@@ -11,10 +11,12 @@ format compact; format short;
 
 % Filebase for the data
 data_set  = 2;
-start_num = 0;
-stop_num  = 240;
-filebase = ['/Volumes/WARP/Research/Antarctica/WAIS Variability/SEAT_Traverses/RawDataDurban/ku_band_12132010_out/' ...
-    int2str(data_set) '.12132010'];
+start_num = 69;
+% start_num = 0;
+stop_num  = 69;
+% stop_num = 240;
+filebase = ['/Volumes/WARP/Research/Antarctica/WAIS Variability' filesep...
+    'SEAT_Traverses/RawDataDurban/SEAT2011/radar_20111218_' '03234255'];
 %filebase  = ['/icebridgedata/lorak/wais_2010/ku_band_12172010/data0' int2str(data_set) '.12172010'];
 pulse_length = 250e-6;
 bandwidth = 2.6320e9;
@@ -24,7 +26,8 @@ gps_file='/icebridgedata/lorak/wais_2010/GPS/12172010.csv'; %Set GPS file for th
 
 
 % Output Directory
-out_dir = '/icebridgedata/lorak/wais_2010/ku_band_12172010_out/';
+out_dir = '/Volumes/WARP/Research/Antarctica/WAIS Variability/Data/radar-RAW/';
+% out_dir = '/icebridgedata/lorak/wais_2010/ku_band_12172010_out/';
 
 % Title for echogram
 info_str   = 'Ku-band radar WAIS 2010';
@@ -57,7 +60,8 @@ delta_t = (fs*pulse_length)/(2*FFT_len*bandwidth); %use this as pixel size gener
 for i1 = start_num:stop_num
     tic
     i1
-    filename = sprintf('%s.%04d.dat',filebase,i1);
+    filename = sprintf('%s_%04d.dat',filebase,i1);
+%     filename = sprintf('%s.%04d.dat',filebase,i1);
     fid = fopen(filename,'r','ieee-be');
     deadbeef = hex2dec('deadbeef');
     
