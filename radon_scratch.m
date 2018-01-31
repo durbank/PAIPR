@@ -33,8 +33,11 @@ files = dir(strcat(radar_dir, wild));
 i = randi(length(files));
 file = strcat([files(i).folder filesep], files(i).name);
 
+% Number of simulations to perform on age-depth Monte Carlo
+Ndraw = 100;
+
 % Calculate radar ages and associated other data
-[radar, core] = radar_ages(file, cores);
+[radar, core] = age_MC(file, cores, Ndraw);
 
 % Define start/end indices for the different windows of data
 window_height = floor(size(radar.data_smooth, 1)/10);
