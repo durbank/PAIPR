@@ -1,13 +1,33 @@
+
+
+% Assigns the path to the data and add-on folders, based on whether running
+% from Durban's Macbook Pro or a lab PC
+PC_true = ispc;
+switch PC_true
+    case true
+        data_path = 'D:/Research/Antarctica/WAIS Variability/';
+        addon_path = 'D:/Research/Antarctica/WAIS Variability/Addons/';
+    case false
+        data_path = '/Volumes/WARP/Research/Antarctica/WAIS Variability/';
+        addon_path = '/Users/Durbank/Documents/MATLAB/Add-Ons/';
+end
+
+% Addons needed for analysis
+% Add Antarctic Mapping Toolbox (AMT) to path
+addon_folder = strcat(addon_path, 'AntarcticMappingTools_v5.03/');
+addpath(genpath(addon_folder))
+
 % Directory to radar files of interest
-radar_dir = ['SEAT_Traverses' filesep 'SEAT2010Kuband' filesep ...
-    'ProcessedSEAT2010' filesep 'grid_SEAT10_3' filesep];
+radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
 files = dir(strcat(radar_dir, wild));
 
 % Import firn core data
-[cores] = import_cores(['SEAT_cores' filesep 'DGK_core_data.xlsx']);
+[cores] = import_cores(strcat(data_path, ['SEAT_cores' filesep ...
+    'DGK_core_data.xlsx']));
 
 % Select individual radar file for analysis
 i = randi(length(files));
