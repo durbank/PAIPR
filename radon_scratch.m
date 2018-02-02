@@ -19,7 +19,7 @@ addpath(genpath(addon_folder))
 
 % Directory to radar files of interest
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -146,9 +146,13 @@ for i=1:length(start_row)
 end
 
 % Plot layers
-figure
+figure('Position', [200 200 1500 800])
+imagesc(radar.data_smooth, [-2 2])
+% imagesc([0 radar.dist(end)], [0 radar.depth_interp(end)], radar.data_smooth, [-2 2])
+% colorbar
+% xlabel('Distance along profile (m)')
+% ylabel('Depth (m)')
 hold on
-imagesc(radar.data_smooth, [-1.5 2.5])
 for i = 1:length(start_row)
     for j = 1:length(start_col)
         if ~isempty(Y_all{i,j})
