@@ -71,7 +71,7 @@ i = randi(size(radar.data_smooth, 2));
 
 % Plot radargram
 figure('Position', [200 200 1500 800])
-imagesc([0 radar.dist(end)], [0 radar.depth_interp(end)], radar.data_smooth, [-2 2])
+imagesc([0 radar.dist(end)], [0 radar.depth_interp(end)], radar.data_smooth)
 colorbar
 xlabel('Distance along profile (m)')
 ylabel('Depth (m)')

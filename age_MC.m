@@ -10,18 +10,6 @@ for i = 1:size(s, 2)
 end
 radar_stat = radar.data_out - s;
 
-% EX = randi(size(radar.data_out, 2));
-% % Diagnostic figure for stationarity
-% figure
-% hold on
-% plot(radar.data_out(:,EX), radar.depth)
-% plot(s(:,EX), radar.depth)
-% xlabel('Radar return strength')
-% ylabel('Depth (m)')
-% legend('Original data', 'Stationarizing spline', 'location', 'nw')
-% set(gca, 'Ydir', 'reverse')
-% hold off
-
 % Remove linear trend in variance (attentuation with depth) and convert to
 % z-score statistics
 radar_Z = zeros(size(radar_stat));
@@ -35,6 +23,31 @@ for i = 1:size(radar_stat, 2)
     mod = EQ(1)*x_mod+EQ(2);
     radar_Z(:,i) = zscore(data./sqrt(abs(mod)));
 end
+
+% % Scale radar data by converting to power
+% radar_power = 20*log10(radar.data_out);
+% 
+% % Stationarize the radar power using a smoothing spline
+% s = zeros(size(radar_power));
+% for i = 1:size(s, 2)
+%     s(:,i) = csaps(radar.depth, radar_power(:,i), 0.95, radar.depth);
+% end
+% radar_stat = radar_power - s;
+% 
+% % Assign radar_Z as radar_stat (for ease of switching to-from log-power
+% radar_Z = radar_stat;
+
+% EX = randi(size(radar.data_out, 2));
+% % Diagnostic figure for stationarity
+% figure
+% hold on
+% plot(radar.data_out(:,EX), radar.depth)
+% plot(s(:,EX), radar.depth)
+% xlabel('Radar return strength')
+% ylabel('Depth (m)')
+% legend('Original data', 'Stationarizing spline', 'location', 'nw')
+% set(gca, 'Ydir', 'reverse')
+% hold off
 
 % Resample and interpolate radar depth and data to a constant depth
 % resolution using a shape-preserving cubic interpolation
