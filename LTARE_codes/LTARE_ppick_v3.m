@@ -51,7 +51,6 @@ ima_in = 20*log10(data);
 %xt=1:floor(length(header(3,:))/5):length(header(3,:));
 %xt=[xt, length(header(3,:))];
 
-
 %=========================================================================
 
 
@@ -146,16 +145,6 @@ for l=1:maxlayer % max number of layers set
     lpx(l,1:size(px,2)) = px(1:size(px,2)); %get all x for a given layer
 end%for l
 
-%% DGK addition
-
-% Clipped indices of layers
-hor_x = lpx(1:maxlayer,:);
-hor_y = lpy(1:maxlayer,:);
-hor_log = logical(hor_x);
-
-weight = sum(hor_log, 2)/size(hor_log, 2);
-
-%%% DGK addition (end)
 %% cleaning to keep correct points
 for l=1:maxlayer
     l, %prints to screen for progress
