@@ -1,4 +1,4 @@
-function [ima_layers, data_pts]=DGK_horizons(data)
+function [CC, data_pts]=DGK_horizons(data)
 %%
 bsize=50; maxlayer=50; L0=3; psm=0.21; maxpeaks=16.5; delta=13; %cols_to_ave=100; dist=5; min_height=0.025;
 
@@ -169,13 +169,13 @@ for i = 1:maxlayer
 end
 hold off 
 
-ima_layers = bwmorph(data_pts, 'bridge');
-ima_layers = bwmorph(ima_layers, 'skel', Inf);
+ima_layers = bwmorph(data_pts, 'thicken', 2);
+ima_layers = bwmorph(ima_layers, 'bridge');
 ima_layers = bwmorph(ima_layers, 'diag', Inf);
-ima_layers = bwmorph(ima_layers, 'thicken', 2);
+ima_layers = bwmorph(ima_layers, 'fill');
+% ima_layers = bwmorph(ima_layers, 'thin', 2);
 
-figure
-imagesc(ima_layers)
+CC = bwconncomp(ima_layers, 4);
 
 
 
