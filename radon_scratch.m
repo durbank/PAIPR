@@ -51,20 +51,32 @@ L = labelmatrix(CC);
 % Statistics on each horizon segment (
 stats = regionprops(CC, 'PixelList');
 
-%% Average layers so each horizon has only 1 y value for each x
+%% Coerce annual layers to 1 dimension, and assign weights
 
+% Preallocate weight matrix and stats structure
 layer_weights = zeros(size(radar.data_smooth));
 stats_new = stats;
+
 for i = 1:length(stats)
+    % Indices of unique x values within radar data matrix for ith layer
     x_all = unique(stats(i).PixelList(:,1));
+    
+    % Boundaries between layer segments with the same x values
     int_jump = [1; diff(stats(i).PixelList(:,1))];
     x_idx = [find(int_jump); length(stats(i).PixelList(:,1))];
+    
     y_all = zeros(size(x_all));
     for j = 1:length(x_all)
+        % Average all y-values for each unique x in ith layer (coerces the
+        % layer to be 1D)
         y_all(j) = round(mean(stats(i).PixelList(x_idx(j):x_idx(j+1),2)));
+        
+        % Assign weight to layer based on ratio of layer length to 2 km
         layer_length = radar.dist(x_all(end)) - radar.dist(x_all(1));
         layer_weights(y_all(j),x_all(j)) = layer_length/2000;
     end
+    
+    % Add 1D layer indices to stats structure
     stats_new(i).PixelList = [x_all y_all];
 end
 
