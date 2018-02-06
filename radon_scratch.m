@@ -43,16 +43,36 @@ Ndraw = 100;
 addpath LTARE_codes/
 
 % Generate binary image of annual layers
-[layers, data_pts] = DGK_horizons(radar.data_smooth);
+[CC, data_pts] = DGK_horizons(radar.data_smooth);
+
+% Generate matrix of annual horizons
+L = labelmatrix(CC);
+
+% Statistics on each horizon segment (
+stats = regionprops(CC, 'PixelList');
+
+%% Average layers so each horizon has only 1 y value for each x
+
+layer_weights = zeros(size(radar.data_smooth));
+stats_new = stats;
+for i = 1:length(stats)
+    x_all = unique(stats(i).PixelList(:,1));
+    int_jump = [1; diff(stats(i).PixelList(:,1))];
+    x_idx = [find(int_jump); length(stats(i).PixelList(:,1))];
+    y_all = zeros(size(x_all));
+    for j = 1:length(x_all)
+        y_all(j) = round(mean(stats(i).PixelList(x_idx(j):x_idx(j+1),2)));
+        layer_length = radar.dist(x_all(end)) - radar.dist(x_all(1));
+        layer_weights(y_all(j),x_all(j)) = layer_length/2000;
+    end
+    stats_new(i).PixelList = [x_all y_all];
+end
 
 
 
 
 
-
-
-
-%%
+%% Old stuff
 
 % % Define start/end indices for the different blocks of data
 % block_height = floor(size(radar.data_smooth, 1)/10);
