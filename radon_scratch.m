@@ -71,9 +71,9 @@ for i = 1:length(stats)
         % layer to be 1D)
         y_all(j) = round(mean(stats(i).PixelList(x_idx(j):x_idx(j+1),2)));
         
-        % Assign weight to layer based on ratio of layer length to 2 km
+        % Assign weight to layer based on ratio of layer length to 1 km
         layer_length = radar.dist(x_all(end)) - radar.dist(x_all(1));
-        layer_weights(y_all(j),x_all(j)) = layer_length/2000;
+        layer_weights(y_all(j),x_all(j)) = layer_length/1000;
     end
     
     % Add 1D layer indices to stats structure
