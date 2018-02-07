@@ -53,10 +53,16 @@ stats = regionprops(CC, 'PixelList');
 
 %% Coerce annual layers to 1 dimension, and assign weights
 
+% Define variables for the likelihood logistic function
+Po = 0.01;
+K = 1;
+P_50 = 500;
+r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
+
 % Preallocate weight matrix and stats structure
-layer_weights = zeros(size(radar.data_smooth));
+layer_ima = zeros(size(radar.data_smooth));
 stats_new = struct('PixelList', cell(1, length(stats)), ...
-    'Layer_length', []);
+    'Layer_length', [], 'Likelihood', []);
 
 for i = 1:length(stats)
     % Indices of unique x values within radar data matrix for ith layer
@@ -66,22 +72,41 @@ for i = 1:length(stats)
     int_jump = [1; diff(stats(i).PixelList(:,1))];
     x_idx = [find(int_jump); length(stats(i).PixelList(:,1))];
     
+    % Find the length of the continuous layer (in meters)
+    layer_length = radar.dist(x_all(end)) - radar.dist(x_all(1));
+    stats_new(i).Layer_length = layer_length;
+    
+    % Assign layer likelihood based on logistic function
+    likelihood = K*Po./(Po + (K-Po)*exp(-r*layer_length));
+    stats_new(i).Likelihood = likelihood;
+    
     y_all = zeros(size(x_all));
     for j = 1:length(x_all)
         % Average all y-values for each unique x in ith layer (coerces the
         % layer to be 1D)
         y_all(j) = round(mean(stats(i).PixelList(x_idx(j):x_idx(j+1),2)));
         
-        % Find the length of the continuous layer (in meters)
-        stats_new(i).Layer_length = radar.dist(x_all(end)) - radar.dist(x_all(1));
+%         % Find the length of the continuous layer (in meters)
+%         layer_length = radar.dist(x_all(end)) - radar.dist(x_all(1));
+%         stats_new(i).Layer_length = layer_length;
         
-        %Assign layer weights (scaled by 1 km)
-        layer_weights(y_all(j),x_all(j)) = layer_length/1000;
+        % Add layer likelihoods to layer image matrix
+        layer_ima(y_all(j),x_all(j)) = likelihood;
     end
     
     % Add 1D layer indices to stats structure
     stats_new(i).PixelList = [x_all y_all];
 end
+
+% Vector of layer segment lengths
+lengths = extractfield(stats_new, 'Layer_length');
+
+% Vector of layer segment likelihoods
+P = extractfield(stats_new, 'Likelihood');
+
+% Plot segment lengths vs. segment likelihoods
+figure
+plot(lengths, P, 'o')
 
 % % Caculate radon-transform weighting coefficient for radar file based on 
 % % average segment length
