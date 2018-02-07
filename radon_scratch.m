@@ -55,7 +55,8 @@ stats = regionprops(CC, 'PixelList');
 
 % Preallocate weight matrix and stats structure
 layer_weights = zeros(size(radar.data_smooth));
-stats_new = stats;
+stats_new = struct('PixelList', cell(1, length(stats)), ...
+    'Layer_length', []);
 
 for i = 1:length(stats)
     % Indices of unique x values within radar data matrix for ith layer
@@ -71,8 +72,10 @@ for i = 1:length(stats)
         % layer to be 1D)
         y_all(j) = round(mean(stats(i).PixelList(x_idx(j):x_idx(j+1),2)));
         
-        % Assign weight to layer based on ratio of layer length to 1 km
-        layer_length = radar.dist(x_all(end)) - radar.dist(x_all(1));
+        % Find the length of the continuous layer (in meters)
+        stats_new(i).Layer_length = radar.dist(x_all(end)) - radar.dist(x_all(1));
+        
+        %Assign layer weights (scaled by 1 km)
         layer_weights(y_all(j),x_all(j)) = layer_length/1000;
     end
     
@@ -80,7 +83,9 @@ for i = 1:length(stats)
     stats_new(i).PixelList = [x_all y_all];
 end
 
-
+% % Caculate radon-transform weighting coefficient for radar file based on 
+% % average segment length
+% w_RT = mean(extractfield(stats_new, 'Layer_length'))/radar.dist(end);
 
 
 
