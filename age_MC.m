@@ -114,6 +114,7 @@ parfor i = 1:size(radar.data_smooth, 2)
     data_i = data(:,i);
     minProm = 0.01;
     minDist = abs(min(dist_Ex) - 3*dist_STD);
+    minDist = 0;
     [~, depths_peaks, ~, Prom] = findpeaks(data_i, depth_i, ...
         'MinPeakProminence', minProm, 'MinPeakDistance', minDist);
     
@@ -128,13 +129,18 @@ parfor i = 1:size(radar.data_smooth, 2)
     Po = 0.01;
     K = 1;
     P_50 = 1*iqr(data_i);
-%     P_50 = median(Prom);
     r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
     
     % Probability of peak representing a year based on a logistic function
     % with rate (r) calculated above
     P = K*Po./(Po + (K-Po)*exp(-r*Prom));
-%     plot(Prom, P, 'bo')
+    
+%     % Function using a more general logistic function (requires
+%     % optimization of k)
+%     L = 1;
+%     P_50 = mean(Prom);
+%     k = 4;
+%     P = L./(1 + exp(-k.*(Prom-P_50)));
 
 %%% EXPERIMENTAL %%%
     % Calculate based on fitted Gamma distribution and corresponding
