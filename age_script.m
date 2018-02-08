@@ -15,16 +15,18 @@ end
 addon_folder = strcat(addon_path, 'AntarcticMappingTools_v5.03/');
 addpath(genpath(addon_folder))
 
+% Import firn core data
+[cores] = import_cores(strcat(data_path, ['SEAT_cores' filesep ...
+    'DGK_core_data.xlsx']));
+
+%%
+
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
 files = dir(strcat(radar_dir, wild));
-
-% Import firn core data
-[cores] = import_cores(strcat(data_path, ['SEAT_cores' filesep ...
-    'DGK_core_data.xlsx']));
 
 % Select individual radar file for analysis
 i = randi(length(files));
@@ -36,7 +38,7 @@ Ndraw = 100;
 % Calculate radar ages and associated other data
 [radar, core] = age_MC(file, cores, Ndraw);
 
-
+%%
 % Automated core age
 yr_top = core.age(1);
 yr_pick1 = floor(yr_top);
