@@ -48,7 +48,7 @@ addpath LTARE_codes/
 % Generate matrix of annual horizons
 L = labelmatrix(CC);
 
-% Statistics on each horizon segment (
+% Statistics on each horizon segment
 stats = regionprops(CC, 'PixelList');
 
 %% Coerce annual layers to 1 dimension, and assign weights
@@ -110,7 +110,7 @@ plot(lengths, P, 'o')
 
 % % Caculate radon-transform weighting coefficient for radar file based on 
 % % average segment length
-% w_RT = mean(extractfield(stats_new, 'Layer_length'))/radar.dist(end);
+w_RT = mean(layer_ima(layer_ima>0));
 
 
 
