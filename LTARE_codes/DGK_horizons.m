@@ -1,6 +1,6 @@
 function [CC, data_pts]=DGK_horizons(data)
 %%
-bsize=50; maxlayer=50; L0=3; psm=0.21; maxpeaks=16.5; delta=13; %cols_to_ave=100; dist=5; min_height=0.025;
+bsize=50; maxlayer=100; L0=3; psm=0.21; maxpeaks=16.5; delta=13; %cols_to_ave=100; dist=5; min_height=0.025;
 
 %The Layer Tracking Algorithm from Radar Echograms: LTARE
 %**With the addition of the Peak Pick script to pick out the most accurate layers and their index values over each assigned column

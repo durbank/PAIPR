@@ -19,7 +19,7 @@ addpath(genpath(addon_folder))
 
 % Directory to radar files of interest
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
