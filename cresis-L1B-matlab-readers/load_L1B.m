@@ -29,13 +29,15 @@ if strcmpi(fn_ext,'.nc')
   mdata = rmfield(mdata,'lat');
   mdata.Longitude = mdata.lon;
   mdata = rmfield(mdata,'lon');
-  mdata.Elevation = mdata.alt;
-  mdata = rmfield(mdata,'alt');
+  mdata.Elevation = mdata.altitude;
+  mdata = rmfield(mdata,'altitude');
   mdata.Data = mdata.amplitude;
+  % mdata.data_out = mdata.amplitude;
   mdata = rmfield(mdata,'amplitude');
   mdata.GPS_time = mdata.time;
-  mdata = rmfield(mdata,'GPS_time');
+  mdata = rmfield(mdata,'time');
   mdata.Time = mdata.fasttime;
+  % mdata.TTWT = mdata.fasttime;
   mdata = rmfield(mdata,'fasttime');
   
 elseif strcmpi(fn_ext,'.mat')
