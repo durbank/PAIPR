@@ -173,7 +173,7 @@ dist_STD = std(depth_btw_yr);
 %% Calculate RT and peak likelihoods separately
 age_peaks = zeros([size(radar.data_smooth) Ndraw]);
 age_RT = zeros([size(radar.data_smooth) Ndraw]);
-age_weighted = zeros([size(radar.data_smooth) Ndraw]);
+age_w = zeros([size(radar.data_smooth) Ndraw]);
 data = radar.data_smooth;
 depth_i = radar.depth_interp;
 parfor i = 1:size(radar.data_smooth, 2)
