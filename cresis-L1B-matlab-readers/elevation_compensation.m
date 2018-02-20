@@ -68,7 +68,8 @@ if ~isfield(param,'depth')
   param.depth = '[-inf inf]';
 end
 
-physical_constants;
+% physical constants
+c = 3E8; % Speed of light in vacuumm (assume air is same) m/s
 
 if param.update_surf
   %% Update surface:
