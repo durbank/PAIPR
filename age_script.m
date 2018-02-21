@@ -15,8 +15,8 @@ end
 addon_folder = strcat(addon_path, 'AntarcticMappingTools_v5.03/');
 addpath(genpath(addon_folder))
 
-radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
+radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2011Kuband'...
+    filesep 'ProcessedSEAT2011' filesep 'grid_SEAT11_6' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
