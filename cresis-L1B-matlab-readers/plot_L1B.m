@@ -14,7 +14,7 @@
 %  fn = 'IRMCR1B_V01_20130408_01_020.nc';
 %  mdata = load_L1B(fn);
 
-fn = 'Data_20111107_02_191.mat';
+fn = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_180.nc';
 mdata = load_L1B(fn);
 
 %% Set which bins to plot

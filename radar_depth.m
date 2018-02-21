@@ -72,7 +72,7 @@ cZ_mod = c0./sqrt(e_mod);   % Speed of light with depth in firn (m/s)
 time_mod = cumsum([0; diff(depth_mod)]./cZ_mod);   % travel time (seconds)
 
 % Calculate cumulative two-way travel time for radar data
-radar.TWTT = (0:radar.time_trace(1):radar.time_trace(1)*...
+radar.TWTT = (0:2*radar.time_trace(1):2*radar.time_trace(1)*...
         (size(radar.data_out, 1)-1))';
 
 % Generate array of cumulative two-way travel time for radar data based on
