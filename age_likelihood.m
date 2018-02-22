@@ -26,7 +26,7 @@ addpath(genpath(addon_folder))
 %%
 % Directory to radar files of interest
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_3' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -138,9 +138,9 @@ lengths = extractfield(stats_new, 'Layer_length');
 % Vector of layer segment likelihoods
 P = extractfield(stats_new, 'Likelihood');
 
-% Plot segment lengths vs. segment likelihoods
-figure
-plot(lengths, P, 'o')
+% % Plot segment lengths vs. segment likelihoods
+% figure
+% plot(lengths, P, 'o')
 
 % Caculate radon-transform weighting coefficient for radar file based on
 % average segment length
@@ -289,6 +289,7 @@ parfor i = 1:size(radar.data_smooth, 2)
     end
     age_w(:,i,:) = age_i;
 end
+
 
 % Diagnostic figure
 figure

@@ -155,19 +155,19 @@ hor_y = lpy(1:maxlayer,:);
 % Preallocate
 data_pts = zeros(size(ima_in));
 
-figure
-imagesc(ima_in)
-hold on
-for i = 1:maxlayer
-    plot(hor_x(i,:), hor_y(i,:), '.')
-    for j = 1:size(hor_x, 2)
-        if hor_y(i,j) <= size(ima_in, 1) && hor_y(i,j) > 0 && ...
-                hor_x(i,j) <= size(ima_in, 2)
-            data_pts(hor_y(i,j),hor_x(i,j)) = 1;
-        end
-    end
-end
-hold off 
+% figure
+% imagesc(ima_in)
+% hold on
+% for i = 1:maxlayer
+%     plot(hor_x(i,:), hor_y(i,:), '.')
+%     for j = 1:size(hor_x, 2)
+%         if hor_y(i,j) <= size(ima_in, 1) && hor_y(i,j) > 0 && ...
+%                 hor_x(i,j) <= size(ima_in, 2)
+%             data_pts(hor_y(i,j),hor_x(i,j)) = 1;
+%         end
+%     end
+% end
+% hold off 
 
 ima_layers = bwmorph(data_pts, 'thicken', 2);
 ima_layers = bwmorph(ima_layers, 'bridge');
