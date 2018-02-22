@@ -6,8 +6,8 @@
 % Change the data set prefix, start number, stop number, filebase, output
 % directory, and info string
 
-close all; clear all; clc;
-format compact; format short;
+% close all; clear all; clc;
+% format compact; format short;
 
 % Filebase for the data
 data_set  = 2;
@@ -218,10 +218,12 @@ for i1 = 1:length(files)
     %LK for the ground based radars we know where the surface is and the the
     %penetration depth so we can set the istart and istop values.
     istart = 1; %allow us to see the antenna height at 170 or 171 is the snow surface
-    istop = 1016; %this is 40 meters into the snow assuming rho=320. and is below the penetration depth.
+    surf_idx = 670;
+    istop = surf_idx + 1016; %this is 40 meters into the snow assuming rho=320. and is below the penetration depth.
     
     Data            = Data(istart:istop,:);
     Depth           = ((0:istop-istart)-169)*pixel_size_snow;
+    Depth           = ((0:istop-istart)-surf_idx)*pixel_size_snow;
     %     tmp_ind=1:169;
     %     Depth(tmp_ind)=0;
     %     clear tmp_ind
