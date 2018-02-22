@@ -15,9 +15,10 @@ start_num = 69;
 % start_num = 0;
 stop_num  = 69;
 % stop_num = 240;
-filebase = ['/Volumes/WARP/Research/Antarctica/WAIS Variability' filesep...
-    'SEAT_Traverses/RawDataDurban/SEAT2011/radar_20111218_' '03234255'];
-%filebase  = ['/icebridgedata/lorak/wais_2010/ku_band_12172010/data0' int2str(data_set) '.12172010'];
+radar_dir = ['/Volumes/WARP/Research/Antarctica/WAIS Variability' filesep...
+    'SEAT_Traverses/RawDataDurban/SEAT2011/'];
+
+
 pulse_length = 250e-6;
 bandwidth = 2.6320e9;
 
@@ -57,10 +58,16 @@ pixel_size_snow = (fs*pulse_length*c)/(2*FFT_len*bandwidth*sqrt(eps_snow));
 pixel_size_air = (fs*pulse_length*c)/(2*FFT_len*bandwidth);
 delta_t = (fs*pulse_length)/(2*FFT_len*bandwidth); %use this as pixel size generic
 
-for i1 = start_num:stop_num
+
+% List all files matching 'wild' within radar directory
+wild = 'radar*';
+files = dir(strcat(radar_dir, wild));
+
+
+for i1 = 1:length(files)
     tic
-    i1
-    filename = sprintf('%s_%04d.dat',filebase,i1);
+%     i1
+    filename = strcat(radar_dir, files(i1).name);
 %     filename = sprintf('%s.%04d.dat',filebase,i1);
     fid = fopen(filename,'r','ieee-be');
     deadbeef = hex2dec('deadbeef');
@@ -230,25 +237,25 @@ for i1 = start_num:stop_num
     
     clear utc_sec utc_frac utc_time
     
-    %load GPS file
-    gps_data=csvread(gps_file);
-    
-    % Convert UTC time to GPS time and interpolate latitude, longitude, and
-    % aircraft altitude to record time
-    Latitude  = interp1(gps_data(:,4),gps_data(:,1),gps_time);
-    Longitude = interp1(gps_data(:,4),gps_data(:,2),gps_time);
-    Altitude  = interp1(gps_data(:,4),gps_data(:,3),gps_time);
-    
-    clear gps_data
-    
-    % Coherent decimation of GPS data to correspond with coherently
-    % integrated radar data
-    gps_time     = gps_time(floor(presums/2):presums:nearest_len);
-    Latitude     = Latitude(floor(presums/2):presums:nearest_len);
-    Longitude    = Longitude(floor(presums/2):presums:nearest_len);
-    Altitude     = Altitude(floor(presums/2):presums:nearest_len);
-    Distance     = dist_KBrunt(Latitude,Longitude);
-    cshift = 0; % there is not cshift for ground data but kept for consistency with IceBridge data fromat.
+%     %load GPS file
+%     gps_data=csvread(gps_file);
+%     
+%     % Convert UTC time to GPS time and interpolate latitude, longitude, and
+%     % aircraft altitude to record time
+%     Latitude  = interp1(gps_data(:,4),gps_data(:,1),gps_time);
+%     Longitude = interp1(gps_data(:,4),gps_data(:,2),gps_time);
+%     Altitude  = interp1(gps_data(:,4),gps_data(:,3),gps_time);
+%     
+%     clear gps_data
+%     
+%     % Coherent decimation of GPS data to correspond with coherently
+%     % integrated radar data
+%     gps_time     = gps_time(floor(presums/2):presums:nearest_len);
+%     Latitude     = Latitude(floor(presums/2):presums:nearest_len);
+%     Longitude    = Longitude(floor(presums/2):presums:nearest_len);
+%     Altitude     = Altitude(floor(presums/2):presums:nearest_len);
+%     Distance     = dist_KBrunt(Latitude,Longitude);
+%     cshift = 0; % there is not cshift for ground data but kept for consistency with IceBridge data fromat.
     
     fprintf('Creating images\n');
     
@@ -259,35 +266,35 @@ for i1 = start_num:stop_num
     hold on;
     colormap(1-bone);
     
-    xt=1:floor(length(Latitude)/5):length(Latitude); %set tick marks
-    set(gca,'XTick',xt,'XTickLabel', round2(Distance(xt),.01))
-    img_title = sprintf('Data %02d Echogram %04d, %s, %6.2f %6.2f',data_set,i1,info_str, Latitude(1), Longitude(1));
-    title(img_title,'FontWeight','Bold');
-    ylabel('Depth [m]');
-    xlabel('Distance [km]');
-    filename = sprintf('%sFFT_image.%02d.%04d',out_dir,data_set,i1);
-    print('-djpeg','-r300',[filename '.jpg']);
-    close(hf);
-    
-    fprintf('Writing data to file\n');
-    % Write necessary data to binary format for upload to NSIDC
-    write_data(1:2:2*size(Data,1),:) = real(Data);
-    write_data(2:2:2*size(Data,1),:) = imag(Data);
-    noBytes         = 4*7+8*size(Data,1);
-    filename_write = sprintf('%sdata%02d.%04d.bin',out_dir,data_set,i1);
-    fid             = fopen(filename_write,'w');
-    for idx = 1:size(Data,2)
-        fwrite(fid,noBytes,'int32');
-        fwrite(fid,gps_time(idx)*1e3,'int32');
-        fwrite(fid,Latitude(idx)*1e6,'int32');
-        fwrite(fid,Longitude(idx)*1e6,'int32');
-        fwrite(fid,Altitude(idx)*1e3,'int32');
-        fwrite(fid,cshift,'int32'); %keep for consistency with IceBridge data but is 0 for ground data
-        fwrite(fid,delta_t*1e12,'float32');
-        fwrite(fid,write_data(:,idx),'float32');
-    end
-    fclose(fid);
-    clear noBytes write_data
+%     xt=1:floor(length(Latitude)/5):length(Latitude); %set tick marks
+%     set(gca,'XTick',xt,'XTickLabel', round2(Distance(xt),.01))
+%     img_title = sprintf('Data %02d Echogram %04d, %s, %6.2f %6.2f',data_set,i1,info_str, Latitude(1), Longitude(1));
+%     title(img_title,'FontWeight','Bold');
+%     ylabel('Depth [m]');
+%     xlabel('Distance [km]');
+%     filename = sprintf('%sFFT_image.%02d.%04d',out_dir,data_set,i1);
+%     print('-djpeg','-r300',[filename '.jpg']);
+%     close(hf);
+%     
+%     fprintf('Writing data to file\n');
+%     % Write necessary data to binary format for upload to NSIDC
+%     write_data(1:2:2*size(Data,1),:) = real(Data);
+%     write_data(2:2:2*size(Data,1),:) = imag(Data);
+%     noBytes         = 4*7+8*size(Data,1);
+%     filename_write = sprintf('%sdata%02d.%04d.bin',out_dir,data_set,i1);
+%     fid             = fopen(filename_write,'w');
+%     for idx = 1:size(Data,2)
+%         fwrite(fid,noBytes,'int32');
+%         fwrite(fid,gps_time(idx)*1e3,'int32');
+%         fwrite(fid,Latitude(idx)*1e6,'int32');
+%         fwrite(fid,Longitude(idx)*1e6,'int32');
+%         fwrite(fid,Altitude(idx)*1e3,'int32');
+%         fwrite(fid,cshift,'int32'); %keep for consistency with IceBridge data but is 0 for ground data
+%         fwrite(fid,delta_t*1e12,'float32');
+%         fwrite(fid,write_data(:,idx),'float32');
+%     end
+%     fclose(fid);
+%     clear noBytes write_data
     
     
     toc
