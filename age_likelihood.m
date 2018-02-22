@@ -26,7 +26,7 @@ addpath(genpath(addon_folder))
 %%
 % Directory to radar files of interest
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_3' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -290,8 +290,12 @@ parfor i = 1:size(radar.data_smooth, 2)
     age_w(:,i,:) = age_i;
 end
 
+% Diagnostic figures
+figure
+imagesc(radar.dist, radar.depth_interp, radar.data_smooth, [-2 2])
+xlabel('Distance [m]')
+ylabel('Depth [m]')
 
-% Diagnostic figure
 figure
 hold on
 h1 = plot(radar.depth_interp, mean(mean(age_peaks, 3), 2), 'm');
