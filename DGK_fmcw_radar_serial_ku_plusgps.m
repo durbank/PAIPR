@@ -10,10 +10,8 @@
 % format compact; format short;
 
 % Filebase for the data
-data_set  = 2;
-start_num = 69;
+% data_set  = 2;
 % start_num = 0;
-stop_num  = 69;
 % stop_num = 240;
 radar_dir = ['/Volumes/WARP/Research/Antarctica/WAIS Variability' filesep...
     'SEAT_Traverses/RawDataDurban/SEAT2011/'];
@@ -23,7 +21,7 @@ pulse_length = 250e-6;
 bandwidth = 2.6320e9;
 
 % Set GPS file name
-gps_file='/icebridgedata/lorak/wais_2010/GPS/12172010.csv'; %Set GPS file for the day
+% gps_file='/icebridgedata/lorak/wais_2010/GPS/12172010.csv'; %Set GPS file for the day
 
 
 % Output Directory
@@ -31,7 +29,8 @@ out_dir = '/Volumes/WARP/Research/Antarctica/WAIS Variability/Data/radar-RAW/';
 % out_dir = '/icebridgedata/lorak/wais_2010/ku_band_12172010_out/';
 
 % Title for echogram
-info_str   = 'Ku-band radar WAIS 2010';
+info_str   = 'Ku-band radar WAIS 2011';
+% info_str   = 'Ku-band radar WAIS 2010';
 
 %XXXXXXXXXXXXXXXXXXXX NOT NECESSARY TO MODIFY FOR ARCTIC DATA XXXXXXXXXXXXXXXXXXXXXXX%
 
@@ -174,8 +173,8 @@ for i1 = 1:length(files)
     Data = double(tmp_Data);
     clear tmp_Data slow_time_win
     %     LK removed this step for stationary data the slow time filter
-    %     takes out the laer when the radar is stationary and is not ideal
-    %     for the ground plication.  The non-stationary data is not
+    %     takes out the layer when the radar is stationary and is not ideal
+    %     for the ground application.  The non-stationary data is not
     %     effected.
     %     % High pass filter in slow time
     %         b     = fir1(64,0.2,'high');
@@ -215,15 +214,17 @@ for i1 = 1:length(files)
     %     % Set start and stop indices around the max value
     %     istart  = max(1,avg_pk - round(30/pixel_size_snow));
     %     istop   = min(size(Data,1),avg_pk + round(40/pixel_size_snow));
+    
     %LK for the ground based radars we know where the surface is and the the
     %penetration depth so we can set the istart and istop values.
     istart = 1; %allow us to see the antenna height at 170 or 171 is the snow surface
     surf_idx = 670;
-    istop = surf_idx + 1016; %this is 40 meters into the snow assuming rho=320. and is below the penetration depth.
+    istop = surf_idx + 40/pixel_size_snow; %this is 40 meters into the snow assuming rho=320. and is below the penetration depth.
+%     istop = 1016; %this is 40 meters into the snow assuming rho=320. and is below the penetration depth.
     
     Data            = Data(istart:istop,:);
-    Depth           = ((0:istop-istart)-169)*pixel_size_snow;
     Depth           = ((0:istop-istart)-surf_idx)*pixel_size_snow;
+%     Depth           = ((0:istop-istart)-169)*pixel_size_snow;
     %     tmp_ind=1:169;
     %     Depth(tmp_ind)=0;
     %     clear tmp_ind
