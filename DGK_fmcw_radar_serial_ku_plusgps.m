@@ -59,7 +59,7 @@ delta_t = (fs*pulse_length)/(2*FFT_len*bandwidth); %use this as pixel size gener
 
 
 % List all files matching 'wild' within radar directory
-wild = 'radar*';
+wild = 'radar*.dat';
 files = dir(strcat(radar_dir, wild));
 
 
@@ -219,7 +219,7 @@ for i1 = 1:length(files)
     %penetration depth so we can set the istart and istop values.
     istart = 1; %allow us to see the antenna height at 170 or 171 is the snow surface
     surf_idx = 670;
-    istop = surf_idx + 40/pixel_size_snow; %this is 40 meters into the snow assuming rho=320. and is below the penetration depth.
+    istop = floor(surf_idx + 40/pixel_size_snow); %this is 40 meters into the snow assuming rho=320. and is below the penetration depth.
 %     istop = 1016; %this is 40 meters into the snow assuming rho=320. and is below the penetration depth.
     
     Data            = Data(istart:istop,:);
