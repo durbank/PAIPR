@@ -22,7 +22,7 @@ addpath(genpath(addon_folder))
 %%
 
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -42,13 +42,17 @@ Ndraw = 100;
 [SMB] = calc_SWE(radar, core);
 
 % Diagnostic figure
+
+subset = randi(size(SMB.radar_accum, 2), 3);
+
 figure
 hold on
-plot(SMB.core_yr, SMB.core_accum, 'k--')
+plot(SMB.radar_yr, SMB.radar_accum(:,subset), 'r--', 'LineWidth', 0.25)
+plot(SMB.core_yr, SMB.core_accum, 'k--', 'LineWidth', 2)
 plot(SMB.core_yr, movmean(SMB.core_accum, 3), 'b', 'LineWidth', 2)
 plot(SMB.radar_yr, mean(SMB.radar_accum, 2), 'r', 'LineWidth', 2)
-plot(SMB.radar_yr, mean(SMB.radar_accum, 2) + std(SMB.radar_accum, [], 2), 'r--')
-plot(SMB.radar_yr, mean(SMB.radar_accum, 2) - std(SMB.radar_accum, [], 2), 'r--')
+plot(SMB.radar_yr, mean(SMB.radar_accum, 2) + std(SMB.radar_accum, [], 2), 'r--', 'LineWidth', 2)
+plot(SMB.radar_yr, mean(SMB.radar_accum, 2) - std(SMB.radar_accum, [], 2), 'r--', 'LineWidth', 2)
 xlabel('Year C.E.')
 ylabel('Accumulation [mm w.e./a]')
 hold off
