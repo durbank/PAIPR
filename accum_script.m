@@ -22,7 +22,7 @@ addpath(genpath(addon_folder))
 %%
 
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_5' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -43,16 +43,18 @@ Ndraw = 100;
 
 % Diagnostic figure
 
-subset = randi(size(SMB.radar_accum, 2), 3);
-
+trace_near = round(size(SMB.radar_accum, 2)/2);
 figure
 hold on
-plot(SMB.radar_yr, SMB.radar_accum(:,subset), 'r--', 'LineWidth', 0.25)
-plot(SMB.core_yr, SMB.core_accum, 'k--', 'LineWidth', 2)
-plot(SMB.core_yr, movmean(SMB.core_accum, 3), 'b', 'LineWidth', 2)
-plot(SMB.radar_yr, mean(SMB.radar_accum, 2), 'r', 'LineWidth', 2)
+h1 = plot(SMB.radar_yr, SMB.radar_accum(:,trace_near), 'm--', 'LineWidth', 0.25);
+h2 = plot(SMB.core_yr, SMB.core_accum, 'k--');
+h3 = plot(SMB.core_yr, movmean(SMB.core_accum, 3), 'b', 'LineWidth', 2);
+h4 = plot(SMB.radar_yr, mean(SMB.radar_accum, 2), 'r', 'LineWidth', 2);
 plot(SMB.radar_yr, mean(SMB.radar_accum, 2) + std(SMB.radar_accum, [], 2), 'r--', 'LineWidth', 2)
 plot(SMB.radar_yr, mean(SMB.radar_accum, 2) - std(SMB.radar_accum, [], 2), 'r--', 'LineWidth', 2)
+legend([h1 h2 h3 h4], 'Nearest trace', 'Core accum', ...
+    'Core 3-yr moving mean', 'Mean radar accum')
 xlabel('Year C.E.')
 ylabel('Accumulation [mm w.e./a]')
+xlim([min([min(SMB.radar_yr) min(SMB.core_yr)]) max([max(SMB.radar_yr) max(SMB.core_yr)])])
 hold off
