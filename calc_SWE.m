@@ -68,12 +68,12 @@ accum = accum(all(accum ,2),:);
 window = 50;
 stack_idx = 1:window:size(accum, 2);
 accum_stack = zeros(length(accum_yr), length(stack_idx)-1);
-std_stack = zeros(length(accum_yr), length(stack_idx)-1);
+ERR_stack = zeros(length(accum_yr), length(stack_idx)-1);
 Northing_stack = zeros(1, length(stack_idx)-1);
 Easting_stack = zeros(1, length(stack_idx)-1);
 for i = 1:length(stack_idx)-1
     accum_stack(:,i) = mean(accum(:,stack_idx(i):stack_idx(i+1)), 2);
-    std_stack(:,i) = std(accum(:,stack_idx(i):stack_idx(i+1)), [], 2);
+    ERR_stack(:,i) = 1.96*std(accum(:,stack_idx(i):stack_idx(i+1)), [], 2)/sqrt(window);
     Northing_stack(i) = mean(radar.Northing(stack_idx(i):stack_idx(i+1)));
     Easting_stack(i) = mean(radar.Easting(stack_idx(i):stack_idx(i+1)));
 end
@@ -91,6 +91,6 @@ end
 
 
 SMB = struct('Easting', Easting_stack, 'Northing', Northing_stack, ...
-    'radar_accum', accum_stack, 'radar_yr', accum_yr, 'radar_std', ...
-    std_stack, 'core_accum', core_accum, 'core_yr', core_yr);
+    'radar_accum', accum_stack, 'radar_yr', accum_yr, 'radar_ERR', ...
+    ERR_stack, 'core_accum', core_accum, 'core_yr', core_yr);
 end
