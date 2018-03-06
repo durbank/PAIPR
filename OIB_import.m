@@ -1,9 +1,34 @@
 % Script to import and format Operation IceBridge radar data for use with
 % accum-radar scripts
 
+PC_true = ispc;
+switch PC_true
+    case true
+        data_path = 'D:/Research/Antarctica/WAIS Variability/';
+        addon_path = 'D:/Research/Antarctica/WAIS Variability/Addons/';
+    case false
+        data_path = '/Volumes/WARP/Research/Antarctica/WAIS Variability/';
+        addon_path = '/Users/Durbank/Documents/MATLAB/Add-Ons/';
+end
+
+% Addons needed for analysis
+% Add Antarctic Mapping Toolbox (AMT) to path
+addon_folder = strcat(addon_path, 'AntarcticMappingTools_v5.03/');
+addpath(genpath(addon_folder))
+
 addpath cresis-L1B-matlab-readers/
 
-file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_180.nc';
+% Files IRSNO1B_20111109_02_211 through ...02_227 roughly follows the
+% SEAT10-1 to SEAT10-6 transect. The same holds true for the following:
+%   IRSNO1B_20161109_02_320 through IRSNO1B_20161109_02_336
+%   Ku-band: IRKUB1B_20161109_02_320 through IRKUB1B_20161109_02_336
+
+% Files IRSNO1B_20111109_02_242 through ...02_272 exactly follows the 
+% SEAT10-4 - SEAT10-6 transect. The same holds true for the following:
+%   IRSNO1B_20161109_02_350 through IRSNO1B_20161109_02_381
+%   Ku-band: IRKUB1B_20161109_02_350 through IRKUB1B_20161109_02_381
+
+file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
 
 % Load data as a .mat structure
 mdata = load_L1B(file);
@@ -80,4 +105,4 @@ mdata.data_out = fillmissing(mdata.data_out, 'pchip');
 mdata.collect_date = mean(mdata.time_gps);
 
 % Remove uneeded fields from the mdata structure
-mdata = rmfield(mdata, {'Latitude', 'Longitude', 'GPS_time', 'lat', 'lon', 'time_gps'});
+mdata = rmfield(mdata, {'Latitude', 'Longitude', 'GPS_time', 'time_gps'});
