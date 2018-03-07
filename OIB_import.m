@@ -28,7 +28,7 @@ addpath cresis-L1B-matlab-readers/
 %   IRSNO1B_20161109_02_350 through IRSNO1B_20161109_02_381
 %   Ku-band: IRKUB1B_20161109_02_350 through IRKUB1B_20161109_02_381
 
-file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
+file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow radar/2011/IRSNO1B_20111109_02_211.nc';
 
 % Load data as a .mat structure
 mdata = load_L1B(file);
@@ -52,7 +52,17 @@ end
 data_depth_min = min(sum(data_out>0));
 data_out = data_out(1:data_depth_min,:);
 TWTT = TWTT(1:data_depth_min,:);
-TWTT = TWTT - TWTT(1,:);
+TWTT = TWTT(:,1) - TWTT(1,1);
+
+%% Cut off data below ~35 m depth
+
+% Calculate velocity (assuming constant relative permittivity)
+c = 2.9979E8;
+u = c/sqrt(param.er_ice);
+idx_end = ceil((35/u)/(0.5*TWTT(2)));
+
+% Truncate data at this cut off point
+data_out = data_out(1:idx_end,:);
 
 
 % Convert struct variable names to match those for 'radar_clean.m'
@@ -60,7 +70,7 @@ mdata.lat = mdata.Latitude';
 mdata.lon = mdata.Longitude';
 mdata.time_gps = mdata.GPS_time';
 mdata.time_trace = mode(diff(TWTT));
-mdata.data_out = data_out;
+mdata.data_out = 10*log10(data_out);
 
 %% Modified code from 'radar_clean.m' (eventually want to combine this into single funtion)
 
@@ -101,8 +111,17 @@ mdata.data_out = fillmissing(mdata.data_out, 'pchip');
 % Convert lat/lon coordinates to polar stereo coordinates (uses AMT)
 [mdata.Easting, mdata.Northing] = ll2ps(mdata.lat, mdata.lon);
 
-% Define time of the surface
-mdata.collect_date = mean(mdata.time_gps);
+% Define time (decimal calendar year) at the surface (the time of data 
+% collection with zero time for data defined as 1970 Jan 01 00:00:00)
+[~, name, ~] = fileparts(file);
+date_char = char(extractBetween(name,'_','_'));
+collect_date = datetime(str2double(date_char(1:4)), ...
+    str2double(date_char(5:6)), str2double(date_char(7:8)));
+% collect_date = datetime(1970,1,1,0,0,0) + seconds(mean(mdata.time_gps));
+mdata.collect_date = year(collect_date) + day(collect_date, 'dayofyear')/365;
 
 % Remove uneeded fields from the mdata structure
-mdata = rmfield(mdata, {'Latitude', 'Longitude', 'GPS_time', 'time_gps'});
+mdata = rmfield(mdata, {'Latitude', 'Longitude', 'GPS_time', 'time_gps' ...
+    'Data', 'Time',});
+mdata = struct('lat', lat, 'lon', lon, 'Northing', Northing, 'Easting', ...
+    Easting,  'elev', Elevation, 'data_out', data_out, TTWT
