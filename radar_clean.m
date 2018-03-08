@@ -4,10 +4,6 @@ function [mdata] = radar_clean(file)
 
 mdata = load(file);
 
-% Add Antarctic Mapping Toolbox (AMT) to path
-addon_path = ['Addons' filesep 'AntarcticMappingTools_v5.03' filesep];
-addpath(genpath(addon_path))
-
 % Remove data without valid location values (lat/lon)
 loc_idx = logical(mdata.lat);
 mdata.lat(~loc_idx) = [];
@@ -15,8 +11,8 @@ mdata.lon(~loc_idx) = [];
 mdata.time_gps(~loc_idx) = [];
 mdata.time_trace(~loc_idx) = [];
 mdata.data_out(:,~loc_idx) = [];
-mdata.arr_layers(:,~loc_idx) = [];
-mdata.arr_segs(:,~loc_idx) = [];
+% mdata.arr_layers(:,~loc_idx) = [];
+% mdata.arr_segs(:,~loc_idx) = [];
 
 % Calucate distance along traverse (in meters)
 mdata.dist = pathdist(mdata.lat, mdata.lon);
@@ -29,8 +25,8 @@ mdata.lon(~dist_idx) = [];
 mdata.time_gps(~dist_idx) = [];
 mdata.time_trace(~dist_idx) = [];
 mdata.data_out(:,~dist_idx) = [];
-mdata.arr_layers(:,~dist_idx) = [];
-mdata.arr_segs(:,~dist_idx) = [];
+% mdata.arr_layers(:,~dist_idx) = [];
+% mdata.arr_segs(:,~dist_idx) = [];
 
 % Approximate the surface in the radar trace, and remove data above the
 % surface (this will need to be improved in the future. OIB may have some
