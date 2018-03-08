@@ -68,6 +68,8 @@ for i = 1:Ndraw
     core.age_auto(:,i) = interp1(depths_i, yrs_i, core.depth, 'linear', 'extrap');
 end
 
+%%
+
 % Select random radar trace for comparison plots
 i = randi(size(radar.data_smooth, 2));
 

@@ -36,7 +36,7 @@ idx_end = ceil((35/u)/(0.5*TWTT(2)));
 
 % Truncate data at this cut off point
 data_out = data_out(1:idx_end,:);
-
+TWTT = TWTT(1:idx_end);
 
 % Convert struct variable names to match those for 'radar_clean.m'
 lat = mdata.Latitude';
