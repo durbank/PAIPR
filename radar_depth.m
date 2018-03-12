@@ -6,11 +6,27 @@ function [radar, core_composite] = radar_depth(radar_file, cores)
 % Firn core data must be provided in the proper format (i.e. as outputted
 % by "import_cores.m"
 
-% Import, clean, and reformat radar data
-radar = radar_clean(radar_file);
+% Determine whether the radar dataset is from OIB or from SEAT records
+if contains(radar_file, '.nc')
+    source = 'OIB';
+elseif contains(radar_file, '.mat')
+    source = 'SEAT';
+else
+    disp('Check radar_file source: unrecognized format')
+end
 
-% Import and clean radar data, and estimate depth-density profile in the 
-% radar based on spatial weighting of nearby cores
+% Import and format data according to whether it is OIB or SEAT
+switch source
+    case 'OIB'
+        % Import, clean, and reformat radar data
+        radar = OIB_import(radar_file);
+    case 'SEAT'
+        % Import, clean, and reformat radar data
+        radar = radar_clean(radar_file);
+end
+
+% Generate a core composite based on the average of spatially-weighted
+% nearby cores
 [core_composite] = rho_spW(radar, cores);
 
 % Needed constants
@@ -79,34 +95,8 @@ time_mod = cumsum([0; time_disc(1:end-1)]);
 radar.TWTT = (0:radar.time_trace(1):radar.time_trace(1)*...
         (size(radar.data_out, 1)-1))';
 
-% Generate array of cumulative two-way travel time for radar data based on
-% recorded TWT time (for 2010 data) or recorded one-way travel time (for
-% 2011 data)
-% if contains(radar_file, '2010') == true
-%     radar.TWTT = (cumsum(2*(0:radar.time_trace(1):radar.time_trace(1)*...
-%         (size(radar.data_out, 1)-1))))';
-% else
-%     radar.TWTT = (cumsum(2*(0:radar.time_trace(1):radar.time_trace(1)*...
-%         (size(radar.data_out, 1)-1))))';
-% end
-
 % Convert recorded TWT time to depth by interpolating measured values to
 % the modeled time-depth relationship
 radar.depth = interp1(time_mod, depth_mod, 0.5*radar.TWTT);
-
-
-
-% % Calculate radar depth based off of raw (no model) density data in
-% % synthetic core (for error calculations)
-% e_data = (1 + 0.845*core_synthetic.rho).^2;  % Kovacs
-% % e_data2 = ((core_synthetic.rho/rho_ice)*(emiss_ice^(1/3)-1) + 1).^3; % Looyenga, 1965
-% cZ_data = c0./sqrt(e_data);
-% time_data = cumsum(core_synthetic.depth./cZ_data);
-% depth_data = interp1(time_data, core_synthetic.depth, 0.5*radar.TWTT);
-
-% % Calculate the residuals and variance in depth estimates between the 
-% % measured density in the synthetic core and the modeled density
-% depth_res = depth_data - radar.depth;
-% radar.depth_var = movvar(depth_res, round(length(depth_res)/5));
 
 end
