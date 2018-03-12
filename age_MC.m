@@ -63,8 +63,9 @@ radarZ_resamp = interp1(radar.depth, radar_Z, radar.depth_interp, 'pchip');
 % set(gca, 'Ydir', 'reverse')
 
 % Find the mean response with depth in the resampled radar data across a
-% given lateral distance 'window' (lateral bin size, where 1 bin ~ 2.5 m)
-window = 50;
+% given lateral distance 'window' (in this case ~100 m)
+window_length = 100;
+window = round(window_length/mean(diff(radar.dist)));
 radar_mean = movmean(radarZ_resamp, window, 2);
 
 % % Diagnostic figure
@@ -181,7 +182,7 @@ parfor i = 1:size(radar.data_smooth, 2)
 end
 radar.age = ages;
 
-radar = rmfield(radar, {'time_trace', 'arr_layers', 'TWTT'});
+% radar = rmfield(radar, {'time_trace', 'arr_layers', 'TWTT'});
 end
 
 
