@@ -31,7 +31,7 @@ TWTT = TWTT(:,1) - TWTT(1,1);
 
 % Calculate velocity (assuming constant relative permittivity)
 c = 2.9979E8;
-u = c/sqrt(param.er_ice);
+u = c/sqrt(2.25);
 idx_end = ceil((35/u)/(0.5*TWTT(2)));
 
 % Truncate data at this cut off point
