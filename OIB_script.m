@@ -19,10 +19,12 @@ addpath cresis-L1B-matlab-readers/
 
 %%
 
-% Files IRSNO1B_20111109_02_211 through ...02_227 roughly follows the
-% SEAT10-1 to SEAT10-6 transect. The same holds true for the following:
+% Files /Snow radar/2011/IRSNO1B_20111109_02_211 through ...02_227 roughly 
+% follows the SEAT10-1 to SEAT10-6 transect. The same holds true for the 
+% following:
 %   IRSNO1B_20161109_02_320 through IRSNO1B_20161109_02_336
-%   Ku-band: IRKUB1B_20161109_02_320 through IRKUB1B_20161109_02_336
+%   Ku-band: /Kuband/2016/IRKUB1B_20161109_02_320.nc through 
+%       IRKUB1B_20161109_02_336
 
 % Files IRSNO1B_20111109_02_242 through ...02_272 exactly follows the 
 % SEAT10-4 - SEAT10-6 transect. The same holds true for the following:
@@ -30,12 +32,12 @@ addpath cresis-L1B-matlab-readers/
 %   Ku-band: IRKUB1B_20161109_02_350 through IRKUB1B_20161109_02_381
 
 % Path of the OIB file to process
-file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow radar/2011/IRSNO1B_20111109_02_211.nc';
+file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
 
-
+% 
 % % Path to SEAT file in questions
 % radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-%     filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_5' filesep]);
+%     filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
 % % List all files matching 'wild' within radar directory
 % wild = 'layers*';
 % files = dir(strcat(radar_dir, wild));
@@ -102,6 +104,8 @@ ylim([-1.5 1.5])
 % Plot core vs mean radar ages (and uncertainty) for random trace
 age_mean = mean(squeeze(radar.age(:,i,:)), 2);
 age_ERR = 2*std(squeeze(radar.age(:,i,:)), [], 2);
+ERR_mod = age_ERR/(quantile(radar.data_smooth(:,i), 0.95) - ...
+    quantile(radar.data_smooth(:,i), 0.05));
 
 figure
 hold on
@@ -109,9 +113,11 @@ h1 = plot(core.depth, core.age, 'b', 'LineWidth', 2);
 h2 = plot(radar.depth_interp, age_mean, 'r', 'LineWidth', 2);
 h3 = plot(radar.depth_interp, age_mean+age_ERR, 'r--', 'LineWidth', 0.5);
 h4 = plot(radar.depth_interp, age_mean-age_ERR, 'r--', 'LineWidth', 0.5);
+h5 = plot(radar.depth_interp, age_mean+ERR_mod, 'm--', 'LineWidth', 0.5);
+h6 = plot(radar.depth_interp, age_mean-ERR_mod, 'm--', 'LineWidth', 0.5);
 xlabel('Depth (m)')
 ylabel('Calendar Year')
-ylim([min([min(core.age) min(age_mean-age_ERR)]) max([max(core.age) max(age_mean)])])
+% ylim([min([min(core.age) min(age_mean-age_ERR)]) max([max(core.age) max(age_mean)])])
 legend([h1 h2], 'Core age (manual)', 'Radar age (automated)', 'Location', 'ne')
 set(gca, 'FontSize', 18)
 hold off
