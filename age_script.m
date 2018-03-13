@@ -22,7 +22,7 @@ addpath(genpath(addon_folder))
 %%
 
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_3' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -67,6 +67,8 @@ for i = 1:Ndraw
     yrs_i = ([yr_top yr_pick1:-1:yr_pick1-length(depths_i)+2])';
     core.age_auto(:,i) = interp1(depths_i, yrs_i, core.depth, 'linear', 'extrap');
 end
+
+%%
 
 % Select random radar trace for comparison plots
 i = randi(size(radar.data_smooth, 2));
