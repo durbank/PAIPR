@@ -110,12 +110,11 @@ dist_STD = std(depth_btw_yr);
 ages = zeros([size(radar.data_smooth) Ndraw]);
 data = radar.data_smooth;
 depth_i = radar.depth_interp;
-% Prom_all = cell(1, size(data, 2));
 parfor i = 1:size(radar.data_smooth, 2)
     data_i = data(:,i);
     minProm = 0.01;
-    minDist = abs(min(dist_Ex) - 3*dist_STD);
-    minDist = 0;
+    minDist = max([0 min(dist_Ex)-3*dist_STD]);
+%     minDist = 0;
     [~, depths_peaks, ~, Prom] = findpeaks(data_i, depth_i, ...
         'MinPeakProminence', minProm, 'MinPeakDistance', minDist);
     
@@ -180,6 +179,7 @@ parfor i = 1:size(radar.data_smooth, 2)
     end
     ages(:,i,:) = age_i;
 end
+
 radar.age = ages;
 
 % radar = rmfield(radar, {'time_trace', 'arr_layers', 'TWTT'});
