@@ -14,6 +14,9 @@ param.er_ice = 3.15;
 param.depth = '[min(Surface_Elev)-20 max(Surface_Elev)+2]';
 [mdata_c,depth_good_idxs] = elevation_compensation(mdata,param);
 
+% Interpolate missing values in mdata_c-Surface_bin
+mdata_c.Surface_Bin = round(fillmissing(mdata_c.Surface_Bin, 'spline'));
+
 data_depth = size(mdata.Data, 1)-max(mdata_c.Surface_Bin);
 data_out = zeros(data_depth, size(mdata.Data, 2));
 TWTT = zeros(data_depth, size(mdata.Data, 2));
