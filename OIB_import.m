@@ -30,12 +30,13 @@ data_out = data_out(1:data_depth_min,:);
 TWTT = TWTT(1:data_depth_min,:);
 TWTT = TWTT(:,1) - TWTT(1,1);
 
-%% Cut off data below ~35 m depth
+%% Cut off data below ~25 m depth
 
 % Calculate velocity (assuming constant relative permittivity)
 c = 2.9979E8;
 u = c/sqrt(2.25);
-idx_end = ceil((35/u)/(0.5*TWTT(2)));
+depth_cut = 25;     % Approximate cut-off depth (data below this depth unreliable)
+idx_end = ceil((depth_cut/u)/(0.5*TWTT(2)));
 
 % Truncate data at this cut off point
 data_out = data_out(1:idx_end,:);
