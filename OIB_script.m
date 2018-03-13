@@ -17,6 +17,8 @@ addpath(genpath(addon_folder))
 
 addpath cresis-L1B-matlab-readers/
 
+%%
+
 % Files IRSNO1B_20111109_02_211 through ...02_227 roughly follows the
 % SEAT10-1 to SEAT10-6 transect. The same holds true for the following:
 %   IRSNO1B_20161109_02_320 through IRSNO1B_20161109_02_336
@@ -30,14 +32,27 @@ addpath cresis-L1B-matlab-readers/
 % Path of the OIB file to process
 file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow radar/2011/IRSNO1B_20111109_02_211.nc';
 
-% Number of simulations to perform on age-depth Monte Carlo
-Ndraw = 100;
+
+% % Path to SEAT file in questions
+% radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
+%     filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_5' filesep]);
+% % List all files matching 'wild' within radar directory
+% wild = 'layers*';
+% files = dir(strcat(radar_dir, wild));
+% % Select individual radar file for analysis
+% i = randi(length(files));
+% file = strcat([files(i).folder filesep], files(i).name);
+
 
 %%
+% Number of simulations to perform on age-depth Monte Carlo
+Ndraw = 100;
 
 % Import firn core data
 [cores] = import_cores(strcat(data_path, ['SEAT_cores' filesep ...
     'DGK_core_data.xlsx']));
+
+%%
 
 % Calculate radar ages and associated other data
 [radar, core] = age_MC(file, cores, Ndraw);
