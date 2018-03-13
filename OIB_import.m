@@ -43,7 +43,7 @@ lat = mdata.Latitude';
 lon = mdata.Longitude';
 elev = mdata.Elevation';
 time_gps = mdata.GPS_time';
-time_trace = mode(diff(TWTT));
+time_trace = 0.5*mode(diff(TWTT));  % time_trace is one-way travel time
 data_out = 10*log10(data_out);
 
 %% Modified code from 'radar_clean.m' (eventually want to combine this into single funtion)
