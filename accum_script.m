@@ -19,19 +19,23 @@ addpath(genpath(addon_folder))
 [cores] = import_cores(strcat(data_path, ['SEAT_cores' filesep ...
     'DGK_core_data.xlsx']));
 
+%% Define radar file to import/process
+
+% radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
+%     filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
+% 
+% % List all files matching 'wild' within radar directory
+% wild = 'layers*';
+% files = dir(strcat(radar_dir, wild));
+% 
+% % Select individual radar file for analysis
+% i = randi(length(files));
+% file = strcat([files(i).folder filesep], files(i).name);
+
+% Path of the OIB file to process
+file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
+
 %%
-
-radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_5' filesep]);
-
-% List all files matching 'wild' within radar directory
-wild = 'layers*';
-files = dir(strcat(radar_dir, wild));
-
-% Select individual radar file for analysis
-i = randi(length(files));
-file = strcat([files(i).folder filesep], files(i).name);
-
 % Number of simulations to perform on age-depth Monte Carlo
 Ndraw = 100;
 
