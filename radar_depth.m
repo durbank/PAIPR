@@ -92,8 +92,8 @@ time_mod = cumsum([0; time_disc(1:end-1)]);
 % time_mod = cumsum([0; diff(depth_mod)]./cZ_mod);
 
 % Calculate cumulative two-way travel time for radar data
-radar.TWTT = (0:radar.time_trace(1):radar.time_trace(1)*...
-        (size(radar.data_out, 1)-1))';
+radar.TWTT = (0:2*radar.time_trace(1):2*radar.time_trace(1)*...
+    (size(radar.data_out, 1)-1))';
 
 % Convert recorded TWT time to depth by interpolating measured values to
 % the modeled time-depth relationship
