@@ -24,19 +24,6 @@ for i = 1:size(radar_stat, 2)
     radar_Z(:,i) = zscore(data./sqrt(abs(mod)));
 end
 
-% % Scale radar data by converting to power
-% radar_power = 20*log10(radar.data_out);
-% 
-% % Stationarize the radar power using a smoothing spline
-% s = zeros(size(radar_power));
-% for i = 1:size(s, 2)
-%     s(:,i) = csaps(radar.depth, radar_power(:,i), 0.95, radar.depth);
-% end
-% radar_stat = radar_power - s;
-% 
-% % Assign radar_Z as radar_stat (for ease of switching to-from log-power
-% radar_Z = radar_stat;
-
 % EX = randi(size(radar.data_out, 2));
 % % Diagnostic figure for stationarity
 % figure
