@@ -1,4 +1,4 @@
-function [SMB] = calc_SWE(radar, core)
+function [radar, core] = calc_SWE(radar, core)
 
 % Generate mean age-depth profiles for each trace from MC simulations
 ages = mean(radar.age, 3);
@@ -12,7 +12,7 @@ yr_end = ceil(min(ages(end,:)));
 rho_ice = 0.917;
 rho_0 = mean(core.rho(1:10));
 rho_coeff = coeffvalues(radar.rho_fit);
-rho_mod = rho_coeff(1)*radar.depth_interp.^rho_coeff(2) + rho_coeff(3);
+rho_mod = rho_coeff(1)*radar.depth.^rho_coeff(2) + rho_coeff(3);
 % rho_mod = rho_ice - (rho_ice-rho_0)*exp(rho_coeff.*radar.depth_interp);
 
 % Generate variance model for density with depth, and calculate standard
@@ -25,7 +25,7 @@ fun = @(a, x) (max(rho_var)-mean(rho_var(end-50:end)))./(a.^x) + ...
 var_fit = fit(core.depth, rho_var, fun, 'StartPoint', 1.5);
 var_coeff = coeffvalues(var_fit);
 std_mod = 1000*sqrt(abs((max(rho_var)-mean(rho_var(end-50:end)))./...
-    (var_coeff.^radar.depth_interp) + mean(rho_var(end-50:end))));
+    (var_coeff.^radar.depth) + mean(rho_var(end-50:end))));
 
 % % Calculate accumulation at each depth interval (0.02 m) with simulated
 % % noise
@@ -64,21 +64,21 @@ if max(diff(accum_yr)) > 1
 end
 accum = accum(all(accum ,2),:);
 
-% Stack adjacent records based on the lateral averaging window size
-window = 50;
-stack_idx = 1:window:size(accum, 2);
-accum_stack = zeros(length(accum_yr), length(stack_idx)-1);
-ERR_stack = zeros(length(accum_yr), length(stack_idx)-1);
-Northing_stack = zeros(1, length(stack_idx)-1);
-Easting_stack = zeros(1, length(stack_idx)-1);
-for i = 1:length(stack_idx)-1
-    accum_stack(:,i) = mean(accum(:,stack_idx(i):stack_idx(i+1)), 2);
-    ERR_stack(:,i) = 1.96*std(accum(:,stack_idx(i):stack_idx(i+1)), [], 2)/sqrt(window);
-    Northing_stack(i) = mean(radar.Northing(stack_idx(i):stack_idx(i+1)));
-    Easting_stack(i) = mean(radar.Easting(stack_idx(i):stack_idx(i+1)));
-end
+% % Stack adjacent records based on the lateral averaging window size
+% window = 50;
+% stack_idx = 1:window:size(accum, 2);
+% accum_stack = zeros(length(accum_yr), length(stack_idx)-1);
+% ERR_stack = zeros(length(accum_yr), length(stack_idx)-1);
+% Northing_stack = zeros(1, length(stack_idx)-1);
+% Easting_stack = zeros(1, length(stack_idx)-1);
+% for i = 1:length(stack_idx)-1
+%     accum_stack(:,i) = mean(accum(:,stack_idx(i):stack_idx(i+1)), 2);
+%     ERR_stack(:,i) = 1.96*std(accum(:,stack_idx(i):stack_idx(i+1)), [], 2)/sqrt(window);
+%     Northing_stack(i) = mean(radar.Northing(stack_idx(i):stack_idx(i+1)));
+%     Easting_stack(i) = mean(radar.Easting(stack_idx(i):stack_idx(i+1)));
+% end
 
-% Calculate annual accumulation for the weighted composite core
+% Calculate annual accumulation for the spatially weighted composite core
 core_accum_dt = 0.02*(1000*core.rho);
 core_yr_idx = logical([1; diff(floor(core.age))]);
 yr_loc = find(core_yr_idx);
@@ -89,8 +89,12 @@ for n = 1:length(core_yr)
     core_accum(n) = sum(core_accum_dt(yr_loc(n)+1:yr_loc(n+1)));
 end
 
+radar.SMB_yr = accum_yr;
+radar.SMB = accum;
+core.SMB_yr = core_yr;
+core.SMB = core_accum;
 
-SMB = struct('Easting', Easting_stack, 'Northing', Northing_stack, ...
-    'radar_accum', accum_stack, 'radar_yr', accum_yr, 'radar_ERR', ...
-    ERR_stack, 'core_accum', core_accum, 'core_yr', core_yr);
+% SMB = struct('Easting', Easting_stack, 'Northing', Northing_stack, ...
+%     'radar_accum', accum_stack, 'radar_yr', accum_yr, 'radar_ERR', ...
+%     ERR_stack, 'core_accum', core_accum, 'core_yr', core_yr);
 end

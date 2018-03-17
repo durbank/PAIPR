@@ -76,7 +76,7 @@ radar.data_smooth = sgolayfilt(radar_mean, 3, 9);
 % Year associated with the first pick of the algorithm
 % age_top = round(radar.collect_date);
 age_top = radar.collect_date;
-yr_pick1 = floor(radar.collect_date);
+yr_pick1 = ceil(radar.collect_date);
 
 % Indices of annual horizions in core
 yr_idx = logical([diff(floor(core_syn.age)); 0]);

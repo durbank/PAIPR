@@ -17,7 +17,7 @@ end
 dist_stack = 0:window_length:window_length*(length(stack_idx)-2);
 
 mdata_stack = struct('Easting', N_stack, 'Northing', N_stack, 'dist', ...
-    dist_stack, 'collect_date', mdata.collect_date, ...
-    'depth', mdata.depth_interp, 'data_stack', data_stack);
+    dist_stack, 'collect_date', mdata.collect_date, 'depth', ...
+    mdata.depth_interp, 'data_stack', data_stack, 'rho_fit', mdata.rho_fit);
 end
     
