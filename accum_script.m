@@ -1,5 +1,8 @@
-% Directory to radar files of interest
 
+
+
+% Directories to data of interest based on computer (eventually will be
+% replaced with GUI for data directory selection)
 PC_true = ispc;
 switch PC_true
     case true
@@ -25,7 +28,7 @@ addpath cresis-L1B-matlab-readers/
 %% Define radar file to import/process
 
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_3' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -38,14 +41,16 @@ file = strcat([files(i).folder filesep], files(i).name);
 % Path of the OIB file to process
 % SEAT10_4
 % file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_272.nc';
+% file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2016/IRSNO1B_20161109_02_381.nc';
+file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
 % SEAT10_5
 % file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_257.nc';
 % SEAT10_6
-file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc';
+% file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc';
 
 %%
 % Number of simulations to perform on age-depth Monte Carlo
-Ndraw = 250;
+Ndraw = 100;
 
 % Calculate radar ages and associated other data
 [radar, core] = radar_age(file, cores, Ndraw);

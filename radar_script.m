@@ -27,7 +27,7 @@ addpath cresis-L1B-matlab-readers/
 %%
 % Directory to radar files of interest
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -43,11 +43,11 @@ file = strcat([files(i).folder filesep], files(i).name);
 % SEAT10_5
 % file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_257.nc';
 % SEAT10_6
-file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc';
+% file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc';
 
 
 % Number of simulations to perform on age-depth Monte Carlo
-Ndraw = 500;
+Ndraw = 100;
 
 % Calculate radar ages and associated other data
 [radar, core] = radar_age(file, cores, Ndraw);

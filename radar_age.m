@@ -159,14 +159,16 @@ layers_val = zeros(1, length(layers_idx));
 layer_peaks = zeros(size(peaks));
 for i = 1:length(layers_idx)
     layers_idx{i} = find(peak_group==i);
-    layers_val(i) = sum(peaks(layers_idx{i}));
+%     layers_val(i) = sum(peaks(layers_idx{i}));
+    layers_val(i) = sum(peaks(layers_idx{i}))*mean(diff(radar.dist));
     layer_peaks(layers_idx{i}) = layers_val(i);
 end
 
 radar.layers = layers_idx;
 radar.layer_vals = layer_peaks;
 
-P_50 = 1*radar.dist(end)/mode(diff(radar.dist));
+P_50 = 2*1000;
+% P_50 = 2*1000/mean(iqr(radar.data_smooth));
 Po = 0.05;
 K = 1;
 r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
@@ -176,6 +178,8 @@ ages = zeros([size(radar.data_smooth) Ndraw]);
 for i = 1:size(layer_peaks, 2)
     
     peaks_i = layer_peaks(:,i);
+%     peaks_i = peaks(:,i).*layer_peaks(:,i);
+
     peaks_idx = peaks_i>0;
     peaks_i = peaks_i(peaks_idx);
     depths_i = radar.depth(peaks_idx);
