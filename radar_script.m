@@ -64,7 +64,11 @@ colorbar
 xlabel('Distance along profile (m)')
 ylabel('Depth (m)')
 hold on
-plot([radar.dist(i) radar.dist(i)], [0 radar.depth(end)], 'r', 'LineWidth', 2)
+for j = 1:10:length(radar.layers)
+[row, col] = ind2sub(size(radar.data_smooth), radar.layers{j});
+plot(radar.dist(col), radar.depth(row), 'm', 'LineWidth', 3)
+end
+plot([radar.dist(i) radar.dist(i)], [0 radar.depth(end)], 'r--')
 xlim([0 radar.dist(end)])
 ylim([0 radar.depth(end)])
 set(gca, 'Ydir', 'reverse', 'FontSize', 18)
