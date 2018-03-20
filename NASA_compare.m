@@ -60,88 +60,90 @@ SEAT10_6_files = {SEAT_KU_6_2010 OIB_SNOW_6_2011 OIB_SNO_6_2016 OIB_KU_6_2016};
 
 %% Process radar data
 
+Ndraw = 100;
+
 %%SEAT10_1
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_1_files{1}, cores, 100);
+[radar, core] = radar_age(SEAT10_1_files{1}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_1.OIB2011_SNO, ~] = calc_SWE(radar, core);
+[SEAT10_1.OIB2011_SNO, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_1_files{2}, cores, 100);
+[radar, core] = radar_age(SEAT10_1_files{2}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_1.OIB2016_SNO, ~] = calc_SWE(radar, core);
+[SEAT10_1.OIB2016_SNO, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_1_files{3}, cores, 100);
+[radar, core] = radar_age(SEAT10_1_files{3}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_1.OIB2016_KU, ~] = calc_SWE(radar, core);
+[SEAT10_1.OIB2016_KU, ~] = calc_SWE(radar, core, Ndraw);
 
 %%SEAT10_4
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_4_files{1}, cores, 100);
+[radar, core] = radar_age(SEAT10_4_files{1}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_4.SEAT_KU, ~] = calc_SWE(radar, core);
+[SEAT10_4.SEAT_KU, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_4_files{2}, cores, 100);
+[radar, core] = radar_age(SEAT10_4_files{2}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_4.OIB2011_SNO, ~] = calc_SWE(radar, core);
+[SEAT10_4.OIB2011_SNO, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_4_files{3}, cores, 100);
+[radar, core] = radar_age(SEAT10_4_files{3}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_4.OIB2016_SNO, ~] = calc_SWE(radar, core);
+[SEAT10_4.OIB2016_SNO, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_4_files{4}, cores, 100);
+[radar, core] = radar_age(SEAT10_4_files{4}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_4.OIB2016_KU, ~] = calc_SWE(radar, core);
+[SEAT10_4.OIB2016_KU, ~] = calc_SWE(radar, core, Ndraw);
 
 %%SEAT10_5
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_5_files{1}, cores, 100);
+[radar, core] = radar_age(SEAT10_5_files{1}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_5.SEAT_KU, ~] = calc_SWE(radar, core);
+[SEAT10_5.SEAT_KU, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_5_files{2}, cores, 100);
+[radar, core] = radar_age(SEAT10_5_files{2}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_5.OIB2011_SNO, ~] = calc_SWE(radar, core);
+[SEAT10_5.OIB2011_SNO, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_5_files{3}, cores, 100);
+[radar, core] = radar_age(SEAT10_5_files{3}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_5.OIB2016_SNO, ~] = calc_SWE(radar, core);
+[SEAT10_5.OIB2016_SNO, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_5_files{4}, cores, 100);
+[radar, core] = radar_age(SEAT10_5_files{4}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_5.OIB2016_KU, ~] = calc_SWE(radar, core);
+[SEAT10_5.OIB2016_KU, ~] = calc_SWE(radar, core, Ndraw);
 
 %%SEAT10_6
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_6_files{1}, cores, 100);
+[radar, core] = radar_age(SEAT10_6_files{1}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_6.SEAT_KU, ~] = calc_SWE(radar, core);
+[SEAT10_6.SEAT_KU, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_6_files{2}, cores, 100);
+[radar, core] = radar_age(SEAT10_6_files{2}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_6.OIB2011_SNO, ~] = calc_SWE(radar, core);
+[SEAT10_6.OIB2011_SNO, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_6_files{3}, cores, 100);
+[radar, core] = radar_age(SEAT10_6_files{3}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_6.OIB2016_SNO, ~] = calc_SWE(radar, core);
+[SEAT10_6.OIB2016_SNO, ~] = calc_SWE(radar, core, Ndraw);
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(SEAT10_6_files{4}, cores, 100);
+[radar, core] = radar_age(SEAT10_6_files{4}, cores, Ndraw);
 % Calculate annual accumulation rates from data
-[SEAT10_6.OIB2016_KU, ~] = calc_SWE(radar, core);
+[SEAT10_6.OIB2016_KU, ~] = calc_SWE(radar, core, Ndraw);
 
 %% Calculate core accumulations for each site
 
@@ -149,19 +151,31 @@ SEAT10_6_files = {SEAT_KU_6_2010 OIB_SNOW_6_2011 OIB_SNO_6_2016 OIB_KU_6_2016};
 core_name = {'SEAT10_1' 'SEAT10_4', 'SEAT10_5', 'SEAT10_6'};
 
 for i = core_name
-    
     core = cores.(i{1});
     core_accum_dt = 0.02*(1000*core.rho);
+    yr_top = floor(core.age(2));
+    yr_end = ceil(core.age(end));
+    core_yr = (yr_top:-1:yr_end)';
     core_yr_idx = logical([1; diff(floor(core.age))]);
     yr_loc = find(core_yr_idx);
-    yr_all = round(core.age(yr_loc));
-    core_yr = yr_all(2:end);
-    core_accum = zeros(length(core_yr), 1);
-    for n = 1:length(core_yr)
-        core_accum(n) = sum(core_accum_dt(yr_loc(n)+1:yr_loc(n+1)));
+    
+    core_accum = zeros(length(core_yr), Ndraw);
+    for j = 1:Ndraw
+        yr_loc_j = yr_loc;
+        yr_loc_j(2:end-1) = yr_loc(2:end-1) + ...
+            round(1*(mean(diff(yr_loc))/12)*randn(length(yr_loc)-2, 1));
+        loc_idx = yr_loc_j<1;
+        yr_loc_j(loc_idx) = yr_loc(loc_idx);
+        
+        core_accum_j = zeros(length(core_yr), 1);
+        for n = 1:length(core_yr)
+            core_accum_j(n) = sum(core_accum_dt(yr_loc_j(n)+1:yr_loc_j(n+1)));
+        end
+        core_accum(:,j) = core_accum_j;
     end
     cores.(i{1}).SMB_yr = core_yr;
     cores.(i{1}).SMB = core_accum;
+    
 end
 
 % Add cores to SEAT structures
@@ -212,9 +226,43 @@ end
 
 %% Diagnostic figures 
 
+% load('/Users/Durbank/Documents/MATLAB/Research/tmp_data/NASA_plots.mat')
+
 %%SEAT10_4 plots
 
-figure
+% Plot SEAT Ku radargram
+figure('Position', [200 200 1000 500])
+imagesc(SEAT10_4.SEAT_KU.dist, SEAT10_4.SEAT_KU.depth, ...
+    SEAT10_4.SEAT_KU.data_smooth, [-2 2])
+colorbar
+title('SEAT Ku radargram for Site SEAT10-4')
+xlabel('Distance along profile (m)')
+ylabel('Depth (m)')
+% hold on
+% 
+% [~, sort_idx] = sort(cellfun(@length,SEAT10_4.SEAT_KU.layers), 'descend');
+% max_idx = sort_idx(1:6);
+% for i = 1:length(max_idx)
+%     [row, col] = ind2sub(size(SEAT10_4.SEAT_KU.data_smooth), ...
+%         SEAT10_4.SEAT_KU.layers{max_idx(i)});
+%     plot(col, row, 'r.', 'markers', 12)
+% end
+% xlim([0 radar.dist(end)])
+% ylim([0 radar.depth(end)])
+% set(gca, 'Ydir', 'reverse', 'FontSize', 18)
+% hold off
+
+% Plot OIB snow radargram
+figure('Position', [200 200 1000 500])
+imagesc(SEAT10_4.OIB2011_SNO.dist, SEAT10_4.OIB2011_SNO.depth, ...
+    SEAT10_4.OIB2011_SNO.data_smooth, [-2 2])
+colorbar
+title('OIB-snow radargram for Site SEAT10-4')
+xlabel('Distance along profile (m)')
+ylabel('Depth (m)')
+
+% Plot age-depth profiles
+figure('Position', [200 200 1000 500])
 hold on
 h1 = plot(SEAT10_4.core.depth, SEAT10_4.core.age, 'b', 'LineWidth', 2);
 h2 = plot(SEAT10_4.SEAT_KU.depth, ...
@@ -245,14 +293,34 @@ ylabel('Calendar year')
 title('Comparison of site SEAT10-4 age-depth profiles')
 hold off
 
-figure
+% Plot annual accumulation
+figure('Position', [200 200 1000 500])
 hold on
-plot(SEAT10_4.core.SMB_yr, SEAT10_4.core.SMB, 'b', 'LineWidth', 2)
-plot(SEAT10_4.SEAT_KU.SMB_yr, ...
-    SEAT10_4.SEAT_KU.SMB(:,idx_near.SEAT10_4.SEAT_KU), 'r', 'LineWidth', 2)
-plot(SEAT10_4.OIB2011_SNO.SMB_yr, ...
-    SEAT10_4.OIB2011_SNO.SMB(:,idx_near.SEAT10_4.OIB2011_SNO), 'c', 'LineWidth', 2)
-legend('Firn core', 'SEAT Ku radar', 'OIB snow radar')
+h1 = plot(SEAT10_4.core.SMB_yr, mean(SEAT10_4.core.SMB, 2), 'b', 'LineWidth', 2);
+plot(SEAT10_4.core.SMB_yr, ...
+    mean(SEAT10_4.core.SMB, 2)+2*std(SEAT10_4.core.SMB, [], 2), 'b--')
+plot(SEAT10_4.core.SMB_yr, ...
+    mean(SEAT10_4.core.SMB, 2)-2*std(SEAT10_4.core.SMB, [], 2), 'b--')
+
+h2 = plot(SEAT10_4.SEAT_KU.SMB_yr{idx_near.SEAT10_4.SEAT_KU}, ...
+    mean(SEAT10_4.SEAT_KU.SMB{idx_near.SEAT10_4.SEAT_KU}, 2), 'r', 'LineWidth', 2);
+plot(SEAT10_4.SEAT_KU.SMB_yr{idx_near.SEAT10_4.SEAT_KU}, ...
+    mean(SEAT10_4.SEAT_KU.SMB{idx_near.SEAT10_4.SEAT_KU}, 2) + ...
+    std(SEAT10_4.SEAT_KU.SMB{idx_near.SEAT10_4.SEAT_KU}, [], 2), 'r--')
+plot(SEAT10_4.SEAT_KU.SMB_yr{idx_near.SEAT10_4.SEAT_KU}, ...
+    mean(SEAT10_4.SEAT_KU.SMB{idx_near.SEAT10_4.SEAT_KU}, 2) - ...
+    std(SEAT10_4.SEAT_KU.SMB{idx_near.SEAT10_4.SEAT_KU}, [], 2), 'r--')
+
+h3 = plot(SEAT10_4.OIB2011_SNO.SMB_yr{idx_near.SEAT10_4.OIB2011_SNO}, ...
+    mean(SEAT10_4.OIB2011_SNO.SMB{idx_near.SEAT10_4.OIB2011_SNO}, 2), 'c', 'LineWidth', 2);
+plot(SEAT10_4.OIB2011_SNO.SMB_yr{idx_near.SEAT10_4.OIB2011_SNO}, ...
+    mean(SEAT10_4.OIB2011_SNO.SMB{idx_near.SEAT10_4.OIB2011_SNO}, 2) + ...
+    2*std(SEAT10_4.OIB2011_SNO.SMB{idx_near.SEAT10_4.OIB2011_SNO}, [], 2), 'c--')
+plot(SEAT10_4.OIB2011_SNO.SMB_yr{idx_near.SEAT10_4.OIB2011_SNO}, ...
+    mean(SEAT10_4.OIB2011_SNO.SMB{idx_near.SEAT10_4.OIB2011_SNO}, 2) - ...
+    2*std(SEAT10_4.OIB2011_SNO.SMB{idx_near.SEAT10_4.OIB2011_SNO}, [], 2), 'c--')
+
+legend([h1 h2 h3], 'Firn core', 'SEAT Ku radar', 'OIB snow radar')
 xlabel('Calendar Year')
 ylabel('Accumulation (mm w.e.)')
 title('Comparison of site SEAT10-4 annual accumulation')
@@ -260,7 +328,26 @@ hold off
 
 %%SEAT10_5 plots
 
-figure
+% Plot SEAT Ku radargram
+figure('Position', [200 200 1000 500])
+imagesc(SEAT10_5.SEAT_KU.dist, SEAT10_5.SEAT_KU.depth, ...
+    SEAT10_5.SEAT_KU.data_smooth, [-2 2])
+colorbar
+title('SEAT Ku radargram for Site SEAT10-5')
+xlabel('Distance along profile (m)')
+ylabel('Depth (m)')
+
+% Plot OIB snow radargram
+figure('Position', [200 200 1000 500])
+imagesc(SEAT10_5.OIB2011_SNO.dist, SEAT10_5.OIB2011_SNO.depth, ...
+    SEAT10_5.OIB2011_SNO.data_smooth, [-2 2])
+colorbar
+title('OIB-snow radargram for Site SEAT10-5')
+xlabel('Distance along profile (m)')
+ylabel('Depth (m)')
+
+% Plot age-depth profiles
+figure('Position', [200 200 1000 500])
 hold on
 h1 = plot(SEAT10_5.core.depth, SEAT10_5.core.age, 'b', 'LineWidth', 2);
 h2 = plot(SEAT10_5.SEAT_KU.depth, ...
@@ -291,14 +378,30 @@ ylabel('Calendar year')
 title('Comparison of site SEAT10-5 age-depth profiles')
 hold off
 
-figure
+% Plot annual accumulation
+figure('Position', [200 200 1000 500])
 hold on
-plot(SEAT10_5.core.SMB_yr, SEAT10_5.core.SMB, 'b', 'LineWidth', 2)
-plot(SEAT10_5.SEAT_KU.SMB_yr, ...
-    SEAT10_5.SEAT_KU.SMB(:,idx_near.SEAT10_5.SEAT_KU), 'r', 'LineWidth', 2)
-plot(SEAT10_5.OIB2011_SNO.SMB_yr, ...
-    SEAT10_5.OIB2011_SNO.SMB(:,idx_near.SEAT10_5.OIB2011_SNO), 'c', 'LineWidth', 2)
-legend('Firn core', 'SEAT Ku radar', 'OIB snow radar')
+h1 = plot(SEAT10_5.core.SMB_yr, mean(SEAT10_5.core.SMB, 2), 'b', 'LineWidth', 2);
+
+h2 = plot(SEAT10_5.SEAT_KU.SMB_yr{idx_near.SEAT10_5.SEAT_KU}, ...
+    mean(SEAT10_5.SEAT_KU.SMB{idx_near.SEAT10_5.SEAT_KU}, 2), 'r', 'LineWidth', 2);
+plot(SEAT10_5.SEAT_KU.SMB_yr{idx_near.SEAT10_5.SEAT_KU}, ...
+    mean(SEAT10_5.SEAT_KU.SMB{idx_near.SEAT10_5.SEAT_KU}, 2) + ...
+    2*std(SEAT10_5.SEAT_KU.SMB{idx_near.SEAT10_5.SEAT_KU}, [], 2), 'r--')
+plot(SEAT10_5.SEAT_KU.SMB_yr{idx_near.SEAT10_5.SEAT_KU}, ...
+    mean(SEAT10_5.SEAT_KU.SMB{idx_near.SEAT10_5.SEAT_KU}, 2) - ...
+    2*std(SEAT10_5.SEAT_KU.SMB{idx_near.SEAT10_5.SEAT_KU}, [], 2), 'r--')
+
+h3 = plot(SEAT10_5.OIB2011_SNO.SMB_yr{idx_near.SEAT10_5.OIB2011_SNO}, ...
+    mean(SEAT10_5.OIB2011_SNO.SMB{idx_near.SEAT10_5.OIB2011_SNO}, 2), 'c', 'LineWidth', 2);
+plot(SEAT10_5.OIB2011_SNO.SMB_yr{idx_near.SEAT10_5.OIB2011_SNO}, ...
+    mean(SEAT10_5.OIB2011_SNO.SMB{idx_near.SEAT10_5.OIB2011_SNO}, 2) + ...
+    2*std(SEAT10_5.OIB2011_SNO.SMB{idx_near.SEAT10_5.OIB2011_SNO}, [], 2), 'c--')
+plot(SEAT10_5.OIB2011_SNO.SMB_yr{idx_near.SEAT10_5.OIB2011_SNO}, ...
+    mean(SEAT10_5.OIB2011_SNO.SMB{idx_near.SEAT10_5.OIB2011_SNO}, 2) - ...
+    2*std(SEAT10_5.OIB2011_SNO.SMB{idx_near.SEAT10_5.OIB2011_SNO}, [], 2), 'c--')
+
+legend([h1 h2 h3], 'Firn core', 'SEAT Ku radar', 'OIB snow radar')
 xlabel('Calendar Year')
 ylabel('Accumulation (mm w.e.)')
 title('Comparison of site SEAT10-5 annual accumulation')
@@ -306,7 +409,26 @@ hold off
 
 %%SEAT10_6 plots
 
-figure
+% Plot SEAT Ku radargram
+figure('Position', [200 200 1000 500])
+imagesc(SEAT10_6.SEAT_KU.dist, SEAT10_6.SEAT_KU.depth, ...
+    SEAT10_6.SEAT_KU.data_smooth, [-2 2])
+colorbar
+title('SEAT Ku radargram for Site SEAT10-6')
+xlabel('Distance along profile (m)')
+ylabel('Depth (m)')
+
+% Plot OIB snow radargram
+figure('Position', [200 200 1000 500])
+imagesc(SEAT10_6.OIB2011_SNO.dist, SEAT10_6.OIB2011_SNO.depth, ...
+    SEAT10_6.OIB2011_SNO.data_smooth, [-2 2])
+colorbar
+title('OIB-snow radargram for Site SEAT10-6')
+xlabel('Distance along profile (m)')
+ylabel('Depth (m)')
+
+% Plot age-depth profiles
+figure('Position', [200 200 1000 500])
 hold on
 h1 = plot(SEAT10_6.core.depth, SEAT10_6.core.age, 'b', 'LineWidth', 2);
 h2 = plot(SEAT10_6.SEAT_KU.depth, ...
@@ -337,14 +459,30 @@ ylabel('Calendar year')
 title('Comparison of site SEAT10-6 age-depth profiles')
 hold off
 
-figure
+% Plot annual accumulation
+figure('Position', [200 200 1000 500])
 hold on
-plot(SEAT10_6.core.SMB_yr, SEAT10_6.core.SMB, 'b', 'LineWidth', 2)
-plot(SEAT10_6.SEAT_KU.SMB_yr, ...
-    SEAT10_6.SEAT_KU.SMB(:,idx_near.SEAT10_6.SEAT_KU), 'r', 'LineWidth', 2)
-plot(SEAT10_6.OIB2011_SNO.SMB_yr, ...
-    SEAT10_6.OIB2011_SNO.SMB(:,idx_near.SEAT10_6.OIB2011_SNO), 'c', 'LineWidth', 2)
-legend('Firn core', 'SEAT Ku radar', 'OIB snow radar')
+h1 = plot(SEAT10_6.core.SMB_yr, mean(SEAT10_6.core.SMB, 2), 'b', 'LineWidth', 2);
+
+h2 = plot(SEAT10_6.SEAT_KU.SMB_yr{idx_near.SEAT10_6.SEAT_KU}, ...
+    mean(SEAT10_6.SEAT_KU.SMB{idx_near.SEAT10_6.SEAT_KU}, 2), 'r', 'LineWidth', 2);
+plot(SEAT10_6.SEAT_KU.SMB_yr{idx_near.SEAT10_6.SEAT_KU}, ...
+    mean(SEAT10_6.SEAT_KU.SMB{idx_near.SEAT10_6.SEAT_KU}, 2) + ...
+    2*std(SEAT10_6.SEAT_KU.SMB{idx_near.SEAT10_6.SEAT_KU}, [], 2), 'r--')
+plot(SEAT10_6.SEAT_KU.SMB_yr{idx_near.SEAT10_6.SEAT_KU}, ...
+    mean(SEAT10_6.SEAT_KU.SMB{idx_near.SEAT10_6.SEAT_KU}, 2) - ...
+    2*std(SEAT10_6.SEAT_KU.SMB{idx_near.SEAT10_6.SEAT_KU}, [], 2), 'r--')
+
+h3 = plot(SEAT10_6.OIB2011_SNO.SMB_yr{idx_near.SEAT10_6.OIB2011_SNO}, ...
+    mean(SEAT10_6.OIB2011_SNO.SMB{idx_near.SEAT10_6.OIB2011_SNO}, 2), 'c', 'LineWidth', 2);
+plot(SEAT10_6.OIB2011_SNO.SMB_yr{idx_near.SEAT10_6.OIB2011_SNO}, ...
+    mean(SEAT10_6.OIB2011_SNO.SMB{idx_near.SEAT10_6.OIB2011_SNO}, 2) + ...
+    2*std(SEAT10_6.OIB2011_SNO.SMB{idx_near.SEAT10_6.OIB2011_SNO}, [], 2), 'c--')
+plot(SEAT10_6.OIB2011_SNO.SMB_yr{idx_near.SEAT10_6.OIB2011_SNO}, ...
+    mean(SEAT10_6.OIB2011_SNO.SMB{idx_near.SEAT10_6.OIB2011_SNO}, 2) - ...
+    2*std(SEAT10_6.OIB2011_SNO.SMB{idx_near.SEAT10_6.OIB2011_SNO}, [], 2), 'c--')
+
+legend([h1 h2 h3], 'Firn core', 'SEAT Ku radar', 'OIB snow radar')
 xlabel('Calendar Year')
 ylabel('Accumulation (mm w.e.)')
 title('Comparison of site SEAT10-6 annual accumulation')
