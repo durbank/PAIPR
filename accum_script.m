@@ -28,7 +28,7 @@ addpath cresis-L1B-matlab-readers/
 %% Define radar file to import/process
 
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_3' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -42,7 +42,7 @@ file = strcat([files(i).folder filesep], files(i).name);
 % SEAT10_4
 % file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_272.nc';
 % file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2016/IRSNO1B_20161109_02_381.nc';
-file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
+% file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
 % SEAT10_5
 % file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_257.nc';
 % SEAT10_6
@@ -56,7 +56,7 @@ Ndraw = 100;
 [radar, core] = radar_age(file, cores, Ndraw);
 
 % Calculate annual accumulation rates from data
-[radar, core] = calc_SWE(radar, core);
+[radar, core] = calc_SWE(radar, core, Ndraw);
 
 %% Diagnostic figure
 
