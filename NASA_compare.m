@@ -238,19 +238,6 @@ colorbar
 title('SEAT Ku radargram for Site SEAT10-4')
 xlabel('Distance along profile (m)')
 ylabel('Depth (m)')
-% hold on
-% 
-% [~, sort_idx] = sort(cellfun(@length,SEAT10_4.SEAT_KU.layers), 'descend');
-% max_idx = sort_idx(1:6);
-% for i = 1:length(max_idx)
-%     [row, col] = ind2sub(size(SEAT10_4.SEAT_KU.data_smooth), ...
-%         SEAT10_4.SEAT_KU.layers{max_idx(i)});
-%     plot(col, row, 'r.', 'markers', 12)
-% end
-% xlim([0 radar.dist(end)])
-% ylim([0 radar.depth(end)])
-% set(gca, 'Ydir', 'reverse', 'FontSize', 18)
-% hold off
 
 % Plot OIB snow radargram
 figure('Position', [200 200 1000 500])
@@ -382,6 +369,10 @@ hold off
 figure('Position', [200 200 1000 500])
 hold on
 h1 = plot(SEAT10_5.core.SMB_yr, mean(SEAT10_5.core.SMB, 2), 'b', 'LineWidth', 2);
+plot(SEAT10_5.core.SMB_yr, ...
+    mean(SEAT10_5.core.SMB, 2) + 2*std(SEAT10_5.core.SMB, [], 2), 'b--')
+plot(SEAT10_5.core.SMB_yr, ...
+    mean(SEAT10_5.core.SMB, 2) - 2*std(SEAT10_5.core.SMB, [], 2), 'b--')
 
 h2 = plot(SEAT10_5.SEAT_KU.SMB_yr{idx_near.SEAT10_5.SEAT_KU}, ...
     mean(SEAT10_5.SEAT_KU.SMB{idx_near.SEAT10_5.SEAT_KU}, 2), 'r', 'LineWidth', 2);
@@ -463,6 +454,10 @@ hold off
 figure('Position', [200 200 1000 500])
 hold on
 h1 = plot(SEAT10_6.core.SMB_yr, mean(SEAT10_6.core.SMB, 2), 'b', 'LineWidth', 2);
+plot(SEAT10_6.core.SMB_yr, ...
+    mean(SEAT10_6.core.SMB, 2) + 2*std(SEAT10_6.core.SMB, [], 2), 'b--')
+plot(SEAT10_6.core.SMB_yr, ...
+    mean(SEAT10_6.core.SMB, 2) - 2*std(SEAT10_6.core.SMB, [], 2), 'b--')
 
 h2 = plot(SEAT10_6.SEAT_KU.SMB_yr{idx_near.SEAT10_6.SEAT_KU}, ...
     mean(SEAT10_6.SEAT_KU.SMB{idx_near.SEAT10_6.SEAT_KU}, 2), 'r', 'LineWidth', 2);
