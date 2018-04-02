@@ -63,6 +63,13 @@ Ndraw = 100;
 % Select random radar trace for comparison plots
 i = randi(size(radar.data_smooth, 2));
 
+% Find the nearest core to the radar data (for comparison plots)
+trace_idx = round(size(radar.data_smooth, 2)/2);
+[~, core_near_idx] = min(pdist2([radar.Easting(trace_idx) ...
+    radar.Northing(trace_idx)], [cores.Easting' cores.Northing'], ...
+    'Euclidean'));
+core_near = cores.(cores.name{core_near_idx});
+
 % Plot radargram
 figure('Position', [200 200 1500 800])
 imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
@@ -75,21 +82,6 @@ xlim([0 radar.dist(end)])
 ylim([0 radar.depth(end)])
 set(gca, 'Ydir', 'reverse', 'FontSize', 18)
 hold off
-
-% Compare radar signal at random trace to annual horizion selection at that
-% trace
-% layer_idx = logical([diff(floor(squeeze(radar.age(:,i,100)))); 0]);
-layer_idx = logical([diff(floor(squeeze(radar.age(:,i,randi(Ndraw))))); 0]);
-figure('Position', [50 50 500 1200])
-hold on
-plot(radar.data_smooth(:,i), radar.depth, 'r', 'LineWidth', 1.5)
-scatter(radar.data_smooth(layer_idx,i), radar.depth(layer_idx), 'b<', 'filled')
-xlim([-1.25 2])
-xlabel('Radar Z-score')
-ylabel('Depth (m)')
-set(gca, 'Ydir', 'reverse')
-hold off
-
 
 figure
 plot(radar.depth, radar.layer_vals(:,i))
@@ -111,25 +103,55 @@ legend([h1 h2], 'Core age (manual)', 'Radar age (automated)', 'Location', 'ne')
 set(gca, 'FontSize', 10)
 hold off
 
+
+% Calculate SWE accumulation at each depth interval in the weighted
+% composite core
+core_accum_dt = 0.02*(1000*core_near.rho);
+
+% Find indices of integer ages within core age profile
+yr_top = floor(core_near.age(2));
+yr_end = ceil(core_near.age(end));
+core_yr = (yr_top:-1:yr_end)';
+core_yr_idx = logical([1; diff(floor(core_near.age))]);
+yr_loc = find(core_yr_idx);
+
+core_accum = zeros(length(core_yr), Ndraw);
+for j = 1:Ndraw
+    
+    % Add noise to integer age locations due to uncertainty in exact point 
+    % in time of the accumulation peak, using a std dev of 1 month
+    yr_loc_j = yr_loc;
+    yr_loc_j(2:end-1) = yr_loc(2:end-1) + ...
+        round(1*(mean(diff(yr_loc))/12)*randn(length(yr_loc)-2, 1));
+    loc_idx = yr_loc_j<1;
+    yr_loc_j(loc_idx) = yr_loc(loc_idx);
+    
+    % Integrate accumulation at each depth point for each whole year in
+    % firn core
+    core_accum_j = zeros(length(core_yr), 1);
+    for n = 1:length(core_yr)
+        core_accum_j(n) = sum(core_accum_dt(yr_loc_j(n)+1:yr_loc_j(n+1)));
+    end
+    
+    % Output accumulatio results to preallocated array
+    core_accum(:,j) = core_accum_j;
+end
+core_near.SMB_yr = core_yr;
+core_near.SMB = core_accum;
+
+
+accum_mean = mean(cell2mat(radar.SMB(:,i)), 2);
+accum_ERR = 2*std(cell2mat(radar.SMB(:,i)), [], 2);
+
 figure
 hold on
-plot(core.SMB_yr, core.SMB, 'b')
-plot(radar.SMB_yr, radar.SMB(:,i), 'r')
+h1 = plot(core_near.SMB_yr, mean(core_near.SMB, 2), 'b', 'LineWidth', 2);
+plot(core_near.SMB_yr, mean(core_near.SMB, 2) + 2*std(core_near.SMB, [], 2), 'b--')
+plot(core_near.SMB_yr, mean(core_near.SMB, 2) - 2*std(core_near.SMB, [], 2), 'b--')
+h2 = plot(radar.SMB_yr{i}, accum_mean, 'r', 'LineWidth', 2);
+plot(radar.SMB_yr{i}, accum_mean + accum_ERR, 'r--')
+plot(radar.SMB_yr{i}, accum_mean - accum_ERR, 'r--')
+legend([h1 h2], 'Firn core', 'Ku radar')
+xlabel('Calendar Year')
+ylabel('Annual accumulation (mm w.e.)')
 hold off
-
-
-% trace_near = round(size(SMB.radar_accum, 2)/2);
-% figure
-% hold on
-% h1 = plot(SMB.radar_yr, SMB.radar_accum(:,trace_near), 'm--', 'LineWidth', 0.25);
-% h2 = plot(SMB.core_yr, SMB.core_accum, 'k--');
-% h3 = plot(SMB.core_yr, movmean(SMB.core_accum, 3), 'b', 'LineWidth', 2);
-% h4 = plot(SMB.radar_yr, mean(SMB.radar_accum, 2), 'r', 'LineWidth', 2);
-% plot(SMB.radar_yr, mean(SMB.radar_accum, 2) + std(SMB.radar_accum, [], 2), 'r--', 'LineWidth', 2)
-% plot(SMB.radar_yr, mean(SMB.radar_accum, 2) - std(SMB.radar_accum, [], 2), 'r--', 'LineWidth', 2)
-% legend([h1 h2 h3 h4], 'Nearest trace', 'Core accum', ...
-%     'Core 3-yr moving mean', 'Mean radar accum')
-% xlabel('Year C.E.')
-% ylabel('Accumulation [mm w.e./a]')
-% xlim([min([min(SMB.radar_yr) min(SMB.core_yr)]) max([max(SMB.radar_yr) max(SMB.core_yr)])])
-% hold off
