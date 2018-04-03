@@ -9,9 +9,11 @@ PC_true = ispc;
 switch PC_true
     case true
         data_path = 'E:/Research/Antarctica/WAIS Variability/';
+        OIB_path = 'E:/Research/Antarctica/Data/IceBridge/';
         addon_path = 'E:/Research/Antarctica/WAIS Variability/Addons/';
     case false
         data_path = '/Volumes/WARP/Research/Antarctica/WAIS Variability/';
+        OIB_path = '/Volumes/WARP/Antarctica/Data/IceBridge/';
         addon_path = '/Users/Durbank/Documents/MATLAB/Add-Ons/';
 end
 
@@ -31,31 +33,31 @@ addpath cresis-L1B-matlab-readers/
 %% Define radar files to import/process
 
 % SEAT10-1
-OIB_SNO_1_2011 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_211.nc';
-OIB_SNO_1_2016 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2016/IRSNO1B_20161109_02_320.nc';
-OIB_KU_1_2016 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_320.nc';
+OIB_SNO_1_2011 = strcat(OIB_path, 'Snow Radar/2011/IRSNO1B_20111109_02_211.nc');
+OIB_SNO_1_2016 = strcat(OIB_path, 'Snow Radar/2016/IRSNO1B_20161109_02_320.nc');
+OIB_KU_1_2016 = strcat(OIB_path, 'Kuband/2016/IRKUB1B_20161109_02_320.nc');
 SEAT10_1_files = {OIB_SNO_1_2011 OIB_SNO_1_2016 OIB_KU_1_2016};
 
 % SEAT10-4
-SEAT_KU_4_2010 = '/Volumes/WARP/Research/Antarctica/WAIS Variability/SEAT_Traverses/SEAT2010Kuband/ProcessedSEAT2010/grid_SEAT10_4/layers_ku_band_12132010_out_dec02.mat';
-OIB_SNO_4_2011 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_272.nc';
-OIB_SNO_4_2016 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2016/IRSNO1B_20161109_02_381.nc';
-OIB_KU_4_2016 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
+SEAT_KU_4_2010 = strcat(data_path, 'SEAT_Traverses/SEAT2010Kuband/ProcessedSEAT2010/grid_SEAT10_4/layers_ku_band_12132010_out_dec02.mat');
+OIB_SNO_4_2011 = strcat(OIB_path, 'Snow Radar/2011/IRSNO1B_20111109_02_272.nc');
+OIB_SNO_4_2016 = strcat(OIB_path, 'Snow Radar/2016/IRSNO1B_20161109_02_381.nc');
+OIB_KU_4_2016 = strcat(OIB_path, 'Kuband/2016/IRKUB1B_20161109_02_381.nc');
 SEAT10_4_files = {SEAT_KU_4_2010 OIB_SNO_4_2011 OIB_SNO_4_2016 OIB_KU_4_2016};
 
 % SEAT10-5
-SEAT_KU_5_2010 = '/Volumes/WARP/Research/Antarctica/WAIS Variability/SEAT_Traverses/SEAT2010Kuband/ProcessedSEAT2010/grid_SEAT10_5/layers_Ku_band_12152010_out_dec04.mat';
-OIB_SNO_5_2011 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_257.nc';
-OIB_SNO_5_2016 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2016/IRSNO1B_20161109_02_366.nc';
-OIB_KU_5_2016 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_366.nc';
+SEAT_KU_5_2010 = strcat(data_path, 'SEAT_Traverses/SEAT2010Kuband/ProcessedSEAT2010/grid_SEAT10_5/layers_Ku_band_12152010_out_dec04.mat');
+OIB_SNO_5_2011 = strcat(OIB_path, 'Snow Radar/2011/IRSNO1B_20111109_02_257.nc');
+OIB_SNO_5_2016 = strcat(OIB_path, 'Snow Radar/2016/IRSNO1B_20161109_02_366.nc');
+OIB_KU_5_2016 = strcat(OIB_path, 'Kuband/2016/IRKUB1B_20161109_02_366.nc');
 SEAT10_5_files = {SEAT_KU_5_2010 OIB_SNO_5_2011 OIB_SNO_5_2016 OIB_KU_5_2016};
 
 % SEAT10-6
-SEAT_KU_6_2010 = '/Volumes/WARP/Research/Antarctica/WAIS Variability/SEAT_Traverses/SEAT2010Kuband/ProcessedSEAT2010/grid_SEAT10_6/layers_Ku_band_12162010_out_dec02.mat';
-OIB_SNOW_6_2011 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc';
-OIB_SNO_6_2016 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2016/IRSNO1B_20161109_02_350.nc';
-OIB_KU_6_2016 = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_350.nc';
-SEAT10_6_files = {SEAT_KU_6_2010 OIB_SNOW_6_2011 OIB_SNO_6_2016 OIB_KU_6_2016};
+SEAT_KU_6_2010 = strcat(data_path, 'SEAT_Traverses/SEAT2010Kuband/ProcessedSEAT2010/grid_SEAT10_6/layers_Ku_band_12162010_out_dec02.mat');
+OIB_SNO_6_2011 = strcat(OIB_path, 'Snow Radar/2011/IRSNO1B_20111109_02_242.nc');
+OIB_SNO_6_2016 = strcat(OIB_path, 'Snow Radar/2016/IRSNO1B_20161109_02_350.nc');
+OIB_KU_6_2016 = strcat(OIB_path, 'Kuband/2016/IRKUB1B_20161109_02_350.nc');
+SEAT10_6_files = {SEAT_KU_6_2010 OIB_SNO_6_2011 OIB_SNO_6_2016 OIB_KU_6_2016};
 
 
 %% Process radar data

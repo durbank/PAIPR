@@ -28,7 +28,7 @@ addpath cresis-L1B-matlab-readers/
 %% Define radar file to import/process
 
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_4' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -83,8 +83,16 @@ ylim([0 radar.depth(end)])
 set(gca, 'Ydir', 'reverse', 'FontSize', 18)
 hold off
 
+% Plot likelihoods for random example trace
 figure
+yyaxis left
+plot(radar.depth, radar.likelihood(:,i), 'LineWidth', 1.5)
+xlabel('Depth (m)')
+ylabel('Radar layer likelihood')
+yyaxis right
 plot(radar.depth, radar.layer_vals(:,i))
+ylabel('Radar layer values (Prominence-distance)')
+
 
 
 age_mean = mean(squeeze(radar.age(:,i,:)), 2);
@@ -139,18 +147,14 @@ end
 core_near.SMB_yr = core_yr;
 core_near.SMB = core_accum;
 
-
-accum_mean = mean(cell2mat(radar.SMB(:,i)), 2);
-accum_ERR = 2*std(cell2mat(radar.SMB(:,i)), [], 2);
-
 figure
 hold on
 h1 = plot(core_near.SMB_yr, mean(core_near.SMB, 2), 'b', 'LineWidth', 2);
 plot(core_near.SMB_yr, mean(core_near.SMB, 2) + 2*std(core_near.SMB, [], 2), 'b--')
 plot(core_near.SMB_yr, mean(core_near.SMB, 2) - 2*std(core_near.SMB, [], 2), 'b--')
-h2 = plot(radar.SMB_yr{i}, accum_mean, 'r', 'LineWidth', 2);
-plot(radar.SMB_yr{i}, accum_mean + accum_ERR, 'r--')
-plot(radar.SMB_yr{i}, accum_mean - accum_ERR, 'r--')
+h2 = plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2), 'r', 'LineWidth', 2);
+plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2) + 2*std(radar.SMB{i}, [], 2), 'r--')
+plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2) - 2*std(radar.SMB{i}, [], 2), 'r--')
 legend([h1 h2], 'Firn core', 'Ku radar')
 xlabel('Calendar Year')
 ylabel('Annual accumulation (mm w.e.)')
