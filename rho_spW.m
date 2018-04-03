@@ -3,20 +3,8 @@
 
 function [core_synthetic] = rho_spW(radar, cores)
 
-% Range (in meters) over which SMB is thought to covary
+% Range (in meters) over which SMB is thought to co-vary
 range = 500000;
-
-% %%% TEMPORARY ADDITION %%%
-% % This removes cores without age-depth scales from consideration (SEAT11_5
-% % and SEAT11_9)
-% subset = [1:9 11:13];
-% cores.name = cores.name(subset);
-% cores.lat = cores.lat(subset);
-% cores.lon = cores.lon(subset);
-% cores.elev = cores.elev(subset);
-% cores.Easting = cores.Easting(subset);
-% cores.Northing = cores.Northing(subset);
-% %%% TEMPORARY ADDITION %%%
 
 % Easting/Northing of the midpoint of the radar trace
 loc_radar = [radar.Easting(round(numel(radar.Easting)/2)) ...
@@ -34,10 +22,6 @@ vDist = mDist(1, 2:end);
 core_idx = find(vDist <= range);
 cores_SWM = fieldnames(cores);
 cores_SWM = cores_SWM(7:end);
-% %%% TEMPORARY ADDITION %%%
-% % Removes cores without age-depth scales from consideration
-% cores_SWM = cores_SWM(subset);
-% %%% TEMPORARY ADDITION %%%
 cores_SWM = cores_SWM(core_idx);
 vDist_SWM = vDist(core_idx);
 
