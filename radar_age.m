@@ -199,7 +199,9 @@ radar.layers = layers_idx;
 radar.layer_vals = layer_peaks;
 
 % P_50 = 2*1000;
-P_50 = 2*1000*mean(iqr(radar.data_smooth));
+% P_50 = 1000*2*mean(iqr(radar.data_smooth));
+P_50 = 1000*1*mean(std(radar.data_smooth));
+
 Po = 0.001;
 K = 1;
 r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
