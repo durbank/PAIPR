@@ -45,6 +45,10 @@ depth_core = (0:0.02:min(max_depth))';
 IDW = 1./vDist_SWM.^2;
 SWM = IDW/sum(IDW);
 
+% Generate a spatially weighted model of variance for the depth-density
+% profile at the radar location
+[rho_var] = rho_variance(cores, core_idx, SWM);
+
 % Create data structure for the synthetic core, containing depth, density 
 % age, location, and isotope values
 ages = zeros(numel(depth_core), numel(cores_SWM));
