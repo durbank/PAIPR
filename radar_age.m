@@ -83,7 +83,7 @@ end
 
 % Define size of ~quasi bin confidence interval
 err_bin = minDist/resolution;
-err_bin = 6;
+err_bin = 4;
 
 % Preallocate cell array for layer numbers and initialize values by
 % assigning unique layer numbers to each peak in the first trace
