@@ -5,33 +5,37 @@ function [radar, core] = calc_SWE(radar, core, Ndraw)
 yr_top = floor(max(max(radar.age(2,:,:))));
 yr_end = ceil(min(min(radar.age(end,:,:))));
 
+% Generate modelled std of density with depth for radar data
+rho_std = sqrt((core.rho_var(1)-core.rho_var(2))./...
+    (core.rho_var(3).^radar.depth) + core.rho_var(2));
+
 % Generate density with depth model for radar data
-rho_ice = 0.917;
-rho_0 = mean(core.rho(1:10));
+% rho_ice = 0.917;
+% rho_0 = mean(core.rho(1:10));
 rho_coeff = coeffvalues(radar.rho_fit);
 rho_mod = rho_coeff(1)*radar.depth.^rho_coeff(2) + rho_coeff(3);
-% rho_mod = rho_ice - (rho_ice-rho_0)*exp(rho_coeff.*radar.depth_interp);
-
-% Generate variance model for density with depth, and calculate standard
-% deviation with depth for density model
-% (Should change this to a weighted mean variance of all cores used in 
-% composite core, in order to avoid potential dampening of density
-% variance)
-rho_res = rho_coeff(1)*core.depth.^rho_coeff(2) + rho_coeff(3);
-% rho_res = core.rho - (rho_ice - (rho_ice-rho_0)*exp(rho_coeff*core.depth));
-rho_var = movvar(rho_res, round(length(rho_res)/3));
-fun = @(a, x) (max(rho_var)-mean(rho_var(end-50:end)))./(a.^x) + ...
-    mean(rho_var(end-50:end));
-var_fit = fit(core.depth, rho_var, fun, 'StartPoint', 1.5);
-var_coeff = coeffvalues(var_fit);
-std_mod = 1000*sqrt(abs((max(rho_var)-mean(rho_var(end-50:end)))./...
-    (var_coeff.^radar.depth) + mean(rho_var(end-50:end))));
+% % rho_mod = rho_ice - (rho_ice-rho_0)*exp(rho_coeff.*radar.depth_interp);
+% 
+% % Generate variance model for density with depth, and calculate standard
+% % deviation with depth for density model
+% % (Should change this to a weighted mean variance of all cores used in 
+% % composite core, in order to avoid potential dampening of density
+% % variance)
+% rho_res = rho_coeff(1)*core.depth.^rho_coeff(2) + rho_coeff(3);
+% % rho_res = core.rho - (rho_ice - (rho_ice-rho_0)*exp(rho_coeff*core.depth));
+% rho_var = movvar(rho_res, round(length(rho_res)/3));
+% fun = @(a, x) (max(rho_var)-mean(rho_var(end-50:end)))./(a.^x) + ...
+%     mean(rho_var(end-50:end));
+% var_fit = fit(core.depth, rho_var, fun, 'StartPoint', 1.5);
+% var_coeff = coeffvalues(var_fit);
+% rho_std = 1000*sqrt(abs((max(rho_var)-mean(rho_var(end-50:end)))./...
+%     (var_coeff.^radar.depth) + mean(rho_var(end-50:end))));
 
 %% Calculate annual accumulation core each radar trace
 
 % % Calculate accumulation at each depth interval (0.02 m) with simulated
 % % noise based on the variance in core density
-noise_rho = repmat(std_mod, 1, size(radar.age, 2)).*randn(size(radar.age));
+noise_rho = repmat(1000*rho_std, 1, size(radar.age, 2)).*randn(size(radar.age));
 % accum_dt = 0.02*(1000*repmat(rho_mod, 1, size(ages, 2)) + noise);
 accum_dt = 0.02*(1000*repmat(rho_mod, 1, size(radar.age, 2), Ndraw) + ...
     noise_rho);
