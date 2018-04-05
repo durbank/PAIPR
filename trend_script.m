@@ -38,8 +38,30 @@ files = dir(strcat(radar_dir, wild));
 % Number of simulations to perform on age-depth Monte Carlo
 Ndraw = 100;
 
+% for i = 1:length(files)
+
+i = 1;
+    file = strcat(radar_dir, files(i).name);
+
 % Calculate radar ages and associated other data
 [radar, core] = radar_age(file, cores, Ndraw);
 
 % Calculate annual accumulation rates from data
 [radar, core] = calc_SWE(radar, core, Ndraw);
+
+% Calculate mean accumulation rate and std at each location
+SMB_mean = cellfun(@(x) mean(mean(x)), radar.SMB);
+SMB_std = cellfun(@(x) mean(std(x)), radar.SMB);
+% SMB_std = cellfun(@(x) mean(std(x)/sqrt(length(x))), radar.SMB);
+
+% Calculate linear trend in accumulation rate and uncertainty at each
+% location
+% [p_coeff,err_obj, mu] = cellfun(@(x,y) polyfit(x,mean(y, 2),1), radar.SMB_yr, ...
+%     radar.SMB, 'UniformOutput', 0); 
+[P, err] = cellfun(@(x,y) polyfit(x,mean(y, 2),1), radar.SMB_yr, ...
+    radar.SMB, 'UniformOutput', 0);
+[trendline, trend_std] = cellfun(@(x,y,z) polyval(x, y, z), ...
+    P, radar.SMB_yr, err, 'UniformOutput', 0);
+
+
+
