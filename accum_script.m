@@ -50,7 +50,7 @@ file = strcat([files(i).folder filesep], files(i).name);
 
 %%
 
-file = 'E:\Research\Antarctica\Data\OUTPUT\layers_ku_band_transectSEAT10_1_2.mat';
+file = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_4_5.mat';
 
 % Number of simulations to perform on age-depth Monte Carlo
 Ndraw = 100;
@@ -65,9 +65,11 @@ Ndraw = 100;
 
 % Select random radar trace for comparison plots
 i = randi(size(radar.data_smooth, 2));
+i = 2650;
 
 % Find the nearest core to the radar data (for comparison plots)
-trace_idx = round(size(radar.data_smooth, 2)/2);
+% trace_idx = round(size(radar.data_smooth, 2)/2);
+trace_idx = i;
 [~, cores_near_idx] = sort(pdist2([radar.Easting(trace_idx) ...
     radar.Northing(trace_idx)], [cores.Easting' cores.Northing'], ...
     'Euclidean'));
