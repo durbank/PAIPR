@@ -1,6 +1,10 @@
 % This function provides an estimated depth scale for radar images based
 % off of depth-density relations from nearby firn cores
 
+%%% NEED TO REVAMP HOW TO CALCULATE COMPOSITE CORE AND DENSITIES (WHOLE
+%%% TRANSECTS COVER TOO MUCH SPACE TO USE A SINGLE COMPOSITE FOR THE ENTIRE
+%%% FILE
+
 function [radar, core_composite] = radar_depth(radar_file, cores)
 
 % Firn core data must be provided in the proper format (i.e. as outputted
