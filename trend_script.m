@@ -40,7 +40,7 @@ Ndraw = 100;
 
 % for i = 1:length(files)
 
-i = 1;
+i = 2;
     file = strcat(radar_dir, files(i).name);
 
 % Calculate radar ages and associated other data
@@ -53,15 +53,17 @@ i = 1;
 SMB_mean = cellfun(@(x) mean(mean(x)), radar.SMB);
 SMB_std = cellfun(@(x) mean(std(x)), radar.SMB);
 % SMB_std = cellfun(@(x) mean(std(x)/sqrt(length(x))), radar.SMB);
+grid_mean = mean(SMB_mean);
+grid_ERR = 1.96*std(SMB_mean)/sqrt(length(SMB_mean));
 
-% Calculate linear trend in accumulation rate and uncertainty at each
-% location
-% [p_coeff,err_obj, mu] = cellfun(@(x,y) polyfit(x,mean(y, 2),1), radar.SMB_yr, ...
-%     radar.SMB, 'UniformOutput', 0); 
-[P, err] = cellfun(@(x,y) polyfit(x,mean(y, 2),1), radar.SMB_yr, ...
-    radar.SMB, 'UniformOutput', 0);
-[trendline, trend_std] = cellfun(@(x,y,z) polyval(x, y, z), ...
-    P, radar.SMB_yr, err, 'UniformOutput', 0);
+% % Calculate linear trend in accumulation rate and uncertainty at each
+% % location
+% [P, err] = cellfun(@(x,y) polyfit(x,mean(y, 2),1), radar.SMB_yr, ...
+%     radar.SMB, 'UniformOutput', 0);
+% [trendline, trend_std] = cellfun(@(x,y,z) polyval(x, y, z), ...
+%     P, radar.SMB_yr, err, 'UniformOutput', 0);
 
-
+% Regression using regress function
+[b, bint, r] = cellfun(@(SMB, year) regress(mean(SMB, 2), year), radar.SMB, ...
+    radar.SMB_yr, 'UniformOutput', 0);
 
