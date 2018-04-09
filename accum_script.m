@@ -6,8 +6,8 @@
 PC_true = ispc;
 switch PC_true
     case true
-        data_path = 'E:/Research/Antarctica/WAIS Variability/';
-        addon_path = 'E:/Research/Antarctica/WAIS Variability/Addons/';
+        data_path = 'E:\Research\Antarctica\WAIS Variability\';
+        addon_path = 'E:\Research\Antarctica\WAIS Variability\Addons/';
     case false
         data_path = '/Volumes/WARP/Research/Antarctica/WAIS Variability/';
         addon_path = '/Users/Durbank/Documents/MATLAB/Add-Ons/';
@@ -28,7 +28,7 @@ addpath cresis-L1B-matlab-readers/
 %% Define radar file to import/process
 
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'grid_SEAT10_6' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'transectSEAT10_1_2' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -49,6 +49,9 @@ file = strcat([files(i).folder filesep], files(i).name);
 % file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc';
 
 %%
+
+file = 'E:\Research\Antarctica\Data\OUTPUT\layers_ku_band_transectSEAT10_1_2.mat';
+
 % Number of simulations to perform on age-depth Monte Carlo
 Ndraw = 100;
 
@@ -65,10 +68,11 @@ i = randi(size(radar.data_smooth, 2));
 
 % Find the nearest core to the radar data (for comparison plots)
 trace_idx = round(size(radar.data_smooth, 2)/2);
-[~, core_near_idx] = min(pdist2([radar.Easting(trace_idx) ...
+[~, cores_near_idx] = sort(pdist2([radar.Easting(trace_idx) ...
     radar.Northing(trace_idx)], [cores.Easting' cores.Northing'], ...
     'Euclidean'));
-core_near = cores.(cores.name{core_near_idx});
+core_near1 = cores.(cores.name{cores_near_idx(1)});
+core_near2 = cores.(cores.name{cores_near_idx(2)});
 
 % Plot radargram
 figure('Position', [200 200 1500 800])
@@ -100,27 +104,29 @@ age_ERR = 2*std(squeeze(radar.age(:,i,:)), [], 2);
 
 figure
 hold on
-h1 = plot(core.depth, core.age, 'b', 'LineWidth', 2);
-h2 = plot(radar.depth, age_mean, 'r', 'LineWidth', 2);
+h1 = plot(core_near1.depth, core_near1.age, 'b', 'LineWidth', 2);
+h2 = plot(core_near2.depth, core_near2.age, 'c', 'LineWidth', 2);
+h3 = plot(radar.depth, age_mean, 'r', 'LineWidth', 2);
 plot(radar.depth, age_mean + age_ERR, 'r--', 'LineWidth', 0.5)
 plot(radar.depth, age_mean - age_ERR, 'r--', 'LineWidth', 0.5)
 ylabel('Calendar Year')
 xlabel('Depth (m)')
 ylim([min([min(core.age) min(age_mean-age_ERR)]) max([max(core.age) max(age_mean)])])
-legend([h1 h2], 'Core age (manual)', 'Radar age (automated)', 'Location', 'ne')
+legend([h1 h2 h3], 'Nearest core age (manual)', '2nd nearest core', ...
+    'Radar age (automated)', 'Location', 'ne')
 set(gca, 'FontSize', 10)
 hold off
 
 
-% Calculate SWE accumulation at each depth interval in the weighted
-% composite core
-core_accum_dt = 0.02*(1000*core_near.rho);
+% Calculate SWE accumulation at each depth interval in the nearest core to
+% the radar trace
+core_accum_dt = 0.02*(1000*core_near1.rho);
 
 % Find indices of integer ages within core age profile
-yr_top = floor(core_near.age(2));
-yr_end = ceil(core_near.age(end));
+yr_top = floor(core_near1.age(2));
+yr_end = ceil(core_near1.age(end));
 core_yr = (yr_top:-1:yr_end)';
-core_yr_idx = logical([1; diff(floor(core_near.age))]);
+core_yr_idx = logical([1; diff(floor(core_near1.age))]);
 yr_loc = find(core_yr_idx);
 
 core_accum = zeros(length(core_yr), Ndraw);
@@ -144,18 +150,59 @@ for j = 1:Ndraw
     % Output accumulatio results to preallocated array
     core_accum(:,j) = core_accum_j;
 end
-core_near.SMB_yr = core_yr;
-core_near.SMB = core_accum;
+core_near1.SMB_yr = core_yr;
+core_near1.SMB = core_accum;
+
+
+% Calculate SWE accumulation at each depth interval in the nearest core to
+% the radar trace
+core_accum_dt = 0.02*(1000*core_near2.rho);
+
+% Find indices of integer ages within core age profile
+yr_top = floor(core_near2.age(2));
+yr_end = ceil(core_near2.age(end));
+core_yr = (yr_top:-1:yr_end)';
+core_yr_idx = logical([1; diff(floor(core_near2.age))]);
+yr_loc = find(core_yr_idx);
+
+core_accum = zeros(length(core_yr), Ndraw);
+for j = 1:Ndraw
+    
+    % Add noise to integer age locations due to uncertainty in exact point 
+    % in time of the accumulation peak, using a std dev of 1 month
+    yr_loc_j = yr_loc;
+    yr_loc_j(2:end-1) = yr_loc(2:end-1) + ...
+        round(1*(mean(diff(yr_loc))/12)*randn(length(yr_loc)-2, 1));
+    loc_idx = yr_loc_j<1;
+    yr_loc_j(loc_idx) = yr_loc(loc_idx);
+    
+    % Integrate accumulation at each depth point for each whole year in
+    % firn core
+    core_accum_j = zeros(length(core_yr), 1);
+    for n = 1:length(core_yr)
+        core_accum_j(n) = sum(core_accum_dt(yr_loc_j(n)+1:yr_loc_j(n+1)));
+    end
+    
+    % Output accumulatio results to preallocated array
+    core_accum(:,j) = core_accum_j;
+end
+core_near2.SMB_yr = core_yr;
+core_near2.SMB = core_accum;
+
 
 figure
 hold on
-h1 = plot(core_near.SMB_yr, mean(core_near.SMB, 2), 'b', 'LineWidth', 2);
-plot(core_near.SMB_yr, mean(core_near.SMB, 2) + 2*std(core_near.SMB, [], 2), 'b--')
-plot(core_near.SMB_yr, mean(core_near.SMB, 2) - 2*std(core_near.SMB, [], 2), 'b--')
-h2 = plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2), 'r', 'LineWidth', 2);
+h1 = plot(core_near1.SMB_yr, mean(core_near1.SMB, 2), 'b', 'LineWidth', 2);
+plot(core_near1.SMB_yr, mean(core_near1.SMB, 2) + 2*std(core_near1.SMB, [], 2), 'b--')
+plot(core_near1.SMB_yr, mean(core_near1.SMB, 2) - 2*std(core_near1.SMB, [], 2), 'b--')
+
+h2 = plot(core_near2.SMB_yr, mean(core_near2.SMB, 2), 'c', 'LineWidth', 2);
+plot(core_near2.SMB_yr, mean(core_near2.SMB, 2) + 2*std(core_near2.SMB, [], 2), 'c--')
+plot(core_near2.SMB_yr, mean(core_near2.SMB, 2) - 2*std(core_near2.SMB, [], 2), 'c--')
+h3 = plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2), 'r', 'LineWidth', 2);
 plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2) + 2*std(radar.SMB{i}, [], 2), 'r--')
 plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2) - 2*std(radar.SMB{i}, [], 2), 'r--')
-legend([h1 h2], 'Firn core', 'Ku radar')
+legend([h1 h2 h3], 'Nearest firn core', '2nd nearest core', 'Ku radar')
 xlabel('Calendar Year')
 ylabel('Annual accumulation (mm w.e.)')
 hold off
