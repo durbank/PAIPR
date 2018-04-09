@@ -39,8 +39,8 @@ max_loc = 300;
 surf_idx = surf_idx + (min_loc-1);
 surf_row = median(surf_idx);
 mdata.data_out(1:surf_row-1,:) = [];
-mdata.arr_layers(1:surf_row-1,:) = [];
-mdata.arr_segs(1:surf_row-1,:) = [];
+% mdata.arr_layers(1:surf_row-1,:) = [];
+% mdata.arr_segs(1:surf_row-1,:) = [];
 
 % Identify data columns consisting solely of NaN cells, and remove these
 % columns from all radar data arrays
@@ -51,8 +51,8 @@ mdata.lon(nan_idx) = [];
 mdata.time_gps(nan_idx) = [];
 mdata.time_trace(nan_idx) = [];
 mdata.data_out(:,nan_idx) = [];
-mdata.arr_layers(:,nan_idx) = [];
-mdata.arr_segs(:,nan_idx) = [];
+% mdata.arr_layers(:,nan_idx) = [];
+% mdata.arr_segs(:,nan_idx) = [];
 
 % Fill in missing radar data (missing/nan values) column-wise using a
 % piecewise shape-preserving spline
@@ -61,28 +61,32 @@ mdata.data_out = fillmissing(mdata.data_out, 'pchip');
 % Convert lat/lon coordinates to polar stereo coordinates (uses AMT)
 [mdata.Easting, mdata.Northing] = ll2ps(mdata.lat, mdata.lon);
 
-% Define the age of the top of the radar (the date the radar was collected)
-% (this will require modification when incorporating data beyond SEAT
-% traverses)
-if contains(file, '2011') == true
-    DateString = '01.01.2012';
-    vector = datevec(DateString, 'dd.mm.yyyy');
-    day_of_year = datenum(vector) - datenum(vector(1), 1, 1);
-    collect_date = vector(1) + day_of_year/365.25;
-elseif contains(file, '2010') == true
-    DateString = '01.01.2011';
-    vector = datevec(DateString, 'dd.mm.yyyy');
-    day_of_year = datenum(vector) - datenum(vector(1), 1, 1);
-    collect_date = vector(1) + day_of_year/365.25;
-else
-    disp('Check collection date')
+% Check to see if collection data is already present. If it does not, 
+% creates collect_date field
+if ~isfield(mdata, 'collect_date')
+    % Define the age of the top of the radar (the date the radar was collected)
+    % (this will require modification when incorporating data beyond SEAT
+    % traverses)
+    if contains(file, '2011') == true
+        DateString = '01.01.2012';
+        vector = datevec(DateString, 'dd.mm.yyyy');
+        day_of_year = datenum(vector) - datenum(vector(1), 1, 1);
+        mdata.collect_date = vector(1) + day_of_year/365.25;
+    elseif contains(file, '2010') == true
+        DateString = '01.01.2011';
+        vector = datevec(DateString, 'dd.mm.yyyy');
+        day_of_year = datenum(vector) - datenum(vector(1), 1, 1);
+        mdata.collect_date = vector(1) + day_of_year/365.25;
+    else
+        disp('Check collection date')
+    end
 end
 
-% Add field for date of data collection (in decimal calendar year)
-mdata.collect_date = collect_date;
+
 
 % Remove uneeded fields from the mdata structure
-mdata = rmfield(mdata, {'arr_segs', 'lat', 'lon', 'time_gps', 'list_segs'...
-    'list_segs_vals', 'list_segs_vals_indx1'});
+% mdata = rmfield(mdata, {'arr_segs', 'lat', 'lon', 'time_gps', 'list_segs'...
+%     'list_segs_vals', 'list_segs_vals_indx1'});
+% mdata = rmfield(mdata, {'lat', 'lon', 'time_gps'});
 
 end
