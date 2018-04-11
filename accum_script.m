@@ -28,7 +28,7 @@ addpath cresis-L1B-matlab-readers/
 %% Define radar file to import/process
 
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'transectSEAT10_1_2' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'transectSEAT10_4_5' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -49,23 +49,32 @@ file = strcat([files(i).folder filesep], files(i).name);
 % file = '/Volumes/WARP/Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc';
 
 %%
+tic
 
-file = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_4_5.mat';
+file = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_5_6.mat';
 
 % Number of simulations to perform on age-depth Monte Carlo
 Ndraw = 100;
 
 % Calculate radar ages and associated other data
-[radar, core] = radar_age(file, cores, Ndraw);
+[radar, core_comp] = radar_age(file, cores, Ndraw);
 
 % Calculate annual accumulation rates from data
-[radar, core] = calc_SWE(radar, core, Ndraw);
+[radar, core_comp] = calc_SWE(radar, core_comp, Ndraw);
 
+toc
+
+% tic
+% % Save the radar output data
+% output_name = 'SEAT_KU_transectSEAT2010_5_6.mat';
+% output_dir = 'E:\Research\Antarctica\Data\OUTPUT\SMB_outputs\';
+% file_path = strcat(output_dir, output_name);
+% save(file_path, 'radar', 'core_comp', '-v7.3')
+% toc
 %% Diagnostic figure
 
 % Select random radar trace for comparison plots
 i = randi(size(radar.data_smooth, 2));
-i = 2650;
 
 % Find the nearest core to the radar data (for comparison plots)
 % trace_idx = round(size(radar.data_smooth, 2)/2);
@@ -75,6 +84,7 @@ trace_idx = i;
     'Euclidean'));
 core_near1 = cores.(cores.name{cores_near_idx(1)});
 core_near2 = cores.(cores.name{cores_near_idx(2)});
+core_near3 = cores.(cores.name{cores_near_idx(3)});
 
 % Plot radargram
 figure('Position', [200 200 1500 800])
@@ -108,14 +118,15 @@ figure
 hold on
 h1 = plot(core_near1.depth, core_near1.age, 'b', 'LineWidth', 2);
 h2 = plot(core_near2.depth, core_near2.age, 'c', 'LineWidth', 2);
-h3 = plot(radar.depth, age_mean, 'r', 'LineWidth', 2);
+h3 = plot(core_near3.depth, core_near3.age, 'c--', 'LineWidth', 1);
+h4 = plot(radar.depth, age_mean, 'r', 'LineWidth', 2);
 plot(radar.depth, age_mean + age_ERR, 'r--', 'LineWidth', 0.5)
 plot(radar.depth, age_mean - age_ERR, 'r--', 'LineWidth', 0.5)
 ylabel('Calendar Year')
 xlabel('Depth (m)')
-ylim([min([min(core.age) min(age_mean-age_ERR)]) max([max(core.age) max(age_mean)])])
-legend([h1 h2 h3], 'Nearest core age (manual)', '2nd nearest core', ...
-    'Radar age (automated)', 'Location', 'ne')
+ylim([min([min(core_comp.age) min(age_mean-age_ERR)]) max([max(core_comp.age) max(age_mean)])])
+legend([h1 h2 h3 h4], 'Nearest core age (manual)', '2nd nearest core', ...
+    '3rd nearest core', 'Radar age (automated)', 'Location', 'ne')
 set(gca, 'FontSize', 10)
 hold off
 
