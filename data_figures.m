@@ -4,8 +4,8 @@
 PC_true = ispc;
 switch PC_true
     case true
-        data_path = 'D:/Research/Antarctica/WAIS Variability/';
-        addon_path = 'D:/Research/Antarctica/WAIS Variability/Addons/';
+        data_path = 'E:\Research\Antarctica\WAIS Variability\';
+        addon_path = 'E:\Research\Antarctica\WAIS Variability\Addons\';
     case false
         data_path = '/Volumes/WARP/Research/Antarctica/WAIS Variability/';
         addon_path = '/Users/Durbank/Documents/MATLAB/Add-Ons/';
