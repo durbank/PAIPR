@@ -28,7 +28,7 @@ addpath cresis-L1B-matlab-readers/
 %% Define radar file to import/process
 
 radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'transectSEAT10_4_5' filesep]);
+    filesep 'ProcessedSEAT2010' filesep 'transectSEAT10_5_6' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -51,16 +51,16 @@ file = strcat([files(i).folder filesep], files(i).name);
 %%
 tic
 
-file = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_5_6.mat';
+% file = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_5_6.mat';
 
 % Number of simulations to perform on age-depth Monte Carlo
 Ndraw = 100;
 
 % Calculate radar ages and associated other data
-[radar, core_comp] = radar_age(file, cores, Ndraw);
+[radar] = radar_age(file, cores, Ndraw);
 
 % Calculate annual accumulation rates from data
-[radar, core_comp] = calc_SWE(radar, core_comp, Ndraw);
+[radar] = calc_SWE(radar, Ndraw);
 
 toc
 

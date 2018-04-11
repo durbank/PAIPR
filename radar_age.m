@@ -1,7 +1,7 @@
-function [radar, core_composite] = radar_age(file, cores, Ndraw)
+function [radar] = radar_age(file, cores, Ndraw)
 
 % Conversion to depth
-[radar, core_composite] = radar_depth(file, cores);
+[radar] = radar_depth(file, cores);
 
 % Find the mean response with depth in the resampled radar data across a
 % given lateral distance 'window' (in this case ~100 m)

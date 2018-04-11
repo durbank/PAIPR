@@ -1,4 +1,4 @@
-function [radar, core] = calc_SWE(radar, core, Ndraw)
+function [radar] = calc_SWE(radar, Ndraw)
 
 % Define first year with complete accumulation data and earliest year with
 % observations within the data set

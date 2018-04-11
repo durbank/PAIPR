@@ -5,7 +5,7 @@
 %%% TRANSECTS COVER TOO MUCH SPACE TO USE A SINGLE COMPOSITE FOR THE ENTIRE
 %%% FILE
 
-function [radar, core_composite] = radar_depth(radar_file, cores)
+function [radar] = radar_depth(radar_file, cores)
 
 % Firn core data must be provided in the proper format (i.e. as outputted
 % by "import_cores.m"
