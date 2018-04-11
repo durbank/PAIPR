@@ -13,9 +13,12 @@
 %     output = strcat(output_dir, filesep);
 % end
 
-radar_dir = 'E:\Research\Antarctica\WAIS Variability\SEAT_Traverses\SEAT2010Kuband\ProcessedSEAT2010\transectSEAT10_5_6\';
-output_dir = 'E:\Research\Antarctica\Data\OUTPUT\';
-output_name = 'layers_ku_band_transectSEAT10_5_6.mat';
+data_folder = 'transectSEAT11_9_1';
+
+path = 'E:\Research\Antarctica\WAIS Variability\SEAT_Traverses\SEAT2011Kuband\ProcessedSEAT2011\';
+radar_dir = strcat(path, data_folder, '\');
+output_dir = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2011_transects\';
+output_name = strcat('layers_ku_band_',data_folder, '.mat');
 
 % Get list of radar files in directory
 wild = 'layers*';
