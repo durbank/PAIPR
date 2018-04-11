@@ -61,10 +61,10 @@ mdata.data_out = fillmissing(mdata.data_out, 'pchip');
 % Convert lat/lon coordinates to polar stereo coordinates (uses AMT)
 [mdata.Easting, mdata.Northing] = ll2ps(mdata.lat, mdata.lon);
 
-% Check to see if collection data is already present. If it does not, 
-% creates collect_date field
+% Check to see if collection data is already present. If it is not, create
+% collect_date field
 if ~isfield(mdata, 'collect_date')
-    % Define the age of the top of the radar (the date the radar was collected)
+    % Define the age of the top of the radar (the data collection date)
     % (this will require modification when incorporating data beyond SEAT
     % traverses)
     if contains(file, '2011') == true

@@ -1,14 +1,17 @@
 % Function to calculate the depth density profile of a radar trace from the
 % spatial weighting of depth-density profiles for surrounding firn cores
 
-function [core_synthetic] = rho_spW(radar, cores)
+function [core_composite] = rho_spW(Easting, Northing, cores)
 
 % Range (in meters) over which SMB is thought to co-vary
 range = 500000;
 
-% Easting/Northing of the midpoint of the radar trace
-loc_radar = [radar.Easting(round(numel(radar.Easting)/2)) ...
-    radar.Northing(round(numel(radar.Northing)/2))];
+% Create array for radar location
+loc_radar = [Easting, Northing];
+
+% % Easting/Northing of the midpoint of the radar trace
+% loc_radar = [radar.Easting(round(numel(radar.Easting)/2)) ...
+%     radar.Northing(round(numel(radar.Northing)/2))];
 
 % Calculate euclidean distance between cores and midpoint of the radar
 % transect
@@ -47,7 +50,7 @@ SWM = IDW/sum(IDW);
 
 % Generate a spatially weighted model of variance for the depth-density
 % profile at the radar location
-[var_rho_coeff] = rho_variance(cores, core_idx, SWM);
+[rho_var_coeff] = rho_variance(cores, core_idx, SWM);
 
 % Create data structure for the synthetic core, containing depth, density 
 % age, location, and isotope values
@@ -65,7 +68,7 @@ for i = 1:numel(cores_SWM)
     d18O_temp = cores.(cores_SWM{i}).d18O;
     d18Os(:,i) = d18O_temp(1:numel(depth_core));
 end
-core_synthetic = struct('depth', depth_core, 'age', sum(SWM.*ages, 2),...
-    'rho', sum(SWM.*rhos, 2), 'rho_var', var_rho_coeff, 'dD', sum(SWM.*dDs, 2), ...
+core_composite = struct('depth', depth_core, 'age', sum(SWM.*ages, 2),...
+    'rho', sum(SWM.*rhos, 2), 'rho_var', rho_var_coeff, 'dD', sum(SWM.*dDs, 2), ...
     'd18O', sum(SWM.*d18Os, 2), 'Easting', loc_radar(1), 'Northing', loc_radar(2));
 end

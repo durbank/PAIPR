@@ -6,39 +6,19 @@ yr_top = floor(max(max(radar.age(2,:,:))));
 yr_end = ceil(min(min(radar.age(end,:,:))));
 
 % Generate modelled std of density with depth for radar data
-rho_std = sqrt((core.rho_var(1)-core.rho_var(2))./...
-    (core.rho_var(3).^radar.depth) + core.rho_var(2));
+rho_std = sqrt((radar.rho_var(1,:)-radar.rho_var(2,:))./...
+    (radar.rho_var(3,:).^radar.depth) + radar.rho_var(2,:));
 
 % Generate density with depth model for radar data
-% rho_ice = 0.917;
-% rho_0 = mean(core.rho(1:10));
-rho_coeff = coeffvalues(radar.rho_fit);
-rho_mod = rho_coeff(1)*radar.depth.^rho_coeff(2) + rho_coeff(3);
-% % rho_mod = rho_ice - (rho_ice-rho_0)*exp(rho_coeff.*radar.depth_interp);
-% 
-% % Generate variance model for density with depth, and calculate standard
-% % deviation with depth for density model
-% % (Should change this to a weighted mean variance of all cores used in 
-% % composite core, in order to avoid potential dampening of density
-% % variance)
-% rho_res = rho_coeff(1)*core.depth.^rho_coeff(2) + rho_coeff(3);
-% % rho_res = core.rho - (rho_ice - (rho_ice-rho_0)*exp(rho_coeff*core.depth));
-% rho_var = movvar(rho_res, round(length(rho_res)/3));
-% fun = @(a, x) (max(rho_var)-mean(rho_var(end-50:end)))./(a.^x) + ...
-%     mean(rho_var(end-50:end));
-% var_fit = fit(core.depth, rho_var, fun, 'StartPoint', 1.5);
-% var_coeff = coeffvalues(var_fit);
-% rho_std = 1000*sqrt(abs((max(rho_var)-mean(rho_var(end-50:end)))./...
-%     (var_coeff.^radar.depth) + mean(rho_var(end-50:end))));
+rho_mod = radar.rho_coeff(1,:).*radar.depth.^radar.rho_coeff(2,:) + ...
+    radar.rho_coeff(3,:);
 
 %% Calculate annual accumulation core each radar trace
 
 % % Calculate accumulation at each depth interval (0.02 m) with simulated
 % % noise based on the variance in core density
-noise_rho = repmat(1000*rho_std, 1, size(radar.age, 2)).*randn(size(radar.age));
-% accum_dt = 0.02*(1000*repmat(rho_mod, 1, size(ages, 2)) + noise);
-accum_dt = 0.02*(1000*repmat(rho_mod, 1, size(radar.age, 2), Ndraw) + ...
-    noise_rho);
+noise_rho = 1000*repmat(rho_std, 1, 1, Ndraw).*randn(size(radar.age));
+accum_dt = 0.02*(1000*repmat(rho_mod, 1, 1, Ndraw) + noise_rho);
 
 % accum_yr = (yr_top:-1:yr_end)';
 % accum = zeros(length(accum_yr), size(radar.age, 2), Ndraw);
@@ -139,60 +119,60 @@ for i = 1:size(accum, 2)
     accum{i} = accum_i;
 end
 
-%% Calculate annual accumulation for the spatially weighted composite core
-
-% Calculate SWE accumulation at each depth interval in the weighted
-% composite core
-core_accum_dt = 0.02*(1000*core.rho);
-
-% Find indices of integer ages within core age profile
-yr_top = floor(core.age(2));
-yr_end = ceil(core.age(end));
-core_yr = (yr_top:-1:yr_end)';
-core_yr_idx = logical([1; diff(floor(core.age))]);
-yr_loc = find(core_yr_idx);
-
-core_accum = zeros(length(core_yr), Ndraw);
-for j = 1:Ndraw
-    
-    % Add noise to integer age locations due to uncertainty in exact point 
-    % in time of the accumulation peak, using a std dev of 1 month
-    yr_loc_j = yr_loc;
-    yr_loc_j(2:end-1) = yr_loc(2:end-1) + ...
-        round(1*(mean(diff(yr_loc))/12)*randn(length(yr_loc)-2, 1));
-    loc_idx = yr_loc_j<1;
-    yr_loc_j(loc_idx) = yr_loc(loc_idx);
-    
-    % Integrate accumulation at each depth point for each whole year in
-    % firn core
-    core_accum_j = zeros(length(core_yr), 1);
-    for n = 1:length(core_yr)
-        core_accum_j(n) = sum(core_accum_dt(yr_loc_j(n)+1:yr_loc_j(n+1)));
-    end
-    
-    % Output accumulatio results to preallocated array
-    core_accum(:,j) = core_accum_j;
-end
-
-
-
-% % Calculate annual accumulation for the spatially weighted composite core
+% %% Calculate annual accumulation for the spatially weighted composite core
+% 
+% % Calculate SWE accumulation at each depth interval in the weighted
+% % composite core
 % core_accum_dt = 0.02*(1000*core.rho);
+% 
+% % Find indices of integer ages within core age profile
+% yr_top = floor(core.age(2));
+% yr_end = ceil(core.age(end));
+% core_yr = (yr_top:-1:yr_end)';
 % core_yr_idx = logical([1; diff(floor(core.age))]);
 % yr_loc = find(core_yr_idx);
-% yr_all = round(core.age(yr_loc));
-% core_yr = yr_all(2:end);
-% core_accum = zeros(length(core_yr), 1);
-% for n = 1:length(core_yr)
-%     core_accum(n) = sum(core_accum_dt(yr_loc(n)+1:yr_loc(n+1)));
+% 
+% core_accum = zeros(length(core_yr), Ndraw);
+% for j = 1:Ndraw
+%     
+%     % Add noise to integer age locations due to uncertainty in exact point 
+%     % in time of the accumulation peak, using a std dev of 1 month
+%     yr_loc_j = yr_loc;
+%     yr_loc_j(2:end-1) = yr_loc(2:end-1) + ...
+%         round(1*(mean(diff(yr_loc))/12)*randn(length(yr_loc)-2, 1));
+%     loc_idx = yr_loc_j<1;
+%     yr_loc_j(loc_idx) = yr_loc(loc_idx);
+%     
+%     % Integrate accumulation at each depth point for each whole year in
+%     % firn core
+%     core_accum_j = zeros(length(core_yr), 1);
+%     for n = 1:length(core_yr)
+%         core_accum_j(n) = sum(core_accum_dt(yr_loc_j(n)+1:yr_loc_j(n+1)));
+%     end
+%     
+%     % Output accumulatio results to preallocated array
+%     core_accum(:,j) = core_accum_j;
 % end
+% 
+% 
+% 
+% % % Calculate annual accumulation for the spatially weighted composite core
+% % core_accum_dt = 0.02*(1000*core.rho);
+% % core_yr_idx = logical([1; diff(floor(core.age))]);
+% % yr_loc = find(core_yr_idx);
+% % yr_all = round(core.age(yr_loc));
+% % core_yr = yr_all(2:end);
+% % core_accum = zeros(length(core_yr), 1);
+% % for n = 1:length(core_yr)
+% %     core_accum(n) = sum(core_accum_dt(yr_loc(n)+1:yr_loc(n+1)));
+% % end
 
 %% Output results to radar and core structures
 
 radar.SMB_yr = accum_yr;
 radar.SMB = accum;
-core.SMB_yr = core_yr;
-core.SMB = core_accum;
+% core.SMB_yr = core_yr;
+% core.SMB = core_accum;
 
 % SMB = struct('Easting', Easting_stack, 'Northing', Northing_stack, ...
 %     'radar_accum', accum_stack, 'radar_yr', accum_yr, 'radar_ERR', ...

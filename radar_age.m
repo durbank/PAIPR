@@ -3,12 +3,16 @@ function [radar, core_composite] = radar_age(file, cores, Ndraw)
 % Conversion to depth
 [radar, core_composite] = radar_depth(file, cores);
 
+% Find the mean response with depth in the resampled radar data across a
+% given lateral distance 'window' (in this case ~100 m)
+[radar] = radar_stack(radar, 30);
+
 % Stationarize the radar response using a smoothing spline
-s = zeros(size(radar.data_out));
+s = zeros(size(radar.data_stack));
 for i = 1:size(s, 2)
-    s(:,i) = csaps(radar.depth, radar.data_out(:,i), 0.95, radar.depth);
+    s(:,i) = csaps(radar.depth(:,i), radar.data_stack(:,i), 0.95, radar.depth(:,i));
 end
-radar_stat = radar.data_out - s;
+radar_stat = radar.data_stack - s;
 
 % Remove linear trend in variance (attentuation with depth) and convert to
 % z-score statistics
@@ -24,19 +28,22 @@ for i = 1:size(radar_stat, 2)
     radar_Z(:,i) = zscore(data./sqrt(abs(mod)));
 end
 
-% Resample and interpolate radar depth and data to a constant depth
-% resolution using a shape-preserving cubic interpolation
-resolution = 0.02;       % Depth resolution in meters
-radar.depth_interp = (0:resolution:radar.depth(end))';
-radar.data_Z = interp1(radar.depth, radar_Z, radar.depth_interp, 'pchip');
+resolution = 0.02;
+depth_bott = min([min(radar.depth(end,:)) 30]);
 
-% Find the mean response with depth in the resampled radar data across a
-% given lateral distance 'window' (in this case ~100 m)
-[radar] = radar_stack(radar, 30);
+radarZ_interp = zeros(depth_bott/resolution+1, size(radar.data_stack, 2));
+
+for i = 1:size(radar.data_stack, 2)
+    depth_interp = (0:resolution:radar.depth(end,i));
+    radarZ_i = interp1(radar.depth(:,i), radar_Z(:,i), depth_interp, 'pchip');
+    radarZ_interp(:,i) = radarZ_i(1:size(radarZ_interp, 1));
+end
+
+radar.depth = (0:resolution:depth_bott)';
 
 % Smooth the laterally averaged radar traces with depth based on a 3rd
 % order Savitzky-Golay filter with a window of 9 frames (~20 m)
-radar.data_smooth = sgolayfilt(radar.data_stack, 3, 9);
+radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
 % Year associated with the first pick of the algorithm
 % age_top = round(radar.collect_date);
