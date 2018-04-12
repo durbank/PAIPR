@@ -124,7 +124,6 @@ plot(radar.depth, age_mean + age_ERR, 'r--', 'LineWidth', 0.5)
 plot(radar.depth, age_mean - age_ERR, 'r--', 'LineWidth', 0.5)
 ylabel('Calendar Year')
 xlabel('Depth (m)')
-ylim([min([min(core_comp.age) min(age_mean-age_ERR)]) max([max(core_comp.age) max(age_mean)])])
 legend([h1 h2 h3 h4], 'Nearest core age (manual)', '2nd nearest core', ...
     '3rd nearest core', 'Radar age (automated)', 'Location', 'ne')
 set(gca, 'FontSize', 10)
