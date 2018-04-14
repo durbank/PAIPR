@@ -9,8 +9,8 @@ switch PC_true
         data_path = 'E:/Research/Antarctica/WAIS Variability/';
         addon_path = 'E:/Research/Antarctica/WAIS Variability/Addons/';
     case false
-        data_path = '/Volumes/WARP/Research/Antarctica/WAIS Variability/';
-        addon_path = '/Users/Durbank/Documents/MATLAB/Add-Ons/';
+        data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
+        addon_path = '/home/durbank/MATLAB/Addons/';
 end
 
 % Addons needed for analysis
@@ -21,14 +21,18 @@ addpath(genpath(addon_folder))
 % Add OIB scripts to path
 addpath cresis-L1B-matlab-readers/
 
+% Number of Monte Carlo simulations
+Ndraw = 100;
+
 % Import firn core data
-[cores] = import_cores(strcat(data_path, ['SEAT_cores' filesep ...
-    'DGK_core_data.xlsx']));
+[cores] = import_cores(strcat(data_path, ['Ice-cores' filesep 'SEAT_cores' ...
+    filesep 'DGK_core_data.xlsx']), Ndraw);
 
 %% Define radar files to import/process
 
-radar_dir = strcat(data_path, ['SEAT_Traverses' filesep 'SEAT2010Kuband'...
-    filesep 'ProcessedSEAT2010' filesep 'transectSEAT10_5_6' filesep]);
+radar_dir = strcat(data_path, ['radar' filesep 'SEAT_Traverses' filesep ...
+    'SEAT2010Kuband' filesep 'ProcessedSEAT2010' filesep ...
+    'transectSEAT10_5_6' filesep]);
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -38,11 +42,12 @@ i = randi(length(files));
 file = strcat(radar_dir, files(i).name);
 
 % Path to full SEAT transect
+% file = strcat(data_path, 'OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_5_6.mat');
 % file = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_5_6.mat';
 
 % Path of the OIB file to process
 % SEAT10_4
-% file = 'E:\Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_272.nc';
+file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_272.nc');
 % file = 'E:\Research/Antarctica/Data/IceBridge/Snow Radar/2016/IRSNO1B_20161109_02_381.nc';
 % file = 'E:\Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
 % SEAT10_5
@@ -51,8 +56,6 @@ file = strcat(radar_dir, files(i).name);
 % file = 'E:\Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc';
 
 %%
-% Number of simulations to perform on age-depth Monte Carlo
-Ndraw = 100;
 
 % for i = 1:length(files)
 
@@ -60,8 +63,24 @@ Ndraw = 100;
 [radar] = radar_age(file, cores, Ndraw);
 
 % Calculate annual accumulation rates from data
-[radar] = calc_SWE(radar, Ndraw);
+[radar0] = calc_SWE(radar, Ndraw);
 
+radar = radar0;
+
+% Remove first/last 10 traces in radar (addresses some edge effect problems
+% present in many data sets
+radar.Easting = radar0.Easting(10:end-10);
+radar.Northing = radar0.Northing(10:end-10);
+radar.dist = radar0.dist(10:end-10);
+radar.data_stack = radar0.data_stack(:,10:end-10);
+radar.rho_coeff = radar0.rho_coeff(:,10:end-10);
+radar.rho_var = radar0.rho_var(:,10:end-10);
+radar.data_smooth = radar0.data_smooth(:,10:end-10);
+radar.layer_vals = radar0.layer_vals(:,10:end-10);
+radar.likelihood = radar0.likelihood(:,10:end-10);
+radar.age = radar0.age(:,10:end-10,:);
+radar.SMB_yr = radar0.SMB_yr(10:end-10);
+radar.SMB = radar0.SMB(10:end-10);
 
 %%
 
@@ -71,9 +90,9 @@ SMB_std = cellfun(@(x) mean(std(x)), radar.SMB);
 
 figure
 scatter(radar.Easting, radar.Northing, 30, SMB_mean, 'filled')
-colormap(cool)
 hcb = colorbar;
 ylabel(hcb, 'Mean annual SMB (mm/a')
+colormap(cool)
 
 % Regression using regress function (average of MC simulations)
 % ***REMOVES FIRST YEAR DUE TO ISSUES WITH HIGHLY REPRESSED ACCUMULATION 
@@ -107,9 +126,9 @@ p_ratio = length(p_star)/length(p_val);
 % Plot trends
 figure
 scatter(radar.Easting, radar.Northing, 30, trend, 'filled')
-colormap(cool)
 hcb = colorbar;
 ylabel(hcb, 'Trend in SMB (mm/a')
+colormap(cool)
 
 % Regression of SMB trend on mean SMB (all traces)
 [trend_b, trend_int, ~, ~, trend_stats] = regress(trend', ...
@@ -138,3 +157,4 @@ legend([h1 h2], 'All traces', 'Significant trends')
 xlabel('Mean annual accumulation (mm w.e.)')
 ylabel('Annual accumulation trend (mm/a)')
 hold off
+
