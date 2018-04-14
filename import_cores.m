@@ -41,7 +41,7 @@ for i = 1:numel(cores.name)
     % Find indices of integer ages within core age profile
     yr_top = floor(core_i.age(2));
     yr_end = ceil(core_i.age(end));
-    core_yr = (yr_top:-1:yr_end)';
+    core_yr = (yr_top-1:-1:yr_end)';
     core_yr_idx = logical([1; diff(floor(core_i.age))]);
     yr_loc = find(core_yr_idx);
     
