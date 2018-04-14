@@ -48,8 +48,8 @@ accum_dt = 0.02*(1000*repmat(rho_mod, 1, 1, Ndraw) + noise_rho);
 % Define age-depth profile as the mean of all MC age profiles for each
 % trace (avoids integer year jumps in accumulation estimates and
 % non-monotonically decreasing ages)
-ages = repmat(mean(radar.age, 3), 1, 1, Ndraw);
-% ages = radar.age;
+% ages = repmat(median(radar.age, 3), 1, 1, Ndraw);
+ages = radar.age;
 
 % accum_yr_init = (yr_top:-1:yr_end)';
 % accum = zeros(length(accum_yr_init), size(radar.age, 2), Ndraw);
@@ -78,7 +78,7 @@ ages = repmat(mean(radar.age, 3), 1, 1, Ndraw);
 
 % Define initial accumulation year vector (will be iteratively modified at
 % each trace in for loop)
-accum_yr_init = (yr_top:-1:yr_end)';
+accum_yr_init = (yr_top-1:-1:yr_end)';
 
 % Preallocation of cell arrays for accumulation years and annual
 % accumulation rate
@@ -114,9 +114,10 @@ for i = 1:size(accum, 2)
     end
     
     % Output results to respective arrays
-    accum_i = accum_i(all(accum_i ,2),:);
-    accum_yr{i} = accum_yr_init(1:size(accum_i, 1));
-    accum{i} = accum_i;
+    accum_idx = find(all(accum_i, 2), 1, 'last');
+    accum_clip = accum_i(1:accum_idx,:);
+    accum_yr{i} = accum_yr_init(1:accum_idx);
+    accum{i} = accum_clip;
 end
 
 % %% Calculate annual accumulation for the spatially weighted composite core

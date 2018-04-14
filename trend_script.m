@@ -42,12 +42,12 @@ i = randi(length(files));
 file = strcat(radar_dir, files(i).name);
 
 % Path to full SEAT transect
-% file = strcat(data_path, 'OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_5_6.mat');
+file = strcat(data_path, 'OUTPUT/SEAT2010_transects/layers_ku_band_transectSEAT10_5_6.mat');
 % file = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_5_6.mat';
 
 % Path of the OIB file to process
 % SEAT10_4
-file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_272.nc');
+% file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_272.nc');
 % file = 'E:\Research/Antarctica/Data/IceBridge/Snow Radar/2016/IRSNO1B_20161109_02_381.nc';
 % file = 'E:\Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
 % SEAT10_5
@@ -94,86 +94,95 @@ hcb = colorbar;
 ylabel(hcb, 'Mean annual SMB (mm/a')
 colormap(cool)
 
-% Regression using regress function (average of MC simulations)
-[b, ~, r, ~, stats] = cellfun(@(SMB, year) regress(mean(SMB, 2), ...
-    [ones(length(year),1) year]), radar.SMB, radar.SMB_yr,...
-    'UniformOutput', 0);
-% ***REMOVES FIRST YEAR DUE TO ISSUES WITH HIGHLY REPRESSED ACCUMULATION 
-% RATES FOR TOP SURFACE YEAR ESTIMATES***
-% [b, ~, r, ~, stats] = cellfun(@(SMB, year) regress(mean(SMB, 2), ...
-%     [ones(length(year),1) year]), radar.SMB, radar.SMB_yr,...
-%     'UniformOutput', 0);
+trend = cell(1, length(radar.SMB));
+p_val = cell(1, length(radar.SMB));
+for i = 1:length(radar.SMB)
+    
+    trend_i = zeros(1, Ndraw);
+    p_val_i = zeros(1, Ndraw);
+    for j = 1:Ndraw
+        % Regression using regress function (average of MC simulations)
+        [b, ~, ~, ~, stats] = regress(radar.SMB{i}(:,j), ...
+            [ones(length(radar.SMB_yr{i}), 1) radar.SMB_yr{i}]);
+        trend_i(j) = b(2);
+        p_val_i(j) = stats(3);
+    end
+    trend{i} = trend_i;
+    p_val{i} = p_val_i;
+end
 
-% Extract trends from b variable
-trend = cellfun(@(x) x(2), b);
+trend_mean = cellfun(@mean, trend);
 
-% Extract p-values from stats
-p_val = cellfun(@(x) x(3), stats);
 
-% Find indices of significant trends (at 95% confidence level)
-p_star = find(p_val<=0.05);
+% % Find indices of significant trends (at 95% confidence level)
+% p_star = find(p_val<=0.05);
+% 
+% % Calculate percentage of traces with significant trend
+% p_ratio = length(p_star)/length(p_val);
 
-% Calculate percentage of traces with significant trend
-p_ratio = length(p_star)/length(p_val);
 
-% % Create colormap that is red for negative, blue for positive,
-% % and white in the middle
-% redColorMap = [linspace(1, 0, 124), zeros(1, 132)];
-% blueColorMap = [zeros(1, 132), linspace(0, 1, 124)];
-% colorMap = [redColorMap; zeros(1, 256); blueColorMap]';
-% colorMap( ~any(colorMap,2), : ) = 1; 
 
 % Plot trends
 figure
-scatter(radar.Easting, radar.Northing, 30, trend, 'filled')
+scatter(radar.Easting, radar.Northing, 30, trend_mean, 'filled')
 hcb = colorbar;
-ylabel(hcb, 'Trend in SMB (mm/a')
+ylabel(hcb, 'Trend in SMB (mm/a)')
 colormap(cool)
 
 % Regression of SMB trend on mean SMB (all traces)
-[trend_b, trend_int, ~, ~, trend_stats] = regress(trend', ...
-    [ones(length(trend), 1) SMB_mean']);
-[p_b, S_b] = polyfit(SMB_mean, trend, 1);
+[trend_b, trend_int, ~, ~, trend_stats] = regress(trend_mean', ...
+    [ones(length(trend_mean), 1) SMB_mean']);
+[p_b, S_b] = polyfit(SMB_mean, trend_mean, 1);
 [trend_Y, trend_D] = polyconf(p_b, SMB_mean, S_b);
 
-% Regression of SMB trend of mean SMB (traces with significant trends)
-[star_trend, star_int, ~, ~, star_stats] = regress(trend(p_star)', ...
-    [ones(length(trend(p_star)), 1) SMB_mean(p_star)']);
-[coeff_star, S_star] = polyfit(SMB_mean(p_star), trend(p_star), 1);
-[star_Y, star_D] = polyconf(coeff_star, SMB_mean(p_star), S_star);
+% % Regression of SMB trend of mean SMB (traces with significant trends)
+% [star_trend, star_int, ~, ~, star_stats] = regress(trend(p_star)', ...
+%     [ones(length(trend(p_star)), 1) SMB_mean(p_star)']);
+% [coeff_star, S_star] = polyfit(SMB_mean(p_star), trend(p_star), 1);
+% [star_Y, star_D] = polyconf(coeff_star, SMB_mean(p_star), S_star);
 
 % Plot mean SMB vs trend (for all trends, and significant trends
 figure
 hold on
-plot(SMB_mean, trend, 'b.')
+plot(SMB_mean, trend_mean, 'b.')
 h1 = plot(SMB_mean, trend_Y, 'b', 'LineWidth', 2);
 plot(SMB_mean, trend_Y + trend_D, 'b--')
 plot(SMB_mean, trend_Y - trend_D, 'b--')
-plot(SMB_mean(p_star), trend(p_star), 'r.')
-h2 = plot(SMB_mean(p_star), star_Y, 'r', 'LineWidth', 2);
-plot(SMB_mean(p_star), star_Y + star_D, 'r--')
-plot(SMB_mean(p_star), star_Y - star_D, 'r--')
-legend([h1 h2], 'All traces', 'Significant trends')
+% plot(SMB_mean(p_star), trend(p_star), 'r.')
+% h2 = plot(SMB_mean(p_star), star_Y, 'r', 'LineWidth', 2);
+% plot(SMB_mean(p_star), star_Y + star_D, 'r--')
+% plot(SMB_mean(p_star), star_Y - star_D, 'r--')
+% legend([h1 h2], 'All traces', 'Significant trends')
 xlabel('Mean annual accumulation (mm w.e.)')
 ylabel('Annual accumulation trend (mm/a)')
 hold off
 
- figure
-yyaxis left
-plot(SMB_mean, 100*trend./SMB_mean, 'bo')
-hold on
-yyaxis right
-plot(SMB_mean, trend, 'ro')
-hold off
+%  figure
+% yyaxis left
+% plot(SMB_mean, 100*trend./SMB_mean, 'bo')
+% hold on
+% yyaxis right
+% plot(SMB_mean, trend, 'ro')
+% hold off
 
 
 
 [p, S] = cellfun(@(year, SMB) polyfit(year, mean(SMB, 2), 1), radar.SMB_yr, radar.SMB, 'UniformOutput', 0);
 Y = cellfun(@(fit, X) polyconf(fit, X), p, radar.SMB_yr, 'UniformOutput', 0);
-idx = 1:10:length(radar.SMB);
+idx = 1:200:length(radar.SMB);
 
 figure
 hold on
 for i = idx
     plot(radar.SMB_yr{i}, Y{i})
 end
+hold off
+
+% figure
+% hold on
+% plot(cores.SEAT10_4.SMB_yr, mean(cores.SEAT10_4.SMB, 2), 'k')
+% 
+% for i = idx
+%     plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2))
+% end
+% hold off
