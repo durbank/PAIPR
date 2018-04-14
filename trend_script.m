@@ -95,11 +95,11 @@ ylabel(hcb, 'Mean annual SMB (mm/a')
 colormap(cool)
 
 % Regression using regress function (average of MC simulations)
-% ***REMOVES FIRST YEAR DUE TO ISSUES WITH HIGHLY REPRESSED ACCUMULATION 
-% RATES FOR THAT FIRST YEAR***
-[b, ~, r, ~, stats] = cellfun(@(SMB, year) regress(mean(SMB(2:end,:), 2), ...
-    [ones(length(year)-1,1) year(2:end)]), radar.SMB, radar.SMB_yr,...
+[b, ~, r, ~, stats] = cellfun(@(SMB, year) regress(mean(SMB, 2), ...
+    [ones(length(year),1) year]), radar.SMB, radar.SMB_yr,...
     'UniformOutput', 0);
+% ***REMOVES FIRST YEAR DUE TO ISSUES WITH HIGHLY REPRESSED ACCUMULATION 
+% RATES FOR TOP SURFACE YEAR ESTIMATES***
 % [b, ~, r, ~, stats] = cellfun(@(SMB, year) regress(mean(SMB, 2), ...
 %     [ones(length(year),1) year]), radar.SMB, radar.SMB_yr,...
 %     'UniformOutput', 0);
@@ -158,3 +158,22 @@ xlabel('Mean annual accumulation (mm w.e.)')
 ylabel('Annual accumulation trend (mm/a)')
 hold off
 
+ figure
+yyaxis left
+plot(SMB_mean, 100*trend./SMB_mean, 'bo')
+hold on
+yyaxis right
+plot(SMB_mean, trend, 'ro')
+hold off
+
+
+
+[p, S] = cellfun(@(year, SMB) polyfit(year, mean(SMB, 2), 1), radar.SMB_yr, radar.SMB, 'UniformOutput', 0);
+Y = cellfun(@(fit, X) polyconf(fit, X), p, radar.SMB_yr, 'UniformOutput', 0);
+idx = 1:10:length(radar.SMB);
+
+figure
+hold on
+for i = idx
+    plot(radar.SMB_yr{i}, Y{i})
+end
