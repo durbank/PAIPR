@@ -6,8 +6,8 @@
 PC_true = ispc;
 switch PC_true
     case true
-        data_path = 'E:/Research/Antarctica/WAIS Variability/';
-        addon_path = 'E:/Research/Antarctica/WAIS Variability/Addons/';
+        data_path = 'F:/Research/Antarctica/Data/';
+        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
         addon_path = '/home/durbank/MATLAB/Addons/';
@@ -25,14 +25,13 @@ addpath cresis-L1B-matlab-readers/
 Ndraw = 100;
 
 % Import firn core data
-[cores] = import_cores(strcat(data_path, ['Ice-cores' filesep 'SEAT_cores' ...
-    filesep 'DGK_core_data.xlsx']), Ndraw);
+[cores] = import_cores(strcat(data_path, 'Ice-cores/SEAT_cores/', ...
+    'DGK_core_data.xlsx'), Ndraw);
 
 %% Define radar files to import/process
 
-radar_dir = strcat(data_path, ['radar' filesep 'SEAT_Traverses' filesep ...
-    'SEAT2010Kuband' filesep 'ProcessedSEAT2010' filesep ...
-    'transectSEAT10_5_6' filesep]);
+radar_dir = strcat(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
+    'ProcessedSEAT2010/transectSEAT10_5_6/');
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -41,6 +40,7 @@ files = dir(strcat(radar_dir, wild));
 i = randi(length(files));
 file = strcat(radar_dir, files(i).name);
 
+<<<<<<< HEAD
 % Path to full SEAT transect
 file = strcat(data_path, 'OUTPUT/SEAT2010_transects/layers_ku_band_transectSEAT10_5_6.mat');
 % file = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_5_6.mat';
@@ -54,6 +54,23 @@ file = strcat(data_path, 'OUTPUT/SEAT2010_transects/layers_ku_band_transectSEAT1
 % file = 'E:\Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_257.nc';
 % SEAT10_6
 % file = 'E:\Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc';
+=======
+% % Path to full SEAT transect
+% file = strcat(data_path, 'OUTPUT\SEAT2010_transects\', ...
+%     'layers_ku_band_transectSEAT10_5_6.mat');
+% file = strcat(data_path, 'OUTPUT\SEAT2010_transects\', ...
+%     'layers_ku_band_transectSEAT10_5_6.mat');
+% 
+% % Path of the OIB file to process
+% % SEAT10_4
+% file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_272.nc');
+% file = strcat(data_path, 'IceBridge/Snow Radar/2016/IRSNO1B_20161109_02_381.nc');
+% file = strcat(data_path, 'IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc');
+% % SEAT10_5
+% file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_257.nc');
+% % SEAT10_6
+% file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc');
+>>>>>>> trends
 
 %%
 
@@ -69,18 +86,20 @@ radar = radar0;
 
 % Remove first/last 10 traces in radar (addresses some edge effect problems
 % present in many data sets
-radar.Easting = radar0.Easting(10:end-10);
-radar.Northing = radar0.Northing(10:end-10);
-radar.dist = radar0.dist(10:end-10);
-radar.data_stack = radar0.data_stack(:,10:end-10);
-radar.rho_coeff = radar0.rho_coeff(:,10:end-10);
-radar.rho_var = radar0.rho_var(:,10:end-10);
-radar.data_smooth = radar0.data_smooth(:,10:end-10);
-radar.layer_vals = radar0.layer_vals(:,10:end-10);
-radar.likelihood = radar0.likelihood(:,10:end-10);
-radar.age = radar0.age(:,10:end-10,:);
-radar.SMB_yr = radar0.SMB_yr(10:end-10);
-radar.SMB = radar0.SMB(10:end-10);
+edge = 25;
+
+radar.Easting = radar0.Easting(edge:end-edge);
+radar.Northing = radar0.Northing(edge:end-edge);
+radar.dist = radar0.dist(edge:end-edge);
+radar.data_stack = radar0.data_stack(:,edge:end-edge);
+radar.rho_coeff = radar0.rho_coeff(:,edge:end-edge);
+radar.rho_var = radar0.rho_var(:,edge:end-edge);
+radar.data_smooth = radar0.data_smooth(:,edge:end-edge);
+radar.layer_vals = radar0.layer_vals(:,edge:end-edge);
+radar.likelihood = radar0.likelihood(:,edge:end-edge);
+radar.age = radar0.age(:,edge:end-edge,:);
+radar.SMB_yr = radar0.SMB_yr(edge:end-edge);
+radar.SMB = radar0.SMB(edge:end-edge);
 
 %%
 
