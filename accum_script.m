@@ -130,76 +130,7 @@ set(gca, 'FontSize', 10)
 hold off
 
 
-% Calculate SWE accumulation at each depth interval in the nearest core to
-% the radar trace
-core_accum_dt = 0.02*(1000*core_near1.rho);
 
-% Find indices of integer ages within core age profile
-yr_top = floor(core_near1.age(2));
-yr_end = ceil(core_near1.age(end));
-core_yr = (yr_top:-1:yr_end)';
-core_yr_idx = logical([1; diff(floor(core_near1.age))]);
-yr_loc = find(core_yr_idx);
-
-core_accum = zeros(length(core_yr), Ndraw);
-for j = 1:Ndraw
-    
-    % Add noise to integer age locations due to uncertainty in exact point 
-    % in time of the accumulation peak, using a std dev of 1 month
-    yr_loc_j = yr_loc;
-    yr_loc_j(2:end-1) = yr_loc(2:end-1) + ...
-        round(1*(mean(diff(yr_loc))/12)*randn(length(yr_loc)-2, 1));
-    loc_idx = yr_loc_j<1;
-    yr_loc_j(loc_idx) = yr_loc(loc_idx);
-    
-    % Integrate accumulation at each depth point for each whole year in
-    % firn core
-    core_accum_j = zeros(length(core_yr), 1);
-    for n = 1:length(core_yr)
-        core_accum_j(n) = sum(core_accum_dt(yr_loc_j(n)+1:yr_loc_j(n+1)));
-    end
-    
-    % Output accumulatio results to preallocated array
-    core_accum(:,j) = core_accum_j;
-end
-core_near1.SMB_yr = core_yr;
-core_near1.SMB = core_accum;
-
-
-% Calculate SWE accumulation at each depth interval in the nearest core to
-% the radar trace
-core_accum_dt = 0.02*(1000*core_near2.rho);
-
-% Find indices of integer ages within core age profile
-yr_top = floor(core_near2.age(2));
-yr_end = ceil(core_near2.age(end));
-core_yr = (yr_top:-1:yr_end)';
-core_yr_idx = logical([1; diff(floor(core_near2.age))]);
-yr_loc = find(core_yr_idx);
-
-core_accum = zeros(length(core_yr), Ndraw);
-for j = 1:Ndraw
-    
-    % Add noise to integer age locations due to uncertainty in exact point 
-    % in time of the accumulation peak, using a std dev of 1 month
-    yr_loc_j = yr_loc;
-    yr_loc_j(2:end-1) = yr_loc(2:end-1) + ...
-        round(1*(mean(diff(yr_loc))/12)*randn(length(yr_loc)-2, 1));
-    loc_idx = yr_loc_j<1;
-    yr_loc_j(loc_idx) = yr_loc(loc_idx);
-    
-    % Integrate accumulation at each depth point for each whole year in
-    % firn core
-    core_accum_j = zeros(length(core_yr), 1);
-    for n = 1:length(core_yr)
-        core_accum_j(n) = sum(core_accum_dt(yr_loc_j(n)+1:yr_loc_j(n+1)));
-    end
-    
-    % Output accumulatio results to preallocated array
-    core_accum(:,j) = core_accum_j;
-end
-core_near2.SMB_yr = core_yr;
-core_near2.SMB = core_accum;
 
 
 figure
