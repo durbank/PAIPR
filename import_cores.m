@@ -29,56 +29,84 @@ for i = 1:numel(cores.name)
         'dD', fillmissing(data(:,4), 'pchip'), ...
         'd18O', fillmissing(data(:,5), 'pchip'));
     
-    %% Calculate annual accumulation ith core
+    %% Calculate annual accumulation in current core (mm per year)
     
     % Define ith core
     core_i = cores.(cores.name{i});
     
-    % Calculate SWE accumulation at each depth interval in the weighted
-    % composite core
-    core_accum_dt = 0.02*(1000*core_i.rho);
+    % Calculate SWE accumulation at each depth interval in the core,
+    % assuming 5% error (95% confidence interval) in density measurement
+    error = 0.05;
+    rho_i = repmat(core_i.rho, 1, Ndraw);
+    rho_std = (error/2)*core_i.rho;
+    rho_noise = repmat(rho_std, 1, Ndraw).*randn(size(rho_i));
+    core_accum_dt = 0.02*(1000*(core_i.rho + rho_noise));
+    
+    % Add Gaussian noise to core age, assuming a std of +/- 0.5 year per
+    % decade
+    duration = max(core_i.age) - min(core_i.age);
+    std_bott = (0.5/10)*duration;
+    age_std = (0:std_bott/(length(core_i.age)-1):std_bott)';
+
+    std_time = age_std.*randn(length(core_i.age), Ndraw) + ...
+        repmat((0:duration/(length(core_i.age)-1):duration)', 1, Ndraw);
+    
+    duration = max(core_i.age) - min(core_i.age);
+    std_bott = (0.5/10)*duration;
+    age_std = (0:std_bott/(length(core_i.age)-1):std_bott)';
+    
+%     ages = sort(repmat(core_i.age, 1, Ndraw) + ...
+%         repmat(age_std, 1, Ndraw).*randn(size(rho_i)), 'descend');
     
     % Find indices of integer ages within core age profile
     yr_top = floor(core_i.age(2));
-    yr_end = ceil(core_i.age(end));
-    core_yr = (yr_top-1:-1:yr_end)';
-    core_yr_idx = logical([1; diff(floor(core_i.age))]);
-    yr_loc = find(core_yr_idx);
+    yr_end = ceil(min(ages(end,:)));
+    core_yr_init = (yr_top-1:-1:yr_end)';
     
-    core_accum = zeros(length(core_yr), Ndraw);
+%     core_yr_idx = logical([1; diff(floor(core_i.age))]);
+%     yr_loc = find(core_yr_idx);
+    
+    core_accum = zeros(length(core_yr_init), Ndraw);
     for j = 1:Ndraw
+        
+        years_j = ages(:,j);
+        yr_idx = logical([diff(floor(years_j)); 0]);
         
         % Add noise to integer age locations due to uncertainty in exact point
         % in time of the accumulation peak, using a std dev of 1 month
-        yr_loc_j = yr_loc;
-        yr_loc_j(2:end-1) = yr_loc(2:end-1) + ...
+        
+        yr_loc = find(yr_idx);
+        loc_temp = yr_loc;
+        loc_temp(2:end-1) = yr_loc(2:end-1) + ...
             round(1*(mean(diff(yr_loc))/12)*randn(length(yr_loc)-2, 1));
-        loc_idx = yr_loc_j<1;
-        yr_loc_j(loc_idx) = yr_loc(loc_idx);
+        loc_idx = loc_temp<1;
+        loc_temp(loc_idx) = yr_loc(loc_idx);
+        yr_loc = loc_temp;
+        
+        
+%         yr_loc = find(yr_idx);
+%         yr_loc(2:end-1) = yr_loc(2:end-1) + ...
+%             round(1*(mean(diff(yr_loc))/12)*randn(length(yr_loc)-2, 1));
+%         loc_idx = yr_loc<1;
+%         yr_loc(loc_idx) = yr_loc(loc_idx);
         
         % Integrate accumulation at each depth point for each whole year in
-        % firn core
-        core_accum_j = zeros(length(core_yr), 1);
-        for n = 1:length(core_yr)
-            core_accum_j(n) = sum(core_accum_dt(yr_loc_j(n)+1:yr_loc_j(n+1)));
+        % firn core realization
+        nlength = length(yr_loc) - 1;
+        core_accum_j = zeros(nlength, 1);
+        for n = 1:nlength
+            core_accum_j(n) = sum(core_accum_dt(yr_loc(n)+1:yr_loc(n+1),j));
         end
         
         % Output accumulatio results to preallocated array
-        core_accum(:,j) = core_accum_j;
+        core_accum(1:nlength,j) = core_accum_j;
     end
     
-    
-    
-%     % Calculate annual accumulation for each core
-%     core_accum_dt = 0.02*(1000*core_i.rho);
-%     core_yr_idx = logical([1; diff(floor(core_i.age))]);
-%     yr_loc = find(core_yr_idx);
-%     yr_all = round(core_i.age(yr_loc));
-%     core_yr = yr_all(2:end);
-%     core_accum = zeros(length(core_yr), 1);
-%     for n = 1:length(core_yr)
-%         core_accum(n) = sum(core_accum_dt(yr_loc(n)+1:yr_loc(n+1)));
-%     end
+    % Output results to respective arrays
+    accum_idx = find(all(core_accum, 2), 1, 'last');
+    accum_clip = core_accum(1:accum_idx,:);
+    core_yr = accum_yr_init(1:accum_idx);
+    core_accum = accum_clip;
     
     cores.(cores.name{i}).SMB_yr = core_yr;
     cores.(cores.name{i}).SMB = core_accum;
