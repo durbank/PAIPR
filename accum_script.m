@@ -76,9 +76,7 @@ toc
 % Select random radar trace for comparison plots
 i = randi(size(radar.data_smooth, 2));
 
-% Find the nearest core to the radar data (for comparison plots)
-% trace_idx = round(size(radar.data_smooth, 2)/2);
-trace_idx = i;
+% Find the nearest cores to the radar data (for comparison plots)
 [~, cores_near_idx] = sort(pdist2([radar.Easting(trace_idx) ...
     radar.Northing(trace_idx)], [cores.Easting' cores.Northing'], ...
     'Euclidean'));
@@ -142,6 +140,7 @@ plot(core_near1.SMB_yr, mean(core_near1.SMB, 2) - 2*std(core_near1.SMB, [], 2), 
 h2 = plot(core_near2.SMB_yr, mean(core_near2.SMB, 2), 'c', 'LineWidth', 2);
 plot(core_near2.SMB_yr, mean(core_near2.SMB, 2) + 2*std(core_near2.SMB, [], 2), 'c--')
 plot(core_near2.SMB_yr, mean(core_near2.SMB, 2) - 2*std(core_near2.SMB, [], 2), 'c--')
+
 h3 = plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2), 'r', 'LineWidth', 2);
 plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2) + 2*std(radar.SMB{i}, [], 2), 'r--')
 plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2) - 2*std(radar.SMB{i}, [], 2), 'r--')
