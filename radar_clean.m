@@ -37,7 +37,10 @@ max_loc = 300;
 %%% FUTURE CHANGES REQUIRED %%%
 [~, surf_idx] = max(abs(diff(mdata.data_out(min_loc:max_loc,:))));
 surf_idx = surf_idx + (min_loc-1);
-surf_row = median(surf_idx);
+% surf_row = median(surf_idx);
+% surf_row = mode(surf_idx);
+surf_row = 203;
+
 mdata.data_out(1:surf_row-1,:) = [];
 % mdata.arr_layers(1:surf_row-1,:) = [];
 % mdata.arr_segs(1:surf_row-1,:) = [];
