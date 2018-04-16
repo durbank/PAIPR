@@ -40,9 +40,9 @@ files = dir(strcat(radar_dir, wild));
 i = randi(length(files));
 file = strcat(radar_dir, files(i).name);
 
-% % Path to full SEAT transect
-% file = strcat(data_path, 'OUTPUT\SEAT2010_transects\', ...
-%     'layers_ku_band_transectSEAT10_5_6.mat');
+% Path to full SEAT transect
+file = strcat(data_path, 'OUTPUT\SEAT2011_transects\', ...
+    'layers_ku_band_transectSEAT11_3_4.mat');
 % 
 % % Path of the OIB file to process
 % % SEAT10_4
@@ -89,12 +89,6 @@ radar.SMB = radar0.SMB(edge:end-edge);
 SMB_mean = cellfun(@mean, radar.SMB, 'UniformOutput', 0);
 SMB_std = cellfun(@std, radar.SMB, 'UniformOutput', 0);
 
-figure
-scatter(radar.Easting, radar.Northing, 30, cellfun(@mean, SMB_mean), 'filled')
-hcb = colorbar;
-ylabel(hcb, 'Mean annual SMB (mm/a')
-colormap(cool)
-
 trend = cell(1, length(radar.SMB));
 p_val = cell(1, length(radar.SMB));
 for i = 1:length(radar.SMB)
@@ -121,71 +115,105 @@ p_star = cellfun(@(x) find(x<=0.05), p_val, 'UniformOutput', 0);
 % Calculate percentage of MC realizations with significant trends
 p_ratio = cellfun(@(sig, all) length(sig)/length(all), p_star, p_val);
 
-% Plot trends
-figure
-scatter(radar.Easting, radar.Northing, 30, trend_mean, 'filled')
-hcb = colorbar;
-ylabel(hcb, 'Trend in SMB (mm/a)')
-colormap(cool)
-
-%%
-
 % Regression of SMB trend on mean SMB (all traces)
 [trend_b, trend_int, ~, ~, trend_stats] = regress(trend_mean', ...
     [ones(length(trend_mean), 1) cellfun(@mean, SMB_mean)']);
 [p_b, S_b] = polyfit(cellfun(@mean, SMB_mean), trend_mean, 1);
 [trend_Y, trend_D] = polyconf(p_b, cellfun(@mean, SMB_mean), S_b);
 
-% % Regression of SMB trend of mean SMB (traces with significant trends)
-% [star_trend, star_int, ~, ~, star_stats] = regress(trend(p_star)', ...
-%     [ones(length(trend(p_star)), 1) SMB_mean(p_star)']);
-% [coeff_star, S_star] = polyfit(SMB_mean(p_star), trend(p_star), 1);
-% [star_Y, star_D] = polyconf(coeff_star, SMB_mean(p_star), S_star);
+%% Diagnostic plots for single random trace
 
-% Plot mean SMB vs trend (for all trends, and significant trends
+% Trace idx to investigate
+i = randi(length(radar.SMB));
+
+% Find the nearest cores to the radar data (for comparison plots)
+[~, cores_near_idx] = sort(pdist2([radar.Easting(i) radar.Northing(i)], ...
+    [cores.Easting' cores.Northing'], 'Euclidean'));
+core_near1 = cores.(cores.name{cores_near_idx(1)});
+core_near2 = cores.(cores.name{cores_near_idx(2)});
+core_near3 = cores.(cores.name{cores_near_idx(3)});
+
+% Calculate the mean age-depth scale and std for radar trace i
+age_mean = mean(squeeze(radar.age(:,i,:)), 2);
+age_std = std(squeeze(radar.age(:,i,:)), [], 2);
+
+% Plot full radargram
+figure('Position', [200 200 1500 800])
+imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
+colorbar
+xlabel('Distance along profile (m)')
+ylabel('Depth (m)')
+hold on
+plot([radar.dist(i) radar.dist(i)], [0 radar.depth(end)], 'r', 'LineWidth', 2)
+xlim([0 radar.dist(end)])
+ylim([0 radar.depth(end)])
+set(gca, 'Ydir', 'reverse', 'FontSize', 18)
+hold off
+
+% Age-depth scale comparison between radar trace and nearest cores
+figure
+hold on
+h1 = plot(core_near1.depth, core_near1.age, 'b', 'LineWidth', 2);
+h2 = plot(core_near2.depth, core_near2.age, 'c', 'LineWidth', 2);
+h3 = plot(core_near3.depth, core_near3.age, 'c--', 'LineWidth', 1);
+h4 = plot(radar.depth, age_mean, 'r', 'LineWidth', 2);
+plot(radar.depth, age_mean + 2*age_std, 'r--', 'LineWidth', 0.5)
+plot(radar.depth, age_mean - 2*age_std, 'r--', 'LineWidth', 0.5)
+ylabel('Calendar Year')
+xlabel('Depth (m)')
+legend([h1 h2 h3 h4], 'Nearest core age (manual)', '2nd nearest core', ...
+    '3rd nearest core', 'Radar age (automated)', 'Location', 'ne')
+set(gca, 'FontSize', 10)
+hold off
+
+% Compare annual accumulation between ith radar trace and nearest 2 cores
+% (along with estimated uncertainties for each)
+figure
+hold on
+h1 = plot(core_near1.SMB_yr, mean(core_near1.SMB, 2), 'b', 'LineWidth', 2);
+plot(core_near1.SMB_yr, mean(core_near1.SMB, 2) + 2*std(core_near1.SMB, [], 2), 'b--')
+plot(core_near1.SMB_yr, mean(core_near1.SMB, 2) - 2*std(core_near1.SMB, [], 2), 'b--')
+
+h2 = plot(core_near2.SMB_yr, mean(core_near2.SMB, 2), 'c', 'LineWidth', 2);
+plot(core_near2.SMB_yr, mean(core_near2.SMB, 2) + 2*std(core_near2.SMB, [], 2), 'c--')
+plot(core_near2.SMB_yr, mean(core_near2.SMB, 2) - 2*std(core_near2.SMB, [], 2), 'c--')
+
+h3 = plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2), 'r', 'LineWidth', 2);
+plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2) + 2*std(radar.SMB{i}, [], 2), 'r--')
+plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2) - 2*std(radar.SMB{i}, [], 2), 'r--')
+legend([h1 h2 h3], 'Nearest firn core', '2nd nearest core', 'Ku radar')
+xlabel('Calendar Year')
+ylabel('Annual accumulation (mm w.e.)')
+hold off
+
+% Compare linear trend in SMB for ith trace and nearest 3 cores (with
+% uncertainty)
+figure
+
+
+%% Diagnostic plots for bulk radar file
+
+% Mean SMB across entire radargram (mean of all realizations for each trace)
+figure
+scatter(radar.Easting, radar.Northing, 30, cellfun(@mean, SMB_mean), 'filled')
+hcb = colorbar;
+ylabel(hcb, 'Mean annual SMB (mm/a')
+colormap(cool)
+
+% Mean trend in SMB across entire radargram
+figure
+scatter(radar.Easting, radar.Northing, 30, trend_mean, 'filled')
+hcb = colorbar;
+ylabel(hcb, 'Trend in SMB (mm/a)')
+colormap(cool)
+
+% Mean SMB vs mean trend
 figure
 hold on
 plot(cellfun(@mean, SMB_mean), trend_mean, 'b.')
 h1 = plot(cellfun(@mean, SMB_mean), trend_Y, 'b', 'LineWidth', 2);
 plot(cellfun(@mean, SMB_mean), trend_Y + trend_D, 'b--')
 plot(cellfun(@mean, SMB_mean), trend_Y - trend_D, 'b--')
-% plot(SMB_mean(p_star), trend(p_star), 'r.')
-% h2 = plot(SMB_mean(p_star), star_Y, 'r', 'LineWidth', 2);
-% plot(SMB_mean(p_star), star_Y + star_D, 'r--')
-% plot(SMB_mean(p_star), star_Y - star_D, 'r--')
-% legend([h1 h2], 'All traces', 'Significant trends')
 xlabel('Mean annual accumulation (mm w.e.)')
 ylabel('Annual accumulation trend (mm/a)')
 hold off
-
-%%
-
-%  figure
-% yyaxis left
-% plot(SMB_mean, 100*trend./SMB_mean, 'bo')
-% hold on
-% yyaxis right
-% plot(SMB_mean, trend, 'ro')
-% hold off
-
-
-
-% [p, S] = cellfun(@(year, SMB) polyfit(year, mean(SMB, 2), 1), radar.SMB_yr, radar.SMB, 'UniformOutput', 0);
-% Y = cellfun(@(fit, X) polyconf(fit, X), p, radar.SMB_yr, 'UniformOutput', 0);
-% idx = 1:10:length(radar.SMB);
-% 
-% figure
-% hold on
-% for i = idx
-%     plot(radar.SMB_yr{i}, Y{i})
-% end
-% hold off
-
-% figure
-% hold on
-% plot(cores.SEAT10_4.SMB_yr, mean(cores.SEAT10_4.SMB, 2), 'k')
-% 
-% for i = idx
-%     plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2))
-% end
-% hold off
