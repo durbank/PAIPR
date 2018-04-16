@@ -40,24 +40,7 @@ files = dir(strcat(radar_dir, wild));
 i = randi(length(files));
 file = strcat(radar_dir, files(i).name);
 
-<<<<<<< HEAD
-% Path to full SEAT transect
-file = strcat(data_path, 'OUTPUT/SEAT2010_transects/layers_ku_band_transectSEAT10_5_6.mat');
-% file = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2010_transects\layers_ku_band_transectSEAT10_5_6.mat';
-
-% Path of the OIB file to process
-% SEAT10_4
-% file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_272.nc');
-% file = 'E:\Research/Antarctica/Data/IceBridge/Snow Radar/2016/IRSNO1B_20161109_02_381.nc';
-% file = 'E:\Research/Antarctica/Data/IceBridge/Kuband/2016/IRKUB1B_20161109_02_381.nc';
-% SEAT10_5
-% file = 'E:\Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_257.nc';
-% SEAT10_6
-% file = 'E:\Research/Antarctica/Data/IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc';
-=======
 % % Path to full SEAT transect
-% file = strcat(data_path, 'OUTPUT\SEAT2010_transects\', ...
-%     'layers_ku_band_transectSEAT10_5_6.mat');
 % file = strcat(data_path, 'OUTPUT\SEAT2010_transects\', ...
 %     'layers_ku_band_transectSEAT10_5_6.mat');
 % 
@@ -70,7 +53,6 @@ file = strcat(data_path, 'OUTPUT/SEAT2010_transects/layers_ku_band_transectSEAT1
 % file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_257.nc');
 % % SEAT10_6
 % file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc');
->>>>>>> trends
 
 %%
 
