@@ -29,7 +29,8 @@ for i = 1:size(radar_stat, 2)
 end
 
 resolution = 0.02;
-depth_bott = floor(min([min(radar.depth(end,:)) 30]));
+cutoff = 25;
+depth_bott = floor(min([min(radar.depth(end,:)) cutoff]));
 
 radarZ_interp = zeros(depth_bott/resolution+1, size(radar.data_stack, 2));
 
