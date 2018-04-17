@@ -44,22 +44,24 @@ for i = 1:numel(cores.name)
     
     % Add Gaussian noise to core age, assuming a std of +/- 0.5 year per
     % decade
-    duration = max(core_i.age) - min(core_i.age);
-    std_bott = (0.5/10)*duration;
-    age_std = (0:std_bott/(length(core_i.age)-1):std_bott)';
+%     duration = max(core_i.age) - min(core_i.age);
+%     std_bott = (0.5/10)*duration;
+%     age_std = (0:std_bott/(length(core_i.age)-1):std_bott)';
+% 
+%     std_time = age_std.*randn(length(core_i.age), Ndraw) + ...
+%         repmat((0:duration/(length(core_i.age)-1):duration)', 1, Ndraw);
+%     
+%     duration = max(core_i.age) - min(core_i.age);
+%     std_bott = (0.5/10)*duration;
+%     age_std = (0:std_bott/(length(core_i.age)-1):std_bott)';
+    
 
-    std_time = age_std.*randn(length(core_i.age), Ndraw) + ...
-        repmat((0:duration/(length(core_i.age)-1):duration)', 1, Ndraw);
+   
+    ages = repmat(core_i.age, 1, Ndraw);
     
-    duration = max(core_i.age) - min(core_i.age);
-    std_bott = (0.5/10)*duration;
-    age_std = (0:std_bott/(length(core_i.age)-1):std_bott)';
-    
-%     ages = sort(repmat(core_i.age, 1, Ndraw) + ...
-%         repmat(age_std, 1, Ndraw).*randn(size(rho_i)), 'descend');
     
     % Find indices of integer ages within core age profile
-    yr_top = floor(core_i.age(2));
+    yr_top = floor(core_i.age(1));
     yr_end = ceil(min(ages(end,:)));
     core_yr_init = (yr_top-1:-1:yr_end)';
     
@@ -105,7 +107,7 @@ for i = 1:numel(cores.name)
     % Output results to respective arrays
     accum_idx = find(all(core_accum, 2), 1, 'last');
     accum_clip = core_accum(1:accum_idx,:);
-    core_yr = accum_yr_init(1:accum_idx);
+    core_yr = core_yr_init(1:accum_idx);
     core_accum = accum_clip;
     
     cores.(cores.name{i}).SMB_yr = core_yr;
