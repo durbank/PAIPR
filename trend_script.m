@@ -41,7 +41,7 @@ i = randi(length(files));
 file = strcat(radar_dir, files(i).name);
 
 % Path to full SEAT transect
-file = strcat(data_path, 'OUTPUT\SEAT2011_transects\', ...
+file = strcat(data_path, 'OUTPUT/SEAT2011_transects/', ...
     'layers_ku_band_transectSEAT11_3_4.mat');
 % 
 % % Path of the OIB file to process
@@ -188,7 +188,7 @@ hold off
 
 % Compare linear trend in SMB for ith trace and nearest 3 cores (with
 % uncertainty)
-figure
+
 
 
 %% Diagnostic plots for bulk radar file
