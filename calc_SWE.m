@@ -12,15 +12,15 @@ rho_mod = radar.rho_coeff(1,:).*radar.depth.^radar.rho_coeff(2,:) + ...
 
 % % Calculate accumulation at each depth interval (0.02 m) with simulated
 % % noise based on the variance in core density
-noise_rho = 1000*repmat(rho_std, 1, 1, Ndraw).*randn(size(radar.age));
+noise_rho = 1000*repmat(rho_std, 1, 1, Ndraw).*randn(size(radar.ages));
 accum_dt = 0.02*(1000*repmat(rho_mod, 1, 1, Ndraw) + noise_rho);
 
 % Define age-depth profile as the mean of all MC age profiles for each
 % trace (avoids integer year jumps in accumulation estimates and
 % non-monotonically decreasing ages)
-age_std = squeeze(std(radar.age, [], 3));
+age_std = squeeze(std(radar.ages, [], 3));
 age_noise = randn(1, 1, Ndraw).*age_std;
-ages = repmat(median(radar.age, 3), 1, 1, Ndraw) + age_noise;
+ages = repmat(median(radar.ages, 3), 1, 1, Ndraw) + age_noise;
 % ages = radar.age;
 
 
@@ -36,8 +36,8 @@ accum_yr_init = (yr_top-1:-1:yr_end)';
 
 % Preallocation of cell arrays for accumulation years and annual
 % accumulation rate
-accum_yr = cell(1, size(radar.age, 2));
-accum = cell(1, size(radar.age, 2));
+accum_yr = cell(1, size(radar.ages, 2));
+accum = cell(1, size(radar.ages, 2));
 for i = 1:size(accum, 2)
     
     % Preallocate vector for accumulation rate at ith trace
