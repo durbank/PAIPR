@@ -4,8 +4,8 @@ function [radar] = radar_age(file, cores, Ndraw)
 [radar] = radar_depth(file, cores);
 
 % Find the mean response with depth in the resampled radar data across a
-% given lateral distance 'window' (in this case ~100 m)
-[radar] = radar_stack(radar, 30);
+% given lateral distance 'window' (in this case 25 m)
+[radar] = radar_stack(radar, 25);
 
 % Stationarize the radar response using a smoothing spline
 s = zeros(size(radar.data_stack));
@@ -206,17 +206,21 @@ end
 radar.layers = layers_idx;
 radar.layer_vals = layer_peaks;
 
-% P_50 = 2*1000;
-% P_50 = 1000*2*mean(iqr(radar.data_smooth));
-P_50 = 1000*mean(std(radar.data_smooth));
 
-Po = 0.001;
-K = 1;
-r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
 
 ages = zeros([size(radar.data_smooth) Ndraw]);
 radar.likelihood = zeros(size(radar.data_smooth));
 for i = 1:size(layer_peaks, 2)
+    
+    % P_50 = 2*1000;
+    % P_50 = 1000*mean(std(radar.data_smooth));
+    P_50 = 1000*(quantile(radar.data_smooth(:,i), 0.95) - ...
+        quantile(radar.data_smooth(:,i), 0.05));
+    
+    Po = 0.001;
+    K = 1;
+    r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
+    
     
     peaks_i = layer_peaks(:,i);
 %     peaks_i = peaks(:,i).*layer_peaks(:,i);
