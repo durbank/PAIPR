@@ -40,9 +40,9 @@ files = dir(strcat(radar_dir, wild));
 i = randi(length(files));
 file = strcat(radar_dir, files(i).name);
 
-% Path to full SEAT transect
-file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_1.mat');
+% % Path to full SEAT transect
+% file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
+%     'layers_ku_band_SEAT10_1.mat');
 % 
 % % Path of the OIB file to process
 % % SEAT10_4
@@ -153,7 +153,9 @@ hold off
 % Age-depth scale comparison between radar trace and nearest cores
 figure
 hold on
-h1 = plot(core_near1.depth, core_near1.age, 'b', 'LineWidth', 2);
+h1 = plot(core_near1.depth, mean(core_near1.ages, 2), 'b', 'LineWidth', 2);
+plot(core_near1.depth, mean(core_near1.ages, 2) + 2*std(core_near1.ages, [], 2), 'b--', 'LineWidth', 2)
+plot(core_near1.depth, mean(core_near1.ages, 2) - 2*std(core_near1.ages, [], 2), 'b--', 'LineWidth', 2)
 h2 = plot(core_near2.depth, core_near2.age, 'c', 'LineWidth', 2);
 h3 = plot(core_near3.depth, core_near3.age, 'c--', 'LineWidth', 1);
 h4 = plot(radar.depth, age_mean, 'r', 'LineWidth', 2);
