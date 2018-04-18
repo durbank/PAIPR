@@ -40,9 +40,9 @@ files = dir(strcat(radar_dir, wild));
 i = randi(length(files));
 file = strcat(radar_dir, files(i).name);
 
-% % Path to full SEAT transect
-% file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-%     'layers_ku_band_SEAT10_1.mat');
+% Path to full SEAT transect
+file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
+    'layers_ku_band_SEAT10_1.mat');
 % 
 % % Path of the OIB file to process
 % % SEAT10_4
@@ -79,7 +79,7 @@ radar.rho_var = radar0.rho_var(:,edge:end-edge);
 radar.data_smooth = radar0.data_smooth(:,edge:end-edge);
 radar.layer_vals = radar0.layer_vals(:,edge:end-edge);
 radar.likelihood = radar0.likelihood(:,edge:end-edge);
-radar.age = radar0.age(:,edge:end-edge,:);
+radar.ages = radar0.ages(:,edge:end-edge,:);
 radar.SMB_yr = radar0.SMB_yr(edge:end-edge);
 radar.SMB = radar0.SMB(edge:end-edge);
 
@@ -134,8 +134,8 @@ core_near2 = cores.(cores.name{cores_near_idx(2)});
 core_near3 = cores.(cores.name{cores_near_idx(3)});
 
 % Calculate the mean age-depth scale and std for radar trace i
-age_mean = mean(squeeze(radar.age(:,i,:)), 2);
-age_std = std(squeeze(radar.age(:,i,:)), [], 2);
+age_mean = mean(squeeze(radar.ages(:,i,:)), 2);
+age_std = std(squeeze(radar.ages(:,i,:)), [], 2);
 
 % Plot full radargram
 figure('Position', [200 200 1500 800])

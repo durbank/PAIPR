@@ -247,6 +247,6 @@ for i = 1:size(layer_peaks, 2)
     end
 end
 
-radar.age = ages;
+radar.ages = ages;
 
 end
