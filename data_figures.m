@@ -1,14 +1,16 @@
 % Script to produce maps of the location of imported Antarctic data and
 % various other plots potentially useful in the future
 
+% Directories to data of interest based on computer (eventually will be
+% replaced with GUI for data directory selection)
 PC_true = ispc;
 switch PC_true
     case true
-        data_path = 'E:\Research\Antarctica\WAIS Variability\';
-        addon_path = 'E:\Research\Antarctica\WAIS Variability\Addons\';
+        data_path = 'F:/Research/Antarctica/Data/';
+        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
     case false
-        data_path = '/Volumes/WARP/Research/Antarctica/WAIS Variability/';
-        addon_path = '/Users/Durbank/Documents/MATLAB/Add-Ons/';
+        data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
+        addon_path = '/home/durbank/MATLAB/Addons/';
 end
 
 % Addons needed for analysis
@@ -16,13 +18,16 @@ end
 addon_folder = strcat(addon_path, 'AntarcticMappingTools_v5.03/');
 addpath(genpath(addon_folder))
 
-[cores] = import_cores(strcat(data_path, ['SEAT_cores' filesep 'DGK_core_data.xlsx']));
-[SEAT10_GPR] = concat_loc(strcat(data_path, ['SEAT_Traverses' filesep ...
-    'SEAT2010Kuband' filesep 'RawSEAT2010' filesep]), 'layers_*');
-[SEAT11_GPR] = concat_loc(strcat(data_path, ['SEAT_Traverses' filesep ...
-    'SEAT2011Kuband' filesep 'RawSEAT2011' filesep]), 'layers_*');
+% Add OIB scripts to path
+addpath cresis-L1B-matlab-readers/
+
+[cores] = import_cores(strcat(data_path, 'ice-cores/SEAT_cores/DGK_core_data.xlsx'), 100);
+[SEAT10_GPR] = concat_loc(strcat(data_path,'radar/SEAT_Traverses/',...
+    'SEAT2010Kuband/RawSEAT2010/'), 'layers_*');
+[SEAT11_GPR] = concat_loc(strcat(data_path, 'radar/SEAT_Traverses/',...
+    'SEAT2011Kuband/RawSEAT2011/'), 'layers_*');
 labels = strrep(cores.name, '_', '-');
-basins = shaperead(strcat(data_path, 'Data/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
+basins = shaperead(strcat(data_path, 'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
 
 Easting_lims = [min(cores.Easting)-0.10*(max(cores.Easting)-min(cores.Easting)) ...
     max(cores.Easting)+0.15*(max(cores.Easting)-min(cores.Easting))];

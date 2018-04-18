@@ -13,12 +13,31 @@
 %     output = strcat(output_dir, filesep);
 % end
 
-data_folder = 'transectSEAT11_9_1';
+% Directories to data of interest based on computer (eventually will be
+% replaced with GUI for data directory selection)
+PC_true = ispc;
+switch PC_true
+    case true
+        data_path = 'F:/Research/Antarctica/Data/';
+        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
+    case false
+        data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
+        addon_path = '/home/durbank/MATLAB/Addons/';
+end
 
-path = 'E:\Research\Antarctica\WAIS Variability\SEAT_Traverses\SEAT2011Kuband\ProcessedSEAT2011\';
-radar_dir = strcat(path, data_folder, '\');
-output_dir = 'E:\Research\Antarctica\Data\OUTPUT\SEAT2011_transects\';
-output_name = strcat('layers_ku_band_',data_folder, '.mat');
+% Addons needed for analysis
+% Add Antarctic Mapping Toolbox (AMT) to path
+addon_folder = strcat(addon_path, 'AntarcticMappingTools_v5.03/');
+addpath(genpath(addon_folder))
+
+
+
+data_name = 'SEAT11_8';
+radar_dir = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', data_name, '/');
+file_name = strcat('layers_ku_band_',data_name, '.mat');
+
+output_dir = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/');
+
 
 % Get list of radar files in directory
 wild = 'layers*';
@@ -60,6 +79,7 @@ else
     disp('Check collection date')
 end
 
-save(strcat(output_dir, output_name), 'lat', 'lon', 'time_gps', ...
+output_path = strcat(output_dir, file_name);
+save(output_path, 'lat', 'lon', 'time_gps', ...
     'time_trace', 'data_out', 'collect_date', '-v7.3')
 
