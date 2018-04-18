@@ -212,10 +212,11 @@ ages = zeros([size(radar.data_smooth) Ndraw]);
 radar.likelihood = zeros(size(radar.data_smooth));
 for i = 1:size(layer_peaks, 2)
     
-    % P_50 = 2*1000;
-    % P_50 = 1000*mean(std(radar.data_smooth));
-    P_50 = 1000*(quantile(radar.data_smooth(:,i), 0.95) - ...
-        quantile(radar.data_smooth(:,i), 0.05));
+%     P_50 = 2*1000;
+%     P_50 = 1000*mean(std(radar.data_smooth));
+%     P_50 = 1000*(quantile(radar.data_smooth(:,i), 0.95) - ...
+%         quantile(radar.data_smooth(:,i), 0.05));
+    P_50 = 1000*1*mean(Proms{i});
     
     Po = 0.001;
     K = 1;
@@ -223,7 +224,7 @@ for i = 1:size(layer_peaks, 2)
     
     
     peaks_i = layer_peaks(:,i);
-%     peaks_i = peaks(:,i).*layer_peaks(:,i);
+    %     peaks_i = peaks(:,i).*layer_peaks(:,i);
 
     peaks_idx = peaks_i>0;
     peaks_i = peaks_i(peaks_idx);
