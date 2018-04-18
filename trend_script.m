@@ -42,8 +42,8 @@ file = strcat(radar_dir, files(i).name);
 
 % Path to full SEAT transect
 file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_1.mat');
-% 
+    'layers_ku_band_SEAT11_8.mat');
+
 % % Path of the OIB file to process
 % % SEAT10_4
 % file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_272.nc');
