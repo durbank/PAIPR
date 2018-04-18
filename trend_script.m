@@ -154,8 +154,8 @@ hold off
 figure
 hold on
 h1 = plot(core_near1.depth, mean(core_near1.ages, 2), 'b', 'LineWidth', 2);
-plot(core_near1.depth, mean(core_near1.ages, 2) + 2*std(core_near1.ages, [], 2), 'b--', 'LineWidth', 2)
-plot(core_near1.depth, mean(core_near1.ages, 2) - 2*std(core_near1.ages, [], 2), 'b--', 'LineWidth', 2)
+plot(core_near1.depth, mean(core_near1.ages, 2) + 2*std(core_near1.ages, [], 2), 'b--')
+plot(core_near1.depth, mean(core_near1.ages, 2) - 2*std(core_near1.ages, [], 2), 'b--')
 h2 = plot(core_near2.depth, core_near2.age, 'c', 'LineWidth', 2);
 h3 = plot(core_near3.depth, core_near3.age, 'c--', 'LineWidth', 1);
 h4 = plot(radar.depth, age_mean, 'r', 'LineWidth', 2);
