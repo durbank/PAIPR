@@ -1,10 +1,5 @@
 function [radar] = calc_SWE(radar, Ndraw)
 
-% Define first year with complete accumulation data and earliest year with
-% observations within the data set
-yr_top = floor(max(max(radar.age(1,:,:))));
-yr_end = ceil(min(min(radar.age(end,:,:))));
-
 % Generate modelled std of density with depth for radar data
 rho_std = sqrt((radar.rho_var(1,:)-radar.rho_var(2,:))./...
     (radar.rho_var(3,:).^radar.depth) + radar.rho_var(2,:));
@@ -13,19 +8,27 @@ rho_std = sqrt((radar.rho_var(1,:)-radar.rho_var(2,:))./...
 rho_mod = radar.rho_coeff(1,:).*radar.depth.^radar.rho_coeff(2,:) + ...
     radar.rho_coeff(3,:);
 
-%% Calculate annual accumulation core each radar trace
+%% Calculate annual accumulation for each radar trace
 
 % % Calculate accumulation at each depth interval (0.02 m) with simulated
 % % noise based on the variance in core density
 noise_rho = 1000*repmat(rho_std, 1, 1, Ndraw).*randn(size(radar.age));
 accum_dt = 0.02*(1000*repmat(rho_mod, 1, 1, Ndraw) + noise_rho);
 
-
 % Define age-depth profile as the mean of all MC age profiles for each
 % trace (avoids integer year jumps in accumulation estimates and
 % non-monotonically decreasing ages)
-% ages = repmat(median(radar.age, 3), 1, 1, Ndraw);
-ages = radar.age;
+age_std = squeeze(std(radar.age, [], 3));
+age_noise = randn(1, 1, Ndraw).*age_std;
+ages = repmat(median(radar.age, 3), 1, 1, Ndraw) + age_noise;
+% ages = radar.age;
+
+
+
+% Define first year with complete accumulation data and earliest year with
+% observations within the data set
+yr_top = floor(max(max(ages(1,:,:))));
+yr_end = ceil(min(min(ages(end,:,:))));
 
 % Define initial accumulation year vector (will be iteratively modified at
 % each trace in for loop)

@@ -42,22 +42,15 @@ for i = 1:numel(cores.name)
     rho_noise = repmat(rho_std, 1, Ndraw).*randn(size(rho_i));
     core_accum_dt = 0.02*(1000*(core_i.rho + rho_noise));
     
-    % Add Gaussian noise to core age, assuming a std of +/- 0.5 year per
-    % decade
-%     duration = max(core_i.age) - min(core_i.age);
-%     std_bott = (0.5/10)*duration;
-%     age_std = (0:std_bott/(length(core_i.age)-1):std_bott)';
-% 
-%     std_time = age_std.*randn(length(core_i.age), Ndraw) + ...
-%         repmat((0:duration/(length(core_i.age)-1):duration)', 1, Ndraw);
-%     
-%     duration = max(core_i.age) - min(core_i.age);
-%     std_bott = (0.5/10)*duration;
-%     age_std = (0:std_bott/(length(core_i.age)-1):std_bott)';
+    % Add Gaussian noise to core age, assuming a std dev. error of +/- 0.5
+    % years per decade
+    duration = max(core_i.age) - min(core_i.age);
+    std_bott = (0.5/10)*duration;
+    age_std = (0:std_bott/(length(core_i.age)-1):std_bott)';
     
-
-   
-    ages = repmat(core_i.age, 1, Ndraw);
+    age_noise = randn(1, Ndraw).*age_std;
+    ages = repmat(core_i.age, 1, Ndraw) + age_noise;
+    % ages = repmat(core_i.age, 1, Ndraw);
     
     
     % Find indices of integer ages within core age profile
@@ -65,20 +58,12 @@ for i = 1:numel(cores.name)
     yr_end = ceil(min(ages(end,:)));
     core_yr_init = (yr_top-1:-1:yr_end)';
     
-%     core_yr_idx = logical([1; diff(floor(core_i.age))]);
-%     yr_loc = find(core_yr_idx);
     
     core_accum = zeros(length(core_yr_init), Ndraw);
     for j = 1:Ndraw
         
         years_j = ages(:,j);
         yr_idx = logical([diff(floor(years_j)); 0]);
-        
-        % Add noise to integer age locations due to uncertainty in exact point
-        % in time of the accumulation peak, using a std dev of 1 month
-        
-        
-        
         
         % Calculate indices of integer ages for jth simulation of the ith
         % core (with added noise from uncertainty in exact point in time
@@ -109,6 +94,7 @@ for i = 1:numel(cores.name)
     core_yr = core_yr_init(1:accum_idx);
     core_accum = accum_clip;
     
+    cores.(cores.name{i}).ages = ages;
     cores.(cores.name{i}).SMB_yr = core_yr;
     cores.(cores.name{i}).SMB = core_accum;
     
