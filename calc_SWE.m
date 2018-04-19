@@ -52,7 +52,8 @@ for i = 1:size(accum, 2)
         yr_loc = find(yr_idx);
         loc_temp = yr_loc;
         loc_temp(2:end-1) = yr_loc(2:end-1) + ...
-            round(1*(mean(diff(yr_loc))/12)*randn(length(yr_loc)-2, 1));
+            round(movmean(1*diff(yr_loc(1:end-1))/12, 2).*...
+            randn(length(yr_loc)-2, 1));
         loc_idx = loc_temp<1;
         loc_temp(loc_idx) = yr_loc(loc_idx);
         yr_loc = loc_temp;
