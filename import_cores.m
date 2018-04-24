@@ -42,10 +42,10 @@ for i = 1:numel(cores.name)
     rho_noise = repmat(rho_std, 1, Ndraw).*randn(size(rho_i));
     core_accum_dt = 0.02*(1000*(core_i.rho + rho_noise));
     
-    % Add Gaussian noise to core age, assuming a std dev. error of +/- 0.5
+    % Add Gaussian noise to core age, assuming a std dev. error of +/- 0.25
     % years per decade
     duration = max(core_i.age) - min(core_i.age);
-    std_bott = (0.5/10)*duration;
+    std_bott = (0.25/10)*duration;
     age_std = (0:std_bott/(length(core_i.age)-1):std_bott)';
     
     age_noise = randn(1, Ndraw).*age_std;
