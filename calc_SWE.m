@@ -15,9 +15,10 @@ rho_mod = radar.rho_coeff(1,:).*radar.depth.^radar.rho_coeff(2,:) + ...
 noise_rho = 1000*repmat(rho_std, 1, 1, Ndraw).*randn(size(radar.ages));
 accum_dt = 0.02*(1000*repmat(rho_mod, 1, 1, Ndraw) + noise_rho);
 
-% Define age-depth profile as the mean of all MC age profiles for each
-% trace (avoids integer year jumps in accumulation estimates and
-% non-monotonically decreasing ages)
+% Define age-depth profile based on the median of all MC age profiles and 
+% the std dev with depth of all MC age profiles for each trace (avoids  
+% integer year jumps in accumulation estimates and non-monotonically 
+% decreasing ages)
 age_std = squeeze(std(radar.ages, [], 3));
 age_noise = randn(1, 1, Ndraw).*age_std;
 ages = repmat(median(radar.ages, 3), 1, 1, Ndraw) + age_noise;
