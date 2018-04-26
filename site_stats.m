@@ -8,9 +8,11 @@ switch PC_true
     case true
         data_path = 'E:/Research/Antarctica/Data/';
         addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
+        out_dir = 'F:/Research/Reports-noVC/Figures/';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
         addon_path = '/home/durbank/MATLAB/Addons/';
+        out_dir = '/media/durbank/JUMP/Research/Reports-noVC/Figures/';
 end
 
 % Addons needed for analysis
@@ -31,8 +33,6 @@ Ndraw = 100;
 % Import firn core data
 [cores] = import_cores(strcat(data_path, 'Ice-cores/SEAT_cores/', ...
     'DGK_core_data.xlsx'), Ndraw);
-
-out_dir = '/media/durbank/JUMP/Research/Reports-noVC/Figures/';
 
 %%
 
