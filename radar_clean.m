@@ -71,12 +71,12 @@ if ~isfield(mdata, 'collect_date')
     % (this will require modification when incorporating data beyond SEAT
     % traverses)
     if contains(file, '2011') == true
-        DateString = '01.01.2012';
+        DateString = '12.15.2011';
         vector = datevec(DateString, 'dd.mm.yyyy');
         day_of_year = datenum(vector) - datenum(vector(1), 1, 1);
         mdata.collect_date = vector(1) + day_of_year/365.25;
     elseif contains(file, '2010') == true
-        DateString = '01.01.2011';
+        DateString = '12.15.2010';
         vector = datevec(DateString, 'dd.mm.yyyy');
         day_of_year = datenum(vector) - datenum(vector(1), 1, 1);
         mdata.collect_date = vector(1) + day_of_year/365.25;
