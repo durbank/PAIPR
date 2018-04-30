@@ -138,6 +138,10 @@ for i = 2:size(peaks, 2)
             (i - (col_idx(1)+local_col-1)).^2 + ...
             (Proms{i}(j) - peaks_local(local_idx)).^2);
         
+%         w_dist = abs(Proms{i}(j) - peaks_local(local_idx)).*...
+%             sqrt((j_idx - (row_idx(1)+local_row-1)).^2 + ...
+%             (i - (col_idx(1)+local_col-1)).^2);
+        
         % Select the nearest neighbor to peak (i,j)
         [~, dist_idx] = min(w_dist);
         
@@ -189,7 +193,7 @@ for i = 1:length(layers_idx)
         end
         layers_idx{i} = find(layer_mat);
     end
-
+    
     % Integrate peak magnitudes across ith layer to obtain layer
     % prominence-distance value (accounting for lateral size of stacked
     % radar trace bins)
