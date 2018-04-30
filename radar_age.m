@@ -25,7 +25,8 @@ for i = 1:size(radar_stat, 2)
     EQ = polyfit(x, var0, 1);
     x_mod = (1:length(data))';
     mod = EQ(1)*x_mod+EQ(2);
-    radar_Z(:,i) = zscore(data./sqrt(abs(mod)));
+%     radar_Z(:,i) = zscore(data./sqrt(abs(mod)));
+    radar_Z(:,i) = data./sqrt(abs(mod));
 end
 
 resolution = 0.02;
@@ -40,6 +41,7 @@ for i = 1:size(radar.data_stack, 2)
     radarZ_interp(:,i) = radarZ_i(1:size(radarZ_interp, 1));
 end
 
+% Assign output depth to interpolated depths
 radar.depth = (0:resolution:depth_bott)';
 
 % Smooth the laterally averaged radar traces with depth based on a 3rd
@@ -47,7 +49,6 @@ radar.depth = (0:resolution:depth_bott)';
 radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
 % Year associated with the first pick of the algorithm
-% age_top = round(radar.collect_date);
 age_top = radar.collect_date;
 yr_pick1 = ceil(radar.collect_date - 1);
 
@@ -64,8 +65,6 @@ depth_idx = cell(1, size(radar.data_smooth, 2));
 for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
     minProm = 0.05;                 % Prominence threshold for peaks
-%     minProm = iqr(data_i);
-%     minDist = max([0 min(dist_Ex)-3*dist_STD]);
     minDist = 0.12;                 % Min distance between peaks (in meters)
     
     % Find peaks in each trace based on requirements
