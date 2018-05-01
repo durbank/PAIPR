@@ -4,8 +4,8 @@ function [radar] = radar_age(file, cores, Ndraw)
 [radar] = radar_depth(file, cores);
 
 % Find the mean response with depth in the resampled radar data across a
-% given lateral distance 'window' (in this case 25 m)
-[radar] = radar_stack(radar, 25);
+% given lateral distance 'window' (in this case 10 m)
+[radar] = radar_stack(radar, 10);
 
 % Stationarize the radar response using a smoothing spline
 s = zeros(size(radar.data_stack));
@@ -46,7 +46,8 @@ radar.depth = (0:resolution:depth_bott)';
 
 % Smooth the laterally averaged radar traces with depth based on a 3rd
 % order Savitzky-Golay filter with a window of 9 frames (~20 m)
-radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
+% radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
+radar.data_smooth = sgolayfilt(movmean(radarZ_interp, 5, 2), 3, 9);
 
 % Year associated with the first pick of the algorithm
 age_top = radar.collect_date;
@@ -64,8 +65,8 @@ depth_idx = cell(1, size(radar.data_smooth, 2));
 
 for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
-    minProm = 0.05;                 % Prominence threshold for peaks
-    minDist = 0.12;                 % Min distance between peaks (in meters)
+    minProm = 0.10;                 % Prominence threshold for peaks
+    minDist = 0.18;                 % Min distance between peaks (in meters)
     
     % Find peaks in each trace based on requirements
     [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...
@@ -89,8 +90,7 @@ end
 %%
 
 % Define size of ~quasi bin confidence interval
-err_bin = minDist/resolution;
-err_bin = 4;
+err_bins = 8;
 
 % Preallocate cell array for layer numbers and initialize values by
 % assigning unique layer numbers to each peak in the first trace
@@ -119,9 +119,10 @@ for i = 2:size(peaks, 2)
         
         % Determine index values for the row boundaries of the local search
         % window of peak (i,j) based on the bin error window size and the
-        % half-width of peak (i,j)
-        row_idx = [max([j_idx-round(0.5*(err_bin+widths{i}(j))) 1]) ...
-            min([j_idx+round(0.5*(err_bin+widths{i}(j))) size(peaks, 1)])];
+        % quarter-width of peak (i,j)
+%         row_idx = [max([j_idx-round(0.5*(err_bin+0.5*widths{i}(j))) 1]) ...
+%             min([j_idx+round(0.5*(err_bin+0.5*widths{i}(j))) size(peaks, 1)])];
+        row_idx = [max([j_idx-err_bins 1]) min([j_idx+err_bins size(peaks, 1)])];
         
         % Define local window to search for matching layer numbers
         peaks_local = peaks(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
@@ -131,37 +132,80 @@ for i = 2:size(peaks, 2)
         [local_row, local_col] = find(peaks_local);
         local_idx = sub2ind(size(peaks_local), local_row, local_col);
         
+        
+        
+        col_i = peaks(row_idx(1):row_idx(2),i);
+        col_other = col_i;
+        col_other(j_idx-row_idx(1)+1) = 0;
+        [row_i] = find(col_other);
+        
+        min_other = [];
+        for k = 1:length(row_i)
+        dist_other = sqrt(6*((j_idx-err_bins+row_i(k)) - (row_idx(1)+local_row-1)).^2 + ...
+            3*(i - (col_idx(1)+local_col-1)).^2 + ...
+            (1/Proms{i}(j))*(col_i(row_i(k)) - peaks_local(local_idx)).^2);
+        min_other = [min_other min(dist_other)];
+        end
+        min_other = min(min_other);
+        
+        
         % Calculate distances between peak (i,j) and peaks within the local
         % search window based on differences in depth, lateral distance,
         % and peak prominence magnitudes
-        w_dist = sqrt((j_idx - (row_idx(1)+local_row-1)).^2 + ...
-            (i - (col_idx(1)+local_col-1)).^2 + ...
-            (Proms{i}(j) - peaks_local(local_idx)).^2);
+        w_dist = sqrt(6*(j_idx - (row_idx(1)+local_row-1)).^2 + ...
+            3*(i - (col_idx(1)+local_col-1)).^2 + ...
+            (1/Proms{i}(j))*(Proms{i}(j) - peaks_local(local_idx)).^2);
         
 %         w_dist = abs(Proms{i}(j) - peaks_local(local_idx)).*...
 %             sqrt((j_idx - (row_idx(1)+local_row-1)).^2 + ...
 %             (i - (col_idx(1)+local_col-1)).^2);
         
         % Select the nearest neighbor to peak (i,j)
-        [~, dist_idx] = min(w_dist);
+        [min_dist, dist_idx] = min(w_dist);
         
-        % (I may add a tolerance in the future)
-        if ~isempty(dist_idx)     % if j_min <= bin_res/2
+        
+        
+        if isempty(dist_idx)
+            % If peak (i,j) does not have a nearest neighbor, assign a new
+            % unqiue layer number to peak (i,j)
+            Groups{i}(j) = new_group;
+            peak_group(j_idx,i) = new_group;
+            new_group = new_group + 1;
             
-            % If present, assign the neighest neighbor layer number to the 
+        elseif isempty(min_other) || min_dist <= min_other
+             % If present, assign the neighest neighbor layer number to the 
             % peak (i,j) layer number in both cell array and matrix
             group_j = uint32(peak_group(row_idx(1)+local_row(dist_idx)-1,...
                 col_idx(1)+local_col(dist_idx)-1));
             Groups{i}(j) = group_j;
             peak_group(j_idx,i) = group_j;
-        else
             
+        else
             % If peak (i,j) does not have a nearest neighbor, assign a new
             % unqiue layer number to peak (i,j)
             Groups{i}(j) = new_group;
             peak_group(j_idx,i) = new_group;
             new_group = new_group + 1;
         end
+        
+        
+%         % (I may add a tolerance in the future)
+%         if ~isempty(dist_idx) &&  min_dist <= min_other    % if j_min <= bin_res/2
+%             
+%             % If present, assign the neighest neighbor layer number to the 
+%             % peak (i,j) layer number in both cell array and matrix
+%             group_j = uint32(peak_group(row_idx(1)+local_row(dist_idx)-1,...
+%                 col_idx(1)+local_col(dist_idx)-1));
+%             Groups{i}(j) = group_j;
+%             peak_group(j_idx,i) = group_j;
+%         else
+%             
+%             % If peak (i,j) does not have a nearest neighbor, assign a new
+%             % unqiue layer number to peak (i,j)
+%             Groups{i}(j) = new_group;
+%             peak_group(j_idx,i) = new_group;
+%             new_group = new_group + 1;
+%         end
     end
 end
 
@@ -176,19 +220,44 @@ for i = 1:length(layers_idx)
     layers_idx{i} = find(peak_group==i);
     
     % Find row and col indices of members of ith layer
-    [~, col] = ind2sub(size(radar.data_smooth), layers_idx{i});
+    [row, col] = ind2sub(size(radar.data_smooth), layers_idx{i});
     
-    % If multiple rows exist for the same column, select the strongest
-    % peak among them and remove others
+%     % If multiple rows exist for the same column, select the strongest
+%     % peak among them and remove others
+%     if length(col) > length(unique(col))
+%         layer_mat = zeros(size(radar.data_smooth));
+%         layer_mat(layers_idx{i}) = peaks(layers_idx{i});
+%         multi_idx = sum(logical(layer_mat))>1;
+%         col_nums = 1:size(layer_mat, 2);
+%         for k = col_nums(multi_idx)
+%             k_col = zeros(size(layer_mat, 1), 1);
+%             [~,k_max] = max(layer_mat(:,k));
+%             k_col(k_max) = layer_mat(k_max,k);
+%             layer_mat(:,k) = k_col;
+%         end
+%         layers_idx{i} = find(layer_mat);
+%     end
+    
+    row_mean = round(movmean(row, 10));
+    
+    % If multiple rows exist for the same column, select the nearest
+    % neighbor compared to the rest of the layer, and remove others
     if length(col) > length(unique(col))
         layer_mat = zeros(size(radar.data_smooth));
         layer_mat(layers_idx{i}) = peaks(layers_idx{i});
         multi_idx = sum(logical(layer_mat))>1;
         col_nums = 1:size(layer_mat, 2);
         for k = col_nums(multi_idx)
+            k_col = layer_mat(:,k);
+            k_idx = find(k_col);
+            P_bounds = [max([k-5 1]) min([k+5 size(layer_mat, 1)])];
+            P_k = layer_mat(:,P_bounds(1):P_bounds(2));
+            P_k = median(P_k(P_k>0));
+            k_dist = sqrt((round(mean(row_mean(col==k))) - k_idx).^2 + ...
+                (P_k - k_col(k_idx)).^2);
+            [~,min_idx] = min(k_dist);
             k_col = zeros(size(layer_mat, 1), 1);
-            [~,k_max] = max(layer_mat(:,k));
-            k_col(k_max) = layer_mat(k_max,k);
+            k_col(k_idx(min_idx)) = layer_mat(k_idx(min_idx),k);
             layer_mat(:,k) = k_col;
         end
         layers_idx{i} = find(layer_mat);
