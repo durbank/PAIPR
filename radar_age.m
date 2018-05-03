@@ -70,7 +70,7 @@ for i = 1:size(radar.data_smooth, 2)
     % Find peaks in each trace based on requirements
     [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...
         'MinPeakProminence', minProm, ...
-        'MinPeakDistance', minDist/resolution);
+        'MinPeakDistance', minDist/resolution, 'WidthReference', 'halfheight');
 %     peaks_i = zeros(length(data_i), 1);
 %     peaks_i(peaks_idx_i) = Prom_i;
 %     peaks(:,i) = peaks_i;
@@ -90,7 +90,7 @@ end
 
 % Define size of ~quasi bin confidence interval
 err_bin = minDist/resolution;
-err_bin = 4;
+err_bin = 12;
 
 % Preallocate cell array for layer numbers and initialize values by
 % assigning unique layer numbers to each peak in the first trace
@@ -204,6 +204,8 @@ for i = 1:length(layers_idx)
     % matrix of the ith layer
     layer_peaks(layers_idx{i}) = layers_val;
 end
+
+layers = layers_idx(cellfun(@(x) length(x) >= 5, layers_idx));
 
 % Output layer arrays to radar structure
 radar.layers = layers_idx;
