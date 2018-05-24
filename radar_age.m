@@ -344,7 +344,7 @@ for i = 1:size(layer_peaks, 2)
 %     P_50 = 1000*mean(std(radar.data_smooth));
 %     P_50 = 1000*(quantile(radar.data_smooth(:,i), 0.95) - ...
 %         quantile(radar.data_smooth(:,i), 0.05));
-    P_50 = 1000*1*mean(Proms{i});
+    P_50 = 500*1*mean(Proms{i});
     
     Po = 0.001;
     K = 1;
