@@ -328,11 +328,8 @@ for i = 1:length(layers)
     layer_peaks(layers{i}) = layers_val(i);
 end
 
-<<<<<<< HEAD
-layers = layers_idx(cellfun(@(x) length(x) >= 5, layers_idx));
-=======
-
->>>>>>> dist-opt
+layers = layers_idx;
+% layers = layers_idx(cellfun(@(x) length(x) >= 5, layers_idx));
 
 % Output layer arrays to radar structure
 radar.layers = layers;
