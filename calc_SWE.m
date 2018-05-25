@@ -57,7 +57,8 @@ for i = 1:size(accum, 2)
             randn(length(yr_loc)-2, 1));
         loc_idx = loc_temp<1;
         loc_temp(loc_idx) = yr_loc(loc_idx);
-        yr_loc = loc_temp;
+        yr_loc = sort(loc_temp, 'ascend');
+        yr_loc(yr_loc>size(accum_dt, 1)) = size(accum_dt, 1);
         
         % Integrate accumulation at each depth point for each whole year in
         % the jth simulation of the ith trace
