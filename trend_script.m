@@ -31,7 +31,7 @@ Ndraw = 100;
 %% Define radar files to import/process
 
 radar_dir = strcat(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
-    'ProcessedSEAT2010/transectSEAT10_1_2/');
+    'ProcessedSEAT2010/transectSEAT10_5_6/');
 
 % List all files matching 'wild' within radar directory
 wild = 'layers*';
@@ -42,7 +42,7 @@ file = strcat(radar_dir, files(i).name);
 
 % Path to full SEAT transect
 file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_5.mat');
+    'layers_ku_band_SEAT10_4.mat');
 
 % % Path of the OIB file to process
 % % SEAT10_4

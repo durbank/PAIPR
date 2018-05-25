@@ -5,6 +5,7 @@ function [radar] = radar_age(file, cores, Ndraw)
 
 % Find the mean response with depth in the resampled radar data across a
 % given lateral distance 'window' (in this case 10 m)
+% radar.data_out = movmean(radar.data_out, round(75/mean(diff(radar.dist))), 2);
 [radar] = radar_stack(radar, 25);
 
 % Stationarize the radar response using a smoothing spline
@@ -12,7 +13,6 @@ s = zeros(size(radar.data_stack));
 for i = 1:size(s, 2)
     s(:,i) = csaps(radar.depth(:,i), radar.data_stack(:,i), 0.95, radar.depth(:,i));
 end
-% radar_stat = radar.data_stack - s;
 radar_stat = movmean(radar.data_stack - s, 10, 2);
 
 % Remove linear trend in variance (attentuation with depth) and convert to
