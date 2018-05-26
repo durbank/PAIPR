@@ -6,14 +6,14 @@ function [radar] = radar_age(file, cores, Ndraw)
 % Find the mean response with depth in the resampled radar data across a
 % given lateral distance 'window' (in this case 10 m)
 % radar.data_out = movmean(radar.data_out, round(75/mean(diff(radar.dist))), 2);
-[radar] = radar_stack(radar, 25);
+[radar] = radar_stack(radar, 10);
 
 % Stationarize the radar response using a smoothing spline
 s = zeros(size(radar.data_stack));
 for i = 1:size(s, 2)
     s(:,i) = csaps(radar.depth(:,i), radar.data_stack(:,i), 0.95, radar.depth(:,i));
 end
-radar_stat = movmean(radar.data_stack - s, 10, 2);
+radar_stat = radar.data_stack - s;
 
 % Remove linear trend in variance (attentuation with depth) and convert to
 % z-score statistics
@@ -66,7 +66,7 @@ depth_idx = cell(1, size(radar.data_smooth, 2));
 
 for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
-    minProm = 0.25;                 % Prominence threshold for peaks
+    minProm = 0.50;                 % Prominence threshold for peaks
     minDist = 0.10;                 % Min distance between peaks (in meters)
     
     % Find peaks in each trace based on requirements
@@ -110,7 +110,7 @@ for i = 2:size(peaks, 2)
     
     % Assign column bounds for the ith local search window based on 250 m
     % window
-    col_idx = [max([i-round(250/mean(diff(radar.dist))) 1]) i-1];
+    col_idx = [max([i-round(100/mean(diff(radar.dist))) 1]) i-1];
 %     col_idx = [max([i-round(0.5*err_bin) 1]) i-1];
     
     for j = 1:length(Proms{i})
@@ -151,13 +151,18 @@ for i = 2:size(peaks, 2)
         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
             (i - (col_idx(1)+group_col-1) - 1).^2 + ...
             (Proms{i}(j)-group_val).^2);
+%         w_dist = (1./group_val).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+%             (i - (col_idx(1)+group_col-1) - 1).^2 + ...
+%             (Proms{i}(j)-group_val).^2);
         
         % Select the nearest group neighbor to peak (i,j)
         [min_dist, dist_idx] = min(w_dist);
         
-        % Set distance threshold based on peaks 100 m laterally apart and
-        % the error bin size, scaled by the local group prominence
-        threshold = group_val(dist_idx)*(100/mean(diff(radar.dist)) + err_bin);
+        % Set distance threshold based on peaks 50 m laterally apart and
+        % the error bin size, scaled by the (i,j) peak prominence
+        threshold = Proms{i}(j)*(50/mean(diff(radar.dist)) + err_bin);
+%         threshold = Proms{i}(j)*(2*err_bin);
+%         threshold = (1/group_val(dist_idx))*Proms{i}(j)*(2*err_bin);
         
         
 %         % Determine whether other peaks in the local window have smaller
@@ -246,7 +251,7 @@ for i = 1:length(layers_idx)
     [row, col] = ind2sub(size(radar.data_smooth), layers_idx{i});
     
     % If multiple rows exist for the same column, take the
-    % prominence-weighted mean of the rows
+    % squared prominence-weighted mean of the rows
     if length(col) > length(unique(col))
         layer_mat = zeros(size(radar.data_smooth));
         layer_mat(layers_idx{i}) = peaks(layers_idx{i});
@@ -255,9 +260,12 @@ for i = 1:length(layers_idx)
         for k = col_nums(multi_idx)
             k_idx = find(col==k);
             k_peaks = layer_mat(row(k_idx),k);
-            k_sum = sum(k_peaks);
-            k_row = round(sum((k_peaks/k_sum).*row(k_idx)));
-            k_peak = sum((k_peaks/k_sum).*k_peaks);
+            k_sum = sum(k_peaks.^2);
+            k_row = round(sum((k_peaks.^2/k_sum).*row(k_idx)));
+            k_peak = sum((k_peaks.^2/k_sum).*k_peaks);
+%             k_sum = sum(k_peaks);
+%             k_row = round(sum((k_peaks/k_sum).*row(k_idx)));
+%             k_peak = sum((k_peaks/k_sum).*k_peaks);
             k_col = zeros(size(layer_mat, 1), 1);
             k_col(k_row) = k_peak;
             layer_mat(:,k) = k_col;
@@ -313,8 +321,8 @@ for i = 1:length(layers_idx)
     
 end
 
-% layers = layers_idx(cellfun(@(x) length(x) > round(100/mean(diff(radar.dist))), layers_idx));
-layers = layers_idx;
+% layers = layers_idx;
+layers = layers_idx(cellfun(@(x) length(x) > 10, layers_idx));
 
 % Integrate peak magnitudes across ith layer to obtain layer
 % prominence-distance value (accounting for lateral size of stacked
@@ -328,8 +336,7 @@ for i = 1:length(layers)
     layer_peaks(layers{i}) = layers_val(i);
 end
 
-layers = layers_idx;
-% layers = layers_idx(cellfun(@(x) length(x) >= 5, layers_idx));
+%%
 
 % Output layer arrays to radar structure
 radar.layers = layers;
