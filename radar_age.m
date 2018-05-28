@@ -91,7 +91,7 @@ end
 %%
 
 % Define size of ~quasi bin confidence interval
-err_bin = 4;
+err_bin = 3;
 
 % Preallocate cell array for layer numbers and initialize values by
 % assigning unique layer numbers to each peak in the first trace
@@ -121,8 +121,8 @@ for i = 2:size(peaks_raw, 2)
         % Determine index values for the row boundaries of the local search
         % window of peak (i,j) based on the bin error window size and the
         % half-width of peak (i,j)
-        row_idx = [max([j_idx-round(err_bin+0.5*widths{i}(j)) 1]) ...
-            min([j_idx+round(err_bin+0.5*widths{i}(j)) size(peaks_raw, 1)])];
+        row_idx = [max([j_idx-round(err_bin+1*widths{i}(j)) 1]) ...
+            min([j_idx+round(err_bin+1*widths{i}(j)) size(peaks_raw, 1)])];
 %         row_idx = [max([j_idx-err_bins 1]) min([j_idx+err_bins size(peaks, 1)])];
         
         % Define local window to search for matching layer numbers
@@ -161,6 +161,7 @@ for i = 2:size(peaks_raw, 2)
         % Set distance threshold based on peaks 50 m laterally apart and
         % the error bin size, scaled by the (i,j) peak prominence
         threshold = Proms{i}(j)*(50/mean(diff(radar.dist)) + err_bin);
+        threshold = (50/mean(diff(radar.dist)) + 0.5*widths{i}(j) + err_bin);
 %         threshold = Proms{i}(j)*(2*err_bin);
 %         threshold = (1/group_val(dist_idx))*Proms{i}(j)*(2*err_bin);
         
