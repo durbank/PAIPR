@@ -62,26 +62,26 @@ file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
 [radar] = radar_age(file, cores, Ndraw);
 
 % Calculate annual accumulation rates from data
-[radar0] = calc_SWE(radar, Ndraw);
+[radar] = calc_SWE(radar, Ndraw);
 
-radar = radar0;
-
-% Remove first/last 10 traces in radar (addresses some edge effect problems
-% present in many data sets
-edge = 25;
-
-radar.Easting = radar0.Easting(edge:end-edge);
-radar.Northing = radar0.Northing(edge:end-edge);
-radar.dist = radar0.dist(edge:end-edge);
-radar.data_stack = radar0.data_stack(:,edge:end-edge);
-radar.rho_coeff = radar0.rho_coeff(:,edge:end-edge);
-radar.rho_var = radar0.rho_var(:,edge:end-edge);
-radar.data_smooth = radar0.data_smooth(:,edge:end-edge);
-radar.layer_vals = radar0.layer_vals(:,edge:end-edge);
-radar.likelihood = radar0.likelihood(:,edge:end-edge);
-radar.ages = radar0.ages(:,edge:end-edge,:);
-radar.SMB_yr = radar0.SMB_yr(edge:end-edge);
-radar.SMB = radar0.SMB(edge:end-edge);
+% radar = radar0;
+% 
+% % Remove first/last 10 traces in radar (addresses some edge effect problems
+% % present in many data sets
+% edge = 25;
+% 
+% radar.Easting = radar0.Easting(edge:end-edge);
+% radar.Northing = radar0.Northing(edge:end-edge);
+% radar.dist = radar0.dist(edge:end-edge);
+% radar.data_stack = radar0.data_stack(:,edge:end-edge);
+% radar.rho_coeff = radar0.rho_coeff(:,edge:end-edge);
+% radar.rho_var = radar0.rho_var(:,edge:end-edge);
+% radar.data_smooth = radar0.data_smooth(:,edge:end-edge);
+% radar.layer_vals = radar0.layer_vals(:,edge:end-edge);
+% radar.likelihood = radar0.likelihood(:,edge:end-edge);
+% radar.ages = radar0.ages(:,edge:end-edge,:);
+% radar.SMB_yr = radar0.SMB_yr(edge:end-edge);
+% radar.SMB = radar0.SMB(edge:end-edge);
 
 %%
 

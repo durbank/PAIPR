@@ -6,7 +6,7 @@ function [radar] = radar_age(file, cores, Ndraw)
 % Find the mean response with depth in the resampled radar data across a
 % given lateral distance 'window' (in this case 10 m)
 % radar.data_out = movmean(radar.data_out, round(75/mean(diff(radar.dist))), 2);
-[radar] = radar_stack(radar, 10);
+[radar] = radar_stack(radar, 20);
 
 % Stationarize the radar response using a smoothing spline
 s = zeros(size(radar.data_stack));
@@ -57,7 +57,7 @@ yr_pick1 = ceil(radar.collect_date - 1);
 %% Find the depth and prominence of peaks within each smoothed radar trace
 
 % Preallocate arrays for various components
-peaks = zeros(size(radar.data_smooth));
+peaks_raw = zeros(size(radar.data_smooth));
 peak_width = zeros(size(radar.data_smooth));
 Proms = cell(1, size(radar.data_smooth, 2));
 widths = cell(1,size(radar.data_smooth, 2));
@@ -78,7 +78,7 @@ for i = 1:size(radar.data_smooth, 2)
 %     peaks(:,i) = peaks_i;
 
     % Add peak prominence and width values to relevent matrices
-    peaks(peaks_idx_i,i) = Prom_i;
+    peaks_raw(peaks_idx_i,i) = Prom_i;
     peak_width(peaks_idx_i,i) = widths_i;
     
     % Add values to relevent cell arrays
@@ -103,14 +103,14 @@ new_group = Groups{1}(end) + 1;
 
 % Preallocate matrix for layer numbers and add initialized values for the
 % first trace (col=1)
-peak_group = zeros(size(peaks));
+peak_group = zeros(size(peaks_raw));
 peak_group(depth_idx{1},1) = Groups{1};
 
-for i = 2:size(peaks, 2)
+for i = 2:size(peaks_raw, 2)
     
     % Assign column bounds for the ith local search window based on 250 m
     % window
-    col_idx = [max([i-round(100/mean(diff(radar.dist))) 1]) i-1];
+    col_idx = [max([i-round(250/mean(diff(radar.dist))) 1]) i-1];
 %     col_idx = [max([i-round(0.5*err_bin) 1]) i-1];
     
     for j = 1:length(Proms{i})
@@ -122,11 +122,11 @@ for i = 2:size(peaks, 2)
         % window of peak (i,j) based on the bin error window size and the
         % half-width of peak (i,j)
         row_idx = [max([j_idx-round(err_bin+0.5*widths{i}(j)) 1]) ...
-            min([j_idx+round(err_bin+0.5*widths{i}(j)) size(peaks, 1)])];
+            min([j_idx+round(err_bin+0.5*widths{i}(j)) size(peaks_raw, 1)])];
 %         row_idx = [max([j_idx-err_bins 1]) min([j_idx+err_bins size(peaks, 1)])];
         
         % Define local window to search for matching layer numbers
-        peaks_local = peaks(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
+        peaks_local = peaks_raw(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
         
         % Define the local group matrix
         group_local = peak_group(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
@@ -241,20 +241,21 @@ end
 
 % Preallocate arrays for the matrix indices of members of each layer
 layers_idx = cell(1,new_group-1);
+peaks = zeros(size(peaks_raw));
 for i = 1:length(layers_idx)
     
     % Find matrix indices of all members of ith layer, and assign to
     % preallocated cell array
-    layers_idx{i} = find(peak_group==i);
+    layer_i = find(peak_group==i);
     
     % Find row and col indices of members of ith layer
-    [row, col] = ind2sub(size(radar.data_smooth), layers_idx{i});
+    [row, col] = ind2sub(size(radar.data_smooth), layer_i);
     
     % If multiple rows exist for the same column, take the
     % squared prominence-weighted mean of the rows
     if length(col) > length(unique(col))
         layer_mat = zeros(size(radar.data_smooth));
-        layer_mat(layers_idx{i}) = peaks(layers_idx{i});
+        layer_mat(layer_i) = peaks_raw(layer_i);
         multi_idx = sum(logical(layer_mat))>1;
         col_nums = 1:size(layer_mat, 2);
         for k = col_nums(multi_idx)
@@ -270,12 +271,18 @@ for i = 1:length(layers_idx)
             k_col(k_row) = k_peak;
             layer_mat(:,k) = k_col;
         end
-    [row, col] = ind2sub(size(radar.data_smooth), find(layer_mat));
-    end
+        peaks_mat = find(layer_mat);
+        [row, col] = ind2sub(size(radar.data_smooth), peaks_mat);
+        peaks(peaks_mat) = layer_mat(peaks_mat);
     
-    % Smooth layer i using a moving average of row indices
-    row_mean = round(movmean(row, 10));
-    layers_idx{i} = sub2ind(size(radar.data_smooth), row_mean, col);
+    else
+        peaks(layer_i) = peaks_raw(layer_i);
+    end
+
+%     % Smooth layer i using a moving average of row indices
+%     row_mean = round(movmean(row, 10));
+%     layers_test{i} = sub2ind(size(radar.data_smooth), row_mean, col);
+    layers_idx{i} = sub2ind(size(radar.data_smooth), row, col);
 
     
 %     % If multiple rows exist for the same column, select the strongest
@@ -321,24 +328,27 @@ for i = 1:length(layers_idx)
     
 end
 
-% layers = layers_idx;
-layers = layers_idx(cellfun(@(x) length(x) > 10, layers_idx));
-
 % Integrate peak magnitudes across ith layer to obtain layer
 % prominence-distance value (accounting for lateral size of stacked
 % radar trace bins)
-layers_val = cellfun(@(x) sum(peaks(x))*mean(diff(radar.dist)), layers);
+% layers_val = cellfun(@(x) sum(peaks(x))*mean(diff(radar.dist)), layers);
+layers_val = cellfun(@(x) numel(x)*median(diff(radar.dist)), layers_idx);
 
 % Map layer prominence-distance values to the location within the radar
 % matrix of the ith layer
 layer_peaks = zeros(size(peaks));
-for i = 1:length(layers)
-    layer_peaks(layers{i}) = layers_val(i);
+for i = 1:length(layers_idx)
+    layer_peaks(layers_idx{i}) = peaks(layers_idx{i}).*layers_val(i);
 end
+
+
+% layers = layers_idx(cellfun(@(x) length(x) > 10, layers_idx));
+layers = layers_idx;
 
 %%
 
 % Output layer arrays to radar structure
+radar.peaks = peaks;
 radar.layers = layers;
 radar.layer_vals = layer_peaks;
 
