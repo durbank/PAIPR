@@ -42,7 +42,7 @@ file = strcat(radar_dir, files(i).name);
 
 % Path to full SEAT transect
 file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_4.mat');
+    'layers_ku_band_SEAT10_6.mat');
 
 % % Path of the OIB file to process
 % % SEAT10_4
@@ -138,13 +138,15 @@ age_mean = mean(squeeze(radar.ages(:,i,:)), 2);
 age_std = std(squeeze(radar.ages(:,i,:)), [], 2);
 
 % Plot full radargram
+row = find(radar.likelihood(:,i)>0.5);
+col = i*ones(length(row),1);
 figure('Position', [200 200 1500 800])
 imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
 colorbar
 xlabel('Distance along profile (m)')
 ylabel('Depth (m)')
 hold on
-plot([radar.dist(i) radar.dist(i)], [0 radar.depth(end)], 'r', 'LineWidth', 2)
+plot(radar.dist(col), radar.depth(row), 'r.', 'MarkerSize', 25)
 xlim([0 radar.dist(end)])
 ylim([0 radar.depth(end)])
 set(gca, 'Ydir', 'reverse', 'FontSize', 18)
