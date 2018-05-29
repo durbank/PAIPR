@@ -66,7 +66,7 @@ depth_idx = cell(1, size(radar.data_smooth, 2));
 
 for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
-    minProm = 0.50;                 % Prominence threshold for peaks
+    minProm = 0.30;                 % Prominence threshold for peaks
     minDist = 0.10;                 % Min distance between peaks (in meters)
     
     % Find peaks in each trace based on requirements
@@ -110,7 +110,7 @@ for i = 2:size(peaks_raw, 2)
     
     % Assign column bounds for the ith local search window based on 250 m
     % window
-    col_idx = [max([i-round(250/mean(diff(radar.dist))) 1]) i-1];
+    col_idx = [max([i-round(500/mean(diff(radar.dist))) 1]) i-1];
 %     col_idx = [max([i-round(0.5*err_bin) 1]) i-1];
     
     for j = 1:length(Proms{i})
@@ -121,8 +121,8 @@ for i = 2:size(peaks_raw, 2)
         % Determine index values for the row boundaries of the local search
         % window of peak (i,j) based on the bin error window size and the
         % half-width of peak (i,j)
-        row_idx = [max([j_idx-round(err_bin+1*widths{i}(j)) 1]) ...
-            min([j_idx+round(err_bin+1*widths{i}(j)) size(peaks_raw, 1)])];
+        row_idx = [max([j_idx-round(err_bin+1.5*widths{i}(j)) 1]) ...
+            min([j_idx+round(err_bin+1.5*widths{i}(j)) size(peaks_raw, 1)])];
 %         row_idx = [max([j_idx-err_bins 1]) min([j_idx+err_bins size(peaks, 1)])];
         
         % Define local window to search for matching layer numbers
@@ -136,34 +136,45 @@ for i = 2:size(peaks_raw, 2)
         group_list = unique(group_local(group_local>0));
         group_row = zeros(length(group_list), 1);
         group_col = zeros(length(group_list), 1);
+        group_numel = zeros(length(group_list), 1);
         group_val = zeros(length(group_list), 1);
         for k = 1:length(group_list)
             [k_rows, k_cols] = find(group_local==group_list(k));
-            group_row(k) = mean(k_rows);
-            group_col(k) = max(k_cols);
             group_idx = sub2ind(size(group_local), k_rows, k_cols);
-            group_val(k) = mean(peaks_local(group_idx));
+            group_numel(k) = length(group_idx);
+%             group_val(k) = median(peaks_local(group_idx));
+            group_val(k) = sum(peaks_local(group_idx));
+            
+            weights = (peaks_local(group_idx) + k_cols)/...
+                sum(peaks_local(group_idx) + k_cols);
+            group_row(k) = sum(weights.*k_rows);
+%             if group_numel(k) > 3
+%                 p = polyfit(k_cols, k_rows, 1);
+%                 group_row(k) = polyval(p, size(group_local, 2)+1);
+%             else
+%                 group_row(k) = mean(k_rows);
+%             end
+            group_col(k) = max(k_cols) + 1;
         end
         
         % Calculate distances between peak (i,j) and mean group values
         % within local window based on differences in depth, lateral
         % distance, and peak prominence
         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
-            (i - (col_idx(1)+group_col-1) - 1).^2 + ...
-            (Proms{i}(j)-group_val).^2);
+            (i - (col_idx(1)+group_col-1)).^2 + ...
+            (Proms{i}(j)-group_val./group_numel).^2);
 %         w_dist = (1./group_val).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
-%             (i - (col_idx(1)+group_col-1) - 1).^2 + ...
-%             (Proms{i}(j)-group_val).^2);
+%             (i - (col_idx(1)+group_col-1)).^2 + ...
+%             (Proms{i}(j)-group_val./group_numel).^2);
         
         % Select the nearest group neighbor to peak (i,j)
         [min_dist, dist_idx] = min(w_dist);
         
         % Set distance threshold based on peaks 50 m laterally apart and
         % the error bin size, scaled by the (i,j) peak prominence
-        threshold = Proms{i}(j)*(50/mean(diff(radar.dist)) + err_bin);
-        threshold = (50/mean(diff(radar.dist)) + 0.5*widths{i}(j) + err_bin);
-%         threshold = Proms{i}(j)*(2*err_bin);
-%         threshold = (1/group_val(dist_idx))*Proms{i}(j)*(2*err_bin);
+        threshold = (60/mean(diff(radar.dist)) + 0.5*widths{i}(j));
+%         threshold = (1/group_val(dist_idx))*...
+%             (60/mean(diff(radar.dist)) + 0.5*widths{i}(j));
         
         
 %         % Determine whether other peaks in the local window have smaller
