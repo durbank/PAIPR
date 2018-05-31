@@ -6,7 +6,7 @@ function [radar] = radar_age(file, cores, Ndraw)
 % Find the mean response with depth in the resampled radar data across a
 % given lateral distance 'window' (in this case 10 m)
 % radar.data_out = movmean(radar.data_out, round(75/mean(diff(radar.dist))), 2);
-[radar] = radar_stack(radar, 20);
+[radar] = radar_stack(radar, 25);
 
 % Stationarize the radar response using a smoothing spline
 s = zeros(size(radar.data_stack));
@@ -64,10 +64,12 @@ widths = cell(1,size(radar.data_smooth, 2));
 depths = cell(1, size(radar.data_smooth, 2));
 depth_idx = cell(1, size(radar.data_smooth, 2));
 
+troughs = zeros(size(radar.data_smooth));
+
 for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
-    minProm = 0.30;                 % Prominence threshold for peaks
-    minDist = 0.10;                 % Min distance between peaks (in meters)
+    minProm = 0.25;                 % Prominence threshold for peaks
+    minDist = 0.08;                 % Min distance between peaks (in meters)
     
     % Find peaks in each trace based on requirements
     [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...
@@ -86,12 +88,20 @@ for i = 1:size(radar.data_smooth, 2)
     widths{i} = widths_i;
     depths{i} = radar.depth(peaks_idx_i);
     depth_idx{i} = peaks_idx_i;
+    
+    
+    [~, trough_idx_i, ~, P_trough_i] = findpeaks(-data_i, ...
+        'MinPeakProminence', minProm, 'MinPeakDistance', minDist/resolution);
+    troughs(trough_idx_i,i) = -P_trough_i;
+    
+    
 end
 
 %%
 
 % Define size of ~quasi bin confidence interval
 err_bin = 3;
+err_bin = round(minDist/resolution);
 
 % Preallocate cell array for layer numbers and initialize values by
 % assigning unique layer numbers to each peak in the first trace
@@ -145,15 +155,15 @@ for i = 2:size(peaks_raw, 2)
 %             group_val(k) = median(peaks_local(group_idx));
             group_val(k) = sum(peaks_local(group_idx));
             
-            weights = (peaks_local(group_idx) + k_cols)/...
-                sum(peaks_local(group_idx) + k_cols);
-            group_row(k) = sum(weights.*k_rows);
-%             if group_numel(k) > 3
-%                 p = polyfit(k_cols, k_rows, 1);
-%                 group_row(k) = polyval(p, size(group_local, 2)+1);
-%             else
-%                 group_row(k) = mean(k_rows);
-%             end
+%             weights = (peaks_local(group_idx) + k_cols)/...
+%                 sum(peaks_local(group_idx) + k_cols);
+%             group_row(k) = sum(weights.*k_rows);
+            if group_numel(k) > 3
+                p = polyfit(k_cols, k_rows, 1);
+                group_row(k) = polyval(p, size(group_local, 2)+1);
+            else
+                group_row(k) = mean(k_rows);
+            end
             group_col(k) = max(k_cols) + 1;
         end
         
@@ -172,7 +182,7 @@ for i = 2:size(peaks_raw, 2)
         
         % Set distance threshold based on peaks 50 m laterally apart and
         % the error bin size, scaled by the (i,j) peak prominence
-        threshold = (60/mean(diff(radar.dist)) + 0.5*widths{i}(j));
+        threshold = (60/mean(diff(radar.dist)) + 0.5*widths{i}(j) + err_bin);
 %         threshold = (1/group_val(dist_idx))*...
 %             (60/mean(diff(radar.dist)) + 0.5*widths{i}(j));
         
@@ -192,62 +202,20 @@ for i = 2:size(peaks_raw, 2)
 %         min_other = [min_other min(dist_other)];
 %         end
 %         min_other = min(min_other);
-        
-        
-        
-        if isempty(dist_idx)
-            % If peak (i,j) does not have a nearest neighbor, assign a new
-            % unqiue layer number to peak (i,j)
-            Groups{i}(j) = new_group;
-            peak_group(j_idx,i) = new_group;
-            new_group = new_group + 1;
             
-        elseif min_dist > threshold
+        if min_dist <= threshold
+            % Assign peak (i,j) to the nearest neighbor group
+            group_j = uint32(group_list(dist_idx));
+            Groups{i}(j) = group_j;
+            peak_group(j_idx,i) = group_j;
+
+        else
             % If peak (i,j) nearest neighbor has a distance greater than
             % the threshold, assign a new unqiue layer number to peak (i,j)
             Groups{i}(j) = new_group;
             peak_group(j_idx,i) = new_group;
             new_group = new_group + 1;
-                
-        else
-            % Assign peak (i,j) to the nearest neighbor group
-            group_j = uint32(group_list(dist_idx));
-            Groups{i}(j) = group_j;
-            peak_group(j_idx,i) = group_j;
-            
-%         elseif isempty(min_other) || min_dist <= min_other
-%              % If present, assign the neighest neighbor layer number to the 
-%             % peak (i,j) layer number in both cell array and matrix
-%             group_j = uint32(group_list(dist_idx));
-%             Groups{i}(j) = group_j;
-%             peak_group(j_idx,i) = group_j;
-%             
-%         else
-%             % If peak (i,j) does not have a nearest neighbor, assign a new
-%             % unqiue layer number to peak (i,j)
-%             Groups{i}(j) = new_group;
-%             peak_group(j_idx,i) = new_group;
-%             new_group = new_group + 1;
         end
-        
-        
-%         % (I may add a tolerance in the future)
-%         if ~isempty(dist_idx) &&  min_dist <= min_other    % if j_min <= bin_res/2
-%             
-%             % If present, assign the neighest neighbor layer number to the 
-%             % peak (i,j) layer number in both cell array and matrix
-%             group_j = uint32(peak_group(row_idx(1)+local_row(dist_idx)-1,...
-%                 col_idx(1)+local_col(dist_idx)-1));
-%             Groups{i}(j) = group_j;
-%             peak_group(j_idx,i) = group_j;
-%         else
-%             
-%             % If peak (i,j) does not have a nearest neighbor, assign a new
-%             % unqiue layer number to peak (i,j)
-%             Groups{i}(j) = new_group;
-%             peak_group(j_idx,i) = new_group;
-%             new_group = new_group + 1;
-%         end
     end
 end
 
@@ -295,23 +263,6 @@ for i = 1:length(layers_idx)
 %     row_mean = round(movmean(row, 10));
 %     layers_test{i} = sub2ind(size(radar.data_smooth), row_mean, col);
     layers_idx{i} = sub2ind(size(radar.data_smooth), row, col);
-
-    
-%     % If multiple rows exist for the same column, select the strongest
-%     % peak among them and remove others
-%     if length(col) > length(unique(col))
-%         layer_mat = zeros(size(radar.data_smooth));
-%         layer_mat(layers_idx{i}) = peaks(layers_idx{i});
-%         multi_idx = sum(logical(layer_mat))>1;
-%         col_nums = 1:size(layer_mat, 2);
-%         for k = col_nums(multi_idx)
-%             k_col = zeros(size(layer_mat, 1), 1);
-%             [~,k_max] = max(layer_mat(:,k));
-%             k_col(k_max) = layer_mat(k_max,k);
-%             layer_mat(:,k) = k_col;
-%         end
-%         layers_idx{i} = find(layer_mat);
-%     end
     
 %     row_mean = round(movmean(row, 10));
 %     
