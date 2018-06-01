@@ -100,7 +100,6 @@ end
 %%
 
 % Define size of ~quasi bin confidence interval
-err_bin = 3;
 err_bin = round(minDist/resolution);
 
 % Preallocate cell array for layer numbers and initialize values by
@@ -120,7 +119,7 @@ for i = 2:size(peaks_raw, 2)
     
     % Assign column bounds for the ith local search window based on 250 m
     % window
-    col_idx = [max([i-round(500/mean(diff(radar.dist))) 1]) i-1];
+    col_idx = [max([i-round(250/mean(diff(radar.dist))) 1]) i-1];
 %     col_idx = [max([i-round(0.5*err_bin) 1]) i-1];
     
     for j = 1:length(Proms{i})
@@ -131,8 +130,8 @@ for i = 2:size(peaks_raw, 2)
         % Determine index values for the row boundaries of the local search
         % window of peak (i,j) based on the bin error window size and the
         % half-width of peak (i,j)
-        row_idx = [max([j_idx-round(err_bin+1.5*widths{i}(j)) 1]) ...
-            min([j_idx+round(err_bin+1.5*widths{i}(j)) size(peaks_raw, 1)])];
+        row_idx = [max([j_idx - 3*round(err_bin+0.5*widths{i}(j)) 1]) ...
+            min([j_idx + 3*round(err_bin+0.5*widths{i}(j)) size(peaks_raw, 1)])];
 %         row_idx = [max([j_idx-err_bins 1]) min([j_idx+err_bins size(peaks, 1)])];
         
         % Define local window to search for matching layer numbers
@@ -170,21 +169,19 @@ for i = 2:size(peaks_raw, 2)
         % Calculate distances between peak (i,j) and mean group values
         % within local window based on differences in depth, lateral
         % distance, and peak prominence
-        w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
-            (i - (col_idx(1)+group_col-1)).^2 + ...
-            (Proms{i}(j)-group_val./group_numel).^2);
-%         w_dist = (1./group_val).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+%         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
 %             (i - (col_idx(1)+group_col-1)).^2 + ...
 %             (Proms{i}(j)-group_val./group_numel).^2);
+        w_dist = (1./group_val).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+            (i - (col_idx(1)+group_col-1)).^2 + ...
+            (Proms{i}(j)-group_val./group_numel).^2);
         
         % Select the nearest group neighbor to peak (i,j)
         [min_dist, dist_idx] = min(w_dist);
         
         % Set distance threshold based on peaks 50 m laterally apart and
         % the error bin size, scaled by the (i,j) peak prominence
-        threshold = (60/mean(diff(radar.dist)) + 0.5*widths{i}(j) + err_bin);
-%         threshold = (1/group_val(dist_idx))*...
-%             (60/mean(diff(radar.dist)) + 0.5*widths{i}(j));
+        threshold = (0.5*widths{i}(j) + err_bin);
         
         
 %         % Determine whether other peaks in the local window have smaller
@@ -203,7 +200,7 @@ for i = 2:size(peaks_raw, 2)
 %         end
 %         min_other = min(min_other);
             
-        if min_dist <= threshold
+        if min_dist.*group_val(dist_idx) <= threshold
             % Assign peak (i,j) to the nearest neighbor group
             group_j = uint32(group_list(dist_idx));
             Groups{i}(j) = group_j;
@@ -218,6 +215,29 @@ for i = 2:size(peaks_raw, 2)
         end
     end
 end
+
+
+
+
+
+% % Preallocate arrays for the matrix indices of members of each layer
+% layers_idx = cell(1,new_group-1);
+% 
+% for i = 1:length(layers_idx)
+%     
+%     % Find matrix indices of all members of ith layer, and assign to
+%     % preallocated cell array
+%     layers_idx{i} = find(peak_group==i);
+% end
+% 
+% layers_idx = layers_idx(cellfun(@(x) ...
+%     length(x) > round(100/mean(diff(radar.dist))), layers_idx));
+
+
+
+
+
+
 
 % Preallocate arrays for the matrix indices of members of each layer
 layers_idx = cell(1,new_group-1);
@@ -291,28 +311,28 @@ for i = 1:length(layers_idx)
     
 end
 
+
 % Integrate peak magnitudes across ith layer to obtain layer
 % prominence-distance value (accounting for lateral size of stacked
 % radar trace bins)
 % layers_val = cellfun(@(x) sum(peaks(x))*mean(diff(radar.dist)), layers);
-layers_val = cellfun(@(x) numel(x)*median(diff(radar.dist)), layers_idx);
+layers_dist = cellfun(@(x) numel(x)*median(diff(radar.dist)), layers_idx);
 
 % Map layer prominence-distance values to the location within the radar
 % matrix of the ith layer
 layer_peaks = zeros(size(peaks));
 for i = 1:length(layers_idx)
-    layer_peaks(layers_idx{i}) = peaks(layers_idx{i}).*layers_val(i);
+    layer_peaks(layers_idx{i}) = peaks(layers_idx{i}).*layers_dist(i);
 end
 
-
-% layers = layers_idx(cellfun(@(x) length(x) > 10, layers_idx));
-layers = layers_idx;
+layers_idx = layers_idx(cellfun(@(x) ...
+    length(x) > round(100/mean(diff(radar.dist))), layers_idx));
 
 %%
 
 % Output layer arrays to radar structure
 radar.peaks = peaks;
-radar.layers = layers;
+radar.layers = layers_idx;
 radar.layer_vals = layer_peaks;
 
 
@@ -325,7 +345,7 @@ for i = 1:size(layer_peaks, 2)
 %     P_50 = 1000*mean(std(radar.data_smooth));
 %     P_50 = 1000*(quantile(radar.data_smooth(:,i), 0.95) - ...
 %         quantile(radar.data_smooth(:,i), 0.05));
-    P_50 = 500*1*mean(Proms{i});
+    P_50 = 1*500*median(Proms{i});
     
     Po = 0.001;
     K = 1;
