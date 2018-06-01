@@ -146,13 +146,13 @@ for i = 2:size(peaks_raw, 2)
         group_row = zeros(length(group_list), 1);
         group_col = zeros(length(group_list), 1);
         group_numel = zeros(length(group_list), 1);
-        group_val = zeros(length(group_list), 1);
+        group_mag = zeros(length(group_list), 1);
         for k = 1:length(group_list)
             [k_rows, k_cols] = find(group_local==group_list(k));
             group_idx = sub2ind(size(group_local), k_rows, k_cols);
             group_numel(k) = length(group_idx);
 %             group_val(k) = median(peaks_local(group_idx));
-            group_val(k) = sum(peaks_local(group_idx));
+            group_mag(k) = sum(peaks_local(group_idx));
             
 %             weights = (peaks_local(group_idx) + k_cols)/...
 %                 sum(peaks_local(group_idx) + k_cols);
@@ -166,15 +166,59 @@ for i = 2:size(peaks_raw, 2)
             group_col(k) = max(k_cols) + 1;
         end
         
+        
+        
+        
+        
+        
+%         % Calculate distances between peak (i,j) and mean group values
+%         % within local window based on differences in depth, lateral
+%         % distance, and peak prominence
+%         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+%             (i - (col_idx(1)+group_col-1)).^2 + ...
+%             (Proms{i}(j)-group_mag./group_numel).^2);
+%         
+%         % Assign distance threshold based on the (i,j) peak half-width and
+%         % the error bin size
+%         threshold = (0.5*widths{i}(j) + err_bin);
+%         
+%         % Create logical index of local peak groups within threshold
+%         % tolerance, and apply to the group_mag array
+%         tol_idx = w_dist <= threshold;
+%         group_mag = group_mag(tol_idx);
+%         
+%         % Scale local group distances within tolerance using the inverse
+%         % group magnitude value (stronger peaks have smaller distances than
+%         % equivalent weaker peaks) and find peak group with the shortest
+%         % distance
+%         [~, dist_idx] = min((1./group_mag).*w_dist(tol_idx));
+%         
+%         if isempty(dist_idx)
+%             % If peak (i,j) nearest neighbor has a distance greater than
+%             % the threshold, assign a new unqiue layer number to peak (i,j)
+%             Groups{i}(j) = new_group;
+%             peak_group(j_idx,i) = new_group;
+%             new_group = new_group + 1;
+%             
+% 
+%         else
+%             % Assign peak (i,j) to the nearest neighbor group
+%             group_j = uint32(group_list(dist_idx));
+%             Groups{i}(j) = group_j;
+%             peak_group(j_idx,i) = group_j;
+
+
+
+        
         % Calculate distances between peak (i,j) and mean group values
         % within local window based on differences in depth, lateral
         % distance, and peak prominence
 %         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
 %             (i - (col_idx(1)+group_col-1)).^2 + ...
 %             (Proms{i}(j)-group_val./group_numel).^2);
-        w_dist = (1./group_val).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+        w_dist = (1./group_mag).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
             (i - (col_idx(1)+group_col-1)).^2 + ...
-            (Proms{i}(j)-group_val./group_numel).^2);
+            (Proms{i}(j)-group_mag./group_numel).^2);
         
         % Select the nearest group neighbor to peak (i,j)
         [min_dist, dist_idx] = min(w_dist);
@@ -182,25 +226,8 @@ for i = 2:size(peaks_raw, 2)
         % Set distance threshold based on peaks 50 m laterally apart and
         % the error bin size, scaled by the (i,j) peak prominence
         threshold = (0.5*widths{i}(j) + err_bin);
-        
-        
-%         % Determine whether other peaks in the local window have smaller
-%         % distances to the groups in question
-%         col_i = peaks(row_idx(1):row_idx(2),i);
-%         col_other = col_i;
-%         col_other(j_idx-row_idx(1)+1) = 0;
-%         [row_i] = find(col_other);
-%         
-%         min_other = [];
-%         for k = 1:length(row_i)
-%         dist_other = sqrt(((row_idx(1)+row_i(k)-1) - (row_idx(1)+group_row-1)).^2 ...
-%         + (i - (col_idx(1)+group_col-1) - 1).^2 + ...
-%         (col_i(row_i(k)) - group_val).^2);
-%         min_other = [min_other min(dist_other)];
-%         end
-%         min_other = min(min_other);
             
-        if min_dist.*group_val(dist_idx) <= threshold
+        if min_dist.*group_mag(dist_idx) <= threshold
             % Assign peak (i,j) to the nearest neighbor group
             group_j = uint32(group_list(dist_idx));
             Groups{i}(j) = group_j;
@@ -212,6 +239,10 @@ for i = 2:size(peaks_raw, 2)
             Groups{i}(j) = new_group;
             peak_group(j_idx,i) = new_group;
             new_group = new_group + 1;
+            
+            
+            
+            
         end
     end
 end

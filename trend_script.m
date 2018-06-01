@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        data_path = 'F:/Research/Antarctica/Data/';
+        data_path = 'E:/Research/Antarctica/Data/';
         addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
