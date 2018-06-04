@@ -130,9 +130,10 @@ for i = 2:size(peaks_raw, 2)
         % Determine index values for the row boundaries of the local search
         % window of peak (i,j) based on the bin error window size and the
         % half-width of peak (i,j)
-        row_idx = [max([j_idx - 3*round(err_bin+0.5*widths{i}(j)) 1]) ...
-            min([j_idx + 3*round(err_bin+0.5*widths{i}(j)) size(peaks_raw, 1)])];
-%         row_idx = [max([j_idx-err_bins 1]) min([j_idx+err_bins size(peaks, 1)])];
+%         row_idx = [max([j_idx - 3*round(err_bin+0.5*widths{i}(j)) 1]) ...
+%             min([j_idx + 3*round(err_bin+0.5*widths{i}(j)) size(peaks_raw, 1)])];
+        row_idx = [max([j_idx-round(0.5/resolution) 1]) ...
+            min([j_idx+round(0.5/resolution) size(peaks_raw, 1)])];
         
         % Define local window to search for matching layer numbers
         peaks_local = peaks_raw(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
@@ -140,7 +141,7 @@ for i = 2:size(peaks_raw, 2)
         % Define the local group matrix
         group_local = peak_group(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
         
-        % Find the mean row, nearest col, and magnitude of groups within
+        % Find the extrapolated row, nearest col, and magnitude of groups within
         % the local window
         group_list = unique(group_local(group_local>0));
         group_row = zeros(length(group_list), 1);
@@ -151,15 +152,15 @@ for i = 2:size(peaks_raw, 2)
             [k_rows, k_cols] = find(group_local==group_list(k));
             group_idx = sub2ind(size(group_local), k_rows, k_cols);
             group_numel(k) = length(group_idx);
-%             group_val(k) = median(peaks_local(group_idx));
-            group_mag(k) = sum(peaks_local(group_idx));
+            group_mag(k) = median(peaks_local(group_idx));
+%             group_mag(k) = sum(peaks_local(group_idx));
             
 %             weights = (peaks_local(group_idx) + k_cols)/...
 %                 sum(peaks_local(group_idx) + k_cols);
 %             group_row(k) = sum(weights.*k_rows);
             if group_numel(k) > 3
                 p = polyfit(k_cols, k_rows, 1);
-                group_row(k) = polyval(p, size(group_local, 2)+1);
+                group_row(k) = polyval(p, size(group_local, 2) + 1);
             else
                 group_row(k) = mean(k_rows);
             end
@@ -176,7 +177,10 @@ for i = 2:size(peaks_raw, 2)
 %         % distance, and peak prominence
 %         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
 %             (i - (col_idx(1)+group_col-1)).^2 + ...
-%             (Proms{i}(j)-group_mag./group_numel).^2);
+%             (Proms{i}(j)-group_mag).^2);
+% %         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+% %             (i - (col_idx(1)+group_col-1)).^2 + ...
+% %             (Proms{i}(j)-group_mag./group_numel).^2);
 %         
 %         % Assign distance threshold based on the (i,j) peak half-width and
 %         % the error bin size
@@ -185,13 +189,13 @@ for i = 2:size(peaks_raw, 2)
 %         % Create logical index of local peak groups within threshold
 %         % tolerance, and apply to the group_mag array
 %         tol_idx = w_dist <= threshold;
-%         group_mag = group_mag(tol_idx);
 %         
 %         % Scale local group distances within tolerance using the inverse
 %         % group magnitude value (stronger peaks have smaller distances than
 %         % equivalent weaker peaks) and find peak group with the shortest
 %         % distance
-%         [~, dist_idx] = min((1./group_mag).*w_dist(tol_idx));
+%         [~, dist_idx] = min(w_dist(tol_idx));
+% %         [~, dist_idx] = min((1./group_mag(tol_idx)).*w_dist(tol_idx));
 %         
 %         if isempty(dist_idx)
 %             % If peak (i,j) nearest neighbor has a distance greater than
@@ -213,19 +217,20 @@ for i = 2:size(peaks_raw, 2)
         % Calculate distances between peak (i,j) and mean group values
         % within local window based on differences in depth, lateral
         % distance, and peak prominence
-%         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+%         w_dist = (1./group_mag).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
 %             (i - (col_idx(1)+group_col-1)).^2 + ...
-%             (Proms{i}(j)-group_val./group_numel).^2);
+%             (Proms{i}(j)-group_mag./group_numel).^2);
         w_dist = (1./group_mag).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
-            (i - (col_idx(1)+group_col-1)).^2 + ...
-            (Proms{i}(j)-group_mag./group_numel).^2);
+            (i - (col_idx(1)+group_col-1)).^2);
+%         w_dist = (1./group_mag).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+%             (i - (col_idx(1)+group_col-1)).^2 + ...
+%             (Proms{i}(j)-group_mag).^2);
         
         % Select the nearest group neighbor to peak (i,j)
         [min_dist, dist_idx] = min(w_dist);
         
-        % Set distance threshold based on peaks 50 m laterally apart and
-        % the error bin size, scaled by the (i,j) peak prominence
-        threshold = (0.5*widths{i}(j) + err_bin);
+        % Set distance threshold based on peak width and error bin size
+        threshold = (0.75*widths{i}(j) + err_bin);
             
         if min_dist.*group_mag(dist_idx) <= threshold
             % Assign peak (i,j) to the nearest neighbor group
@@ -251,96 +256,69 @@ end
 
 
 
-% % Preallocate arrays for the matrix indices of members of each layer
-% layers_idx = cell(1,new_group-1);
-% 
-% for i = 1:length(layers_idx)
-%     
-%     % Find matrix indices of all members of ith layer, and assign to
-%     % preallocated cell array
-%     layers_idx{i} = find(peak_group==i);
-% end
-% 
-% layers_idx = layers_idx(cellfun(@(x) ...
-%     length(x) > round(100/mean(diff(radar.dist))), layers_idx));
-
-
-
-
-
-
-
 % Preallocate arrays for the matrix indices of members of each layer
 layers_idx = cell(1,new_group-1);
-peaks = zeros(size(peaks_raw));
+
 for i = 1:length(layers_idx)
     
     % Find matrix indices of all members of ith layer, and assign to
     % preallocated cell array
-    layer_i = find(peak_group==i);
-    
-    % Find row and col indices of members of ith layer
-    [row, col] = ind2sub(size(radar.data_smooth), layer_i);
-    
-    % If multiple rows exist for the same column, take the
-    % squared prominence-weighted mean of the rows
-    if length(col) > length(unique(col))
-        layer_mat = zeros(size(radar.data_smooth));
-        layer_mat(layer_i) = peaks_raw(layer_i);
-        multi_idx = sum(logical(layer_mat))>1;
-        col_nums = 1:size(layer_mat, 2);
-        for k = col_nums(multi_idx)
-            k_idx = find(col==k);
-            k_peaks = layer_mat(row(k_idx),k);
-            k_sum = sum(k_peaks.^2);
-            k_row = round(sum((k_peaks.^2/k_sum).*row(k_idx)));
-            k_peak = sum((k_peaks.^2/k_sum).*k_peaks);
-%             k_sum = sum(k_peaks);
-%             k_row = round(sum((k_peaks/k_sum).*row(k_idx)));
-%             k_peak = sum((k_peaks/k_sum).*k_peaks);
-            k_col = zeros(size(layer_mat, 1), 1);
-            k_col(k_row) = k_peak;
-            layer_mat(:,k) = k_col;
-        end
-        peaks_mat = find(layer_mat);
-        [row, col] = ind2sub(size(radar.data_smooth), peaks_mat);
-        peaks(peaks_mat) = layer_mat(peaks_mat);
-    
-    else
-        peaks(layer_i) = peaks_raw(layer_i);
-    end
+    layers_idx{i} = find(peak_group==i);
+end
+peaks = peaks_raw;
 
-%     % Smooth layer i using a moving average of row indices
-%     row_mean = round(movmean(row, 10));
-%     layers_test{i} = sub2ind(size(radar.data_smooth), row_mean, col);
-    layers_idx{i} = sub2ind(size(radar.data_smooth), row, col);
-    
-%     row_mean = round(movmean(row, 10));
+
+
+
+
+
+
+% % Preallocate arrays for the matrix indices of members of each layer
+% layers_idx = cell(1,new_group-1);
+% peaks = zeros(size(peaks_raw));
+% for i = 1:length(layers_idx)
 %     
-%     % If multiple rows exist for the same column, select the nearest
-%     % neighbor compared to the rest of the layer, and remove others
+%     % Find matrix indices of all members of ith layer, and assign to
+%     % preallocated cell array
+%     layer_i = find(peak_group==i);
+%     
+%     % Find row and col indices of members of ith layer
+%     [row, col] = ind2sub(size(radar.data_smooth), layer_i);
+%     
+%     % If multiple rows exist for the same column, take the
+%     % squared prominence-weighted mean of the rows
 %     if length(col) > length(unique(col))
 %         layer_mat = zeros(size(radar.data_smooth));
-%         layer_mat(layers_idx{i}) = peaks(layers_idx{i});
+%         layer_mat(layer_i) = peaks_raw(layer_i);
 %         multi_idx = sum(logical(layer_mat))>1;
 %         col_nums = 1:size(layer_mat, 2);
 %         for k = col_nums(multi_idx)
-%             k_col = layer_mat(:,k);
-%             k_idx = find(k_col);
-%             P_bounds = [max([k-10 1]) min([k+10 size(layer_mat, 2)])];
-%             P_k = layer_mat(:,P_bounds(1):P_bounds(2));
-%             P_k = median(P_k(P_k>0));
-%             k_dist = sqrt((round(mean(row_mean(col==k))) - k_idx).^2 + ...
-%                 (P_k - k_col(k_idx)).^2);
-%             [~,min_idx] = min(k_dist);
+%             k_idx = find(col==k);
+%             k_peaks = layer_mat(row(k_idx),k);
+%             k_sum = sum(k_peaks.^2);
+%             k_row = round(sum((k_peaks.^2/k_sum).*row(k_idx)));
+%             k_peak = sum((k_peaks.^2/k_sum).*k_peaks);
+% %             k_sum = sum(k_peaks);
+% %             k_row = round(sum((k_peaks/k_sum).*row(k_idx)));
+% %             k_peak = sum((k_peaks/k_sum).*k_peaks);
 %             k_col = zeros(size(layer_mat, 1), 1);
-%             k_col(k_idx(min_idx)) = layer_mat(k_idx(min_idx),k);
+%             k_col(k_row) = k_peak;
 %             layer_mat(:,k) = k_col;
 %         end
-%         layers_idx{i} = find(layer_mat);
+%         peaks_mat = find(layer_mat);
+%         [row, col] = ind2sub(size(radar.data_smooth), peaks_mat);
+%         peaks(peaks_mat) = layer_mat(peaks_mat);
+%     
+%     else
+%         peaks(layer_i) = peaks_raw(layer_i);
 %     end
-    
-end
+% 
+% %     % Smooth layer i using a moving average of row indices
+% %     row_mean = round(movmean(row, round(100/mean(diff(radar.dist)))));
+% %     layers_test{i} = sub2ind(size(radar.data_smooth), row_mean, col);
+%     layers_idx{i} = sub2ind(size(radar.data_smooth), row, col);
+%     
+% end
 
 
 % Integrate peak magnitudes across ith layer to obtain layer
