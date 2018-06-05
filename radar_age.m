@@ -4,9 +4,9 @@ function [radar] = radar_age(file, cores, Ndraw)
 [radar] = radar_depth(file, cores);
 
 % Find the mean response with depth in the resampled radar data across a
-% given lateral distance 'window' (in this case 10 m)
-% radar.data_out = movmean(radar.data_out, round(75/mean(diff(radar.dist))), 2);
-[radar] = radar_stack(radar, 25);
+% given lateral distance 'window'
+horz_res = 25;
+[radar] = radar_stack(radar, horz_res);
 
 % Stationarize the radar response using a smoothing spline
 s = zeros(size(radar.data_stack));
@@ -30,20 +30,20 @@ for i = 1:size(radar_stat, 2)
     radar_Z(:,i) = data./sqrt(abs(mod));
 end
 
-resolution = 0.02;
+core_res = 0.02;
 cutoff = 25;
 depth_bott = floor(min([min(radar.depth(end,:)) cutoff]));
 
-radarZ_interp = zeros(depth_bott/resolution+1, size(radar.data_stack, 2));
+radarZ_interp = zeros(depth_bott/core_res+1, size(radar.data_stack, 2));
 
 for i = 1:size(radar.data_stack, 2)
-    depth_interp = (0:resolution:radar.depth(end,i));
+    depth_interp = (0:core_res:radar.depth(end,i));
     radarZ_i = interp1(radar.depth(:,i), radar_Z(:,i), depth_interp, 'pchip');
     radarZ_interp(:,i) = radarZ_i(1:size(radarZ_interp, 1));
 end
 
 % Assign output depth to interpolated depths
-radar.depth = (0:resolution:depth_bott)';
+radar.depth = (0:core_res:depth_bott)';
 
 % Smooth the laterally averaged radar traces with depth based on a 3rd
 % order Savitzky-Golay filter with a window of 9 frames (~20 m)
@@ -74,7 +74,7 @@ for i = 1:size(radar.data_smooth, 2)
     % Find peaks in each trace based on requirements
     [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...
         'MinPeakProminence', minProm, ...
-        'MinPeakDistance', minDist/resolution, 'WidthReference', 'halfheight');
+        'MinPeakDistance', minDist/core_res, 'WidthReference', 'halfheight');
 %     peaks_i = zeros(length(data_i), 1);
 %     peaks_i(peaks_idx_i) = Prom_i;
 %     peaks(:,i) = peaks_i;
@@ -91,7 +91,7 @@ for i = 1:size(radar.data_smooth, 2)
     
     
     [~, trough_idx_i, ~, P_trough_i] = findpeaks(-data_i, ...
-        'MinPeakProminence', minProm, 'MinPeakDistance', minDist/resolution);
+        'MinPeakProminence', minProm, 'MinPeakDistance', minDist/core_res);
     troughs(trough_idx_i,i) = -P_trough_i;
     
     
@@ -100,7 +100,7 @@ end
 %%
 
 % Define size of ~quasi bin confidence interval
-err_bin = round(minDist/resolution);
+err_bin = round(minDist/core_res);
 
 % Preallocate cell array for layer numbers and initialize values by
 % assigning unique layer numbers to each peak in the first trace
@@ -119,7 +119,7 @@ for i = 2:size(peaks_raw, 2)
     
     % Assign column bounds for the ith local search window based on 250 m
     % window
-    col_idx = [max([i-round(250/mean(diff(radar.dist))) 1]) i-1];
+    col_idx = [max([i-round(250/horz_res) 1]) i-1];
 %     col_idx = [max([i-round(0.5*err_bin) 1]) i-1];
     
     for j = 1:length(Proms{i})
@@ -132,8 +132,8 @@ for i = 2:size(peaks_raw, 2)
         % half-width of peak (i,j)
 %         row_idx = [max([j_idx - 3*round(err_bin+0.5*widths{i}(j)) 1]) ...
 %             min([j_idx + 3*round(err_bin+0.5*widths{i}(j)) size(peaks_raw, 1)])];
-        row_idx = [max([j_idx-round(0.5/resolution) 1]) ...
-            min([j_idx+round(0.5/resolution) size(peaks_raw, 1)])];
+        row_idx = [max([j_idx-round(0.50/core_res) 1]) ...
+            min([j_idx+round(0.50/core_res) size(peaks_raw, 1)])];
         
         % Define local window to search for matching layer numbers
         peaks_local = peaks_raw(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
@@ -230,7 +230,7 @@ for i = 2:size(peaks_raw, 2)
         [min_dist, dist_idx] = min(w_dist);
         
         % Set distance threshold based on peak width and error bin size
-        threshold = (0.75*widths{i}(j) + err_bin);
+        threshold = (0.5*widths{i}(j) + err_bin);
             
         if min_dist.*group_mag(dist_idx) <= threshold
             % Assign peak (i,j) to the nearest neighbor group
@@ -265,7 +265,6 @@ for i = 1:length(layers)
     % preallocated cell array
     layers{i} = find(peak_group==i);
 end
-peaks = peaks_raw;
 
 
 
@@ -278,24 +277,26 @@ peaks = peaks_raw;
 layers_idx = 1:length(layers);
 layer_pool = layers;
 group_pool = peak_group;
-layers_comb = cell(1, length(layers(cellfun(@(x) length(x)>20, layers))));
+extrap_dist = round(200/horz_res);
+layers_comb = cell(1, length(layers(cellfun(@(x) length(x)>=extrap_dist, layers))));
 i = 0;
 
 
-while max(cellfun(@length, layer_pool)) >= 20
+
+while max(cellfun(@length, layer_pool)) >= extrap_dist
     i = i + 1
     [~, idx_i] = max(cellfun(@length, layer_pool));
     layer_i = layer_pool{idx_i};
     width_i = 0.5*median(peak_width(layer_i));
-    [~, col] = ind2sub(size(peaks), layer_i);
+    [~, col] = ind2sub(size(peaks_raw), layer_i);
     
-    if max(col) > size(peaks, 2)-5
+    if max(col) >= size(peaks_raw, 2) - extrap_dist
         search_R = false;
     else
         search_R = true;
     end
     
-    if min(col) < 5
+    if min(col) <= extrap_dist
         search_L = false;
     else
         search_L = true;
@@ -304,23 +305,26 @@ while max(cellfun(@length, layer_pool)) >= 20
     % Connections moving right
     while search_R == true
         
-        [row, col] = ind2sub(size(peaks), layer_i);
+        [row, col] = ind2sub(size(peaks_raw), layer_i);
         [~,sort_idx] = sort(col);
         row = row(sort_idx);
         col = col(sort_idx);
-        row_R = row(end-19:end);
-        col_R = col(end-19:end);
+        i_length = length(col);
+        row_R = row(end-min([15 i_length])+1:end);
+        col_R = col(end-min([15 i_length])+1:end);
         p = polyfit(col_R, row_R, 1);
-        col_extra_R = col_R(end)+1:min([col_R(end)+5 size(peaks, 2)]);
+        col_extra_R = col_R(end)+1:min([col_R(end)+extrap_dist size(peaks_raw, 2)]);
         
         row_extra_R = round(polyval(p, col_extra_R));
         row_top = row_extra_R - round(width_i+err_bin);
         row_top(row_top<1) = 1;
+        row_top(row_top>size(peaks_raw,1)) = size(peaks_raw, 1);
         row_bott = row_extra_R + round(width_i+err_bin);
-        row_bott(row_bott > size(peaks, 1)) = size(peaks, 1);
+        row_bott(row_bott<1) = 1;
+        row_bott(row_bott > size(peaks_raw, 1)) = size(peaks_raw, 1);
         adj_idx = cell(1, length(col_extra_R));
         for j = 1:length(col_extra_R)
-            adj_idx{j} = sub2ind(size(peaks), row_top(j):row_bott(j), ...
+            adj_idx{j} = sub2ind(size(peaks_raw), row_top(j):row_bott(j), ...
                 col_extra_R(j)*ones(1, row_bott(j)-row_top(j)+1));
         end
         adj_idx = [adj_idx{:}]';
@@ -340,7 +344,7 @@ while max(cellfun(@length, layer_pool)) >= 20
         end
         group_pool(adj_idx) = 0;
         
-        if isempty(group_num) || col_extra_R(end) > size(peaks, 2)-5
+        if isempty(group_num) || col_extra_R(end) >= size(peaks_raw, 2)-extrap_dist
             search_R = false;
         end
     end
@@ -348,20 +352,26 @@ while max(cellfun(@length, layer_pool)) >= 20
     % Connections moving left
     while search_L == true
         
-        [row, col] = ind2sub(size(peaks), layer_i);
-        row_L = row(1:19);
-        col_L = col(1:19);
+        [row, col] = ind2sub(size(peaks_raw), layer_i);
+        [~,sort_idx] = sort(col);
+        row = row(sort_idx);
+        col = col(sort_idx);
+        i_length = length(col);
+        row_L = row(1:min([i_length 15]));
+        col_L = col(1:min([i_length 15]));
         p = polyfit(col_L, row_L, 1);
-        col_extra_L = col_L(1)-6:col_L(1)-1;
+        col_extra_L = max([1 col_L(1)-extrap_dist]):col_L(1)-1;
         
         row_extra_L = round(polyval(p, col_extra_L));
         row_top = row_extra_L - round(width_i+err_bin);
         row_top(row_top<1) = 1;
+        row_top(row_top>size(peaks_raw,1)) = size(peaks_raw, 1);
         row_bott = row_extra_L + round(width_i+err_bin);
-        row_bott(row_bott > size(peaks, 1)) = size(peaks, 1);
+        row_bott(row_bott<1) = 1;
+        row_bott(row_bott > size(peaks_raw, 1)) = size(peaks_raw, 1);
         adj_idx = cell(1, length(col_extra_L));
         for j = 1:length(col_extra_L)
-            adj_idx{j} = sub2ind(size(peaks), row_top(j):row_bott(j), ...
+            adj_idx{j} = sub2ind(size(peaks_raw), row_top(j):row_bott(j), ...
                 col_extra_L(j)*ones(1, row_bott(j)-row_top(j)+1));
         end
         
@@ -379,92 +389,95 @@ while max(cellfun(@length, layer_pool)) >= 20
         end
         group_pool(adj_idx) = 0;
         
-        if isempty(group_num) || col_extra_L(1) < 5
+        if isempty(group_num) || col_extra_L(1) <= extrap_dist
             search_L = false;
         end
         
         
     end
-    
-    layers_comb{i} = layer_i;
+    layers_comb{i} = sort(layer_i);
     layer_pool(idx_i) = [];
     layers_idx(idx_i) = [];
     
 end
 
 layers_comb(cellfun(@isempty, layers_comb)) = [];
-layers = layers_comb;
 
 
-% % Preallocate arrays for the matrix indices of members of each layer
-% layers_idx = cell(1,new_group-1);
-% peaks = zeros(size(peaks_raw));
-% for i = 1:length(layers_idx)
-%     
-%     % Find matrix indices of all members of ith layer, and assign to
-%     % preallocated cell array
-%     layer_i = find(peak_group==i);
-%     
-%     % Find row and col indices of members of ith layer
-%     [row, col] = ind2sub(size(radar.data_smooth), layer_i);
-%     
-%     % If multiple rows exist for the same column, take the
-%     % squared prominence-weighted mean of the rows
-%     if length(col) > length(unique(col))
-%         layer_mat = zeros(size(radar.data_smooth));
-%         layer_mat(layer_i) = peaks_raw(layer_i);
-%         multi_idx = sum(logical(layer_mat))>1;
-%         col_nums = 1:size(layer_mat, 2);
-%         for k = col_nums(multi_idx)
-%             k_idx = find(col==k);
-%             k_peaks = layer_mat(row(k_idx),k);
-%             k_sum = sum(k_peaks.^2);
-%             k_row = round(sum((k_peaks.^2/k_sum).*row(k_idx)));
-%             k_peak = sum((k_peaks.^2/k_sum).*k_peaks);
-% %             k_sum = sum(k_peaks);
-% %             k_row = round(sum((k_peaks/k_sum).*row(k_idx)));
-% %             k_peak = sum((k_peaks/k_sum).*k_peaks);
-%             k_col = zeros(size(layer_mat, 1), 1);
-%             k_col(k_row) = k_peak;
-%             layer_mat(:,k) = k_col;
-%         end
-%         peaks_mat = find(layer_mat);
-%         [row, col] = ind2sub(size(radar.data_smooth), peaks_mat);
-%         peaks(peaks_mat) = layer_mat(peaks_mat);
-%     
-%     else
-%         peaks(layer_i) = peaks_raw(layer_i);
-%     end
-% 
-% %     % Smooth layer i using a moving average of row indices
-% %     row_mean = round(movmean(row, round(100/mean(diff(radar.dist)))));
-% %     layers_test{i} = sub2ind(size(radar.data_smooth), row_mean, col);
-%     layers_idx{i} = sub2ind(size(radar.data_smooth), row, col);
-%     
-% end
+
+% Preallocate arrays for the matrix indices of members of each layer
+layers_idx = cell(1,length(layers_comb));
+layers_test = cell(1,length(layers_comb));
+peaks = zeros(size(peaks_raw));
+for i = 1:length(layers_idx)
+    
+    % Find matrix indices of all members of ith layer, and assign to
+    % preallocated cell array
+    layer_i = layers_comb{i};
+    
+    % Find row and col indices of members of ith layer
+    [row, col] = ind2sub(size(radar.data_smooth), layer_i);
+    
+%     [~,sort_idx] = sort(col);
+%     row = row(sort_idx);
+%     col = col(sort_idx);
+    
+    % If multiple rows exist for the same column, take the
+    % squared prominence-weighted mean of the rows
+    if length(col) > length(unique(col))
+        layer_mat = zeros(size(radar.data_smooth));
+        layer_mat(layer_i) = peaks_raw(layer_i);
+        multi_idx = sum(logical(layer_mat))>1;
+        col_nums = 1:size(layer_mat, 2);
+        for k = col_nums(multi_idx)
+            k_idx = find(col==k);
+            k_peaks = layer_mat(row(k_idx),k);
+            k_sum = sum(k_peaks.^2);
+            k_row = round(sum((k_peaks.^2/k_sum).*row(k_idx)));
+            k_peak = sum((k_peaks.^2/k_sum).*k_peaks);
+%             k_sum = sum(k_peaks);
+%             k_row = round(sum((k_peaks/k_sum).*row(k_idx)));
+%             k_peak = sum((k_peaks/k_sum).*k_peaks);
+            k_col = zeros(size(layer_mat, 1), 1);
+            k_col(k_row) = k_peak;
+            layer_mat(:,k) = k_col;
+        end
+        peaks_mat = find(layer_mat);
+        [row, col] = ind2sub(size(radar.data_smooth), peaks_mat);
+        peaks(peaks_mat) = layer_mat(peaks_mat);
+    
+    else
+        peaks(layer_i) = peaks_raw(layer_i);
+    end
+
+%     % Smooth layer i using a moving average of row indices
+    row_mean = round(movmean(row, round(250/horz_res)));
+    layers_test{i} = sub2ind(size(radar.data_smooth), row_mean, col);
+    layers_idx{i} = sub2ind(size(radar.data_smooth), row, col);
+    
+end
 
 
 % Integrate peak magnitudes across ith layer to obtain layer
 % prominence-distance value (accounting for lateral size of stacked
 % radar trace bins)
 % layers_val = cellfun(@(x) sum(peaks(x))*mean(diff(radar.dist)), layers);
-layers_dist = cellfun(@(x) numel(x)*median(diff(radar.dist)), layers);
+layers_dist = cellfun(@(x) numel(x)*median(diff(radar.dist)), layers_idx);
 
 % Map layer prominence-distance values to the location within the radar
 % matrix of the ith layer
 layer_peaks = zeros(size(peaks));
-for i = 1:length(layers)
-    layer_peaks(layers{i}) = peaks(layers{i}).*layers_dist(i);
+for i = 1:length(layers_idx)
+    layer_peaks(layers_idx{i}) = peaks(layers_idx{i}).*layers_dist(i);
 end
 
-layers = layers(cellfun(@(x) ...
-    length(x) > round(100/mean(diff(radar.dist))), layers));
+
 
 %%
 
 % Output layer arrays to radar structure
 radar.peaks = peaks;
-radar.layers = layers;
+radar.layers = layers_idx;
 radar.layer_vals = layer_peaks;
 
 
