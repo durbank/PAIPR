@@ -42,7 +42,7 @@ file = strcat(radar_dir, files(i).name);
 
 % Path to full SEAT transect
 file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_4.mat');
+    'layers_ku_band_SEAT10_5.mat');
 
 % % Path of the OIB file to process
 % % SEAT10_4

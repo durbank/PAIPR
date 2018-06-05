@@ -257,13 +257,13 @@ end
 
 
 % Preallocate arrays for the matrix indices of members of each layer
-layers_idx = cell(1,new_group-1);
+layers = cell(1,new_group-1);
 
-for i = 1:length(layers_idx)
+for i = 1:length(layers)
     
     % Find matrix indices of all members of ith layer, and assign to
     % preallocated cell array
-    layers_idx{i} = find(peak_group==i);
+    layers{i} = find(peak_group==i);
 end
 peaks = peaks_raw;
 
@@ -271,6 +271,129 @@ peaks = peaks_raw;
 
 
 
+
+
+
+% Code to combine overlapping and adjacent layers
+layers_idx = 1:length(layers);
+layer_pool = layers;
+group_pool = peak_group;
+layers_comb = cell(1, length(layers(cellfun(@(x) length(x)>20, layers))));
+i = 0;
+
+
+while max(cellfun(@length, layer_pool)) >= 20
+    i = i + 1
+    [~, idx_i] = max(cellfun(@length, layer_pool));
+    layer_i = layer_pool{idx_i};
+    width_i = 0.5*median(peak_width(layer_i));
+    [~, col] = ind2sub(size(peaks), layer_i);
+    
+    if max(col) > size(peaks, 2)-5
+        search_R = false;
+    else
+        search_R = true;
+    end
+    
+    if min(col) < 5
+        search_L = false;
+    else
+        search_L = true;
+    end
+    
+    % Connections moving right
+    while search_R == true
+        
+        [row, col] = ind2sub(size(peaks), layer_i);
+        [~,sort_idx] = sort(col);
+        row = row(sort_idx);
+        col = col(sort_idx);
+        row_R = row(end-19:end);
+        col_R = col(end-19:end);
+        p = polyfit(col_R, row_R, 1);
+        col_extra_R = col_R(end)+1:min([col_R(end)+5 size(peaks, 2)]);
+        
+        row_extra_R = round(polyval(p, col_extra_R));
+        row_top = row_extra_R - round(width_i+err_bin);
+        row_top(row_top<1) = 1;
+        row_bott = row_extra_R + round(width_i+err_bin);
+        row_bott(row_bott > size(peaks, 1)) = size(peaks, 1);
+        adj_idx = cell(1, length(col_extra_R));
+        for j = 1:length(col_extra_R)
+            adj_idx{j} = sub2ind(size(peaks), row_top(j):row_bott(j), ...
+                col_extra_R(j)*ones(1, row_bott(j)-row_top(j)+1));
+        end
+        adj_idx = [adj_idx{:}]';
+        
+        
+        
+        local_adj = group_pool(adj_idx);
+        group_idx = logical(local_adj);
+        group_num = unique(local_adj(group_idx));
+        
+        for j = 1:length(group_num)
+            j_idx = layers_idx==group_num(j);
+            layer_i = [layer_i; layer_pool{j_idx}];
+            
+            layer_pool(j_idx) = [];
+            layers_idx(j_idx) = [];
+        end
+        group_pool(adj_idx) = 0;
+        
+        if isempty(group_num) || col_extra_R(end) > size(peaks, 2)-5
+            search_R = false;
+        end
+    end
+    
+    % Connections moving left
+    while search_L == true
+        
+        [row, col] = ind2sub(size(peaks), layer_i);
+        row_L = row(1:19);
+        col_L = col(1:19);
+        p = polyfit(col_L, row_L, 1);
+        col_extra_L = col_L(1)-6:col_L(1)-1;
+        
+        row_extra_L = round(polyval(p, col_extra_L));
+        row_top = row_extra_L - round(width_i+err_bin);
+        row_top(row_top<1) = 1;
+        row_bott = row_extra_L + round(width_i+err_bin);
+        row_bott(row_bott > size(peaks, 1)) = size(peaks, 1);
+        adj_idx = cell(1, length(col_extra_L));
+        for j = 1:length(col_extra_L)
+            adj_idx{j} = sub2ind(size(peaks), row_top(j):row_bott(j), ...
+                col_extra_L(j)*ones(1, row_bott(j)-row_top(j)+1));
+        end
+        
+        adj_idx = [adj_idx{:}]';
+        local_adj = group_pool(adj_idx);
+        group_idx = logical(local_adj);
+        group_num = unique(local_adj(group_idx));
+        
+        for j = 1:length(group_num)
+            j_idx = layers_idx==group_num(j);
+            layer_i = [layer_i; layer_pool{j_idx}];
+            
+            layer_pool(j_idx) = [];
+            layers_idx(j_idx) = [];
+        end
+        group_pool(adj_idx) = 0;
+        
+        if isempty(group_num) || col_extra_L(1) < 5
+            search_L = false;
+        end
+        
+        
+    end
+    
+    layers_comb{i} = layer_i;
+    layer_pool(idx_i) = [];
+    layers_idx(idx_i) = [];
+    
+end
+
+layers_comb(cellfun(@isempty, layers_comb)) = [];
+layers = layers_comb;
 
 
 % % Preallocate arrays for the matrix indices of members of each layer
@@ -325,23 +448,23 @@ peaks = peaks_raw;
 % prominence-distance value (accounting for lateral size of stacked
 % radar trace bins)
 % layers_val = cellfun(@(x) sum(peaks(x))*mean(diff(radar.dist)), layers);
-layers_dist = cellfun(@(x) numel(x)*median(diff(radar.dist)), layers_idx);
+layers_dist = cellfun(@(x) numel(x)*median(diff(radar.dist)), layers);
 
 % Map layer prominence-distance values to the location within the radar
 % matrix of the ith layer
 layer_peaks = zeros(size(peaks));
-for i = 1:length(layers_idx)
-    layer_peaks(layers_idx{i}) = peaks(layers_idx{i}).*layers_dist(i);
+for i = 1:length(layers)
+    layer_peaks(layers{i}) = peaks(layers{i}).*layers_dist(i);
 end
 
-layers_idx = layers_idx(cellfun(@(x) ...
-    length(x) > round(100/mean(diff(radar.dist))), layers_idx));
+layers = layers(cellfun(@(x) ...
+    length(x) > round(100/mean(diff(radar.dist))), layers));
 
 %%
 
 % Output layer arrays to radar structure
 radar.peaks = peaks;
-radar.layers = layers_idx;
+radar.layers = layers;
 radar.layer_vals = layer_peaks;
 
 
