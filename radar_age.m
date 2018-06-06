@@ -115,6 +115,60 @@ new_group = Groups{1}(end) + 1;
 peak_group = zeros(size(peaks_raw));
 peak_group(depth_idx{1},1) = Groups{1};
 
+
+
+peak_group = zeros(size(peaks_raw));
+peak_pool = peaks_raw;
+group_num = 1;
+
+[~, peak_max] = max(peak_pool(:));
+peak_group(peak_max) = group_num;
+
+
+peak_n = peak_max;
+search_R = true;
+
+while search_R == true
+    
+    [row_n col_n] = ind2sub(size(peaks_raw), peak_n);
+    mag_n = peaks_raw(peak_n);
+    row_idx = [max([row_n-round(0.50/core_res) 1]) ...
+        min([row_n+round(0.50/core_res) size(peaks_raw, 1)])];
+    col_idx = [col_n+1 min([col_n+round(100/horz_res) size(peaks_raw, 2)])];
+    peak_local = peaks_raw(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
+    local_idx = find(peak_local);
+    mag_local = peak_local(local_idx);
+    [row_local, col_local] = ind2sub(size(peak_local), local_idx);
+    
+    dist_n = sqrt((row_n - (row_idx(1)+row_local-1)).^2 + ...
+        2*(col_n - (col_idx(1)+col_local-1)).^2 + (mag_n - mag_local).^2);
+    
+    % Select the nearest group neighbor to peak (i,j)
+    [min_dist, dist_idx] = min(dist_n);
+        
+    % Set distance threshold based on peak width and error bin size
+    threshold = (peak_width(peak_n) + err_bin);
+            
+    if min_dist <= threshold
+        peak_near = sub2ind(size(peaks_raw), ...
+            row_idx(1)+row_local(dist_idx)-1, col_idx(1)+col_local(dist_idx)-1);
+        peak_group(peak_near) = group_num;
+        peak_n = peak_near;
+            
+    else
+        search_R = false;
+    end
+end
+
+
+
+
+
+
+
+
+
+
 for i = 2:size(peaks_raw, 2)
     
     % Assign column bounds for the ith local search window based on 250 m
@@ -167,11 +221,7 @@ for i = 2:size(peaks_raw, 2)
             group_col(k) = max(k_cols) + 1;
         end
         
-        
-        
-        
-        
-        
+
 %         % Calculate distances between peak (i,j) and mean group values
 %         % within local window based on differences in depth, lateral
 %         % distance, and peak prominence
@@ -280,8 +330,6 @@ group_pool = peak_group;
 extrap_dist = round(200/horz_res);
 layers_comb = cell(1, length(layers(cellfun(@(x) length(x)>=extrap_dist, layers))));
 i = 0;
-
-
 
 while max(cellfun(@length, layer_pool)) >= extrap_dist
     i = i + 1
