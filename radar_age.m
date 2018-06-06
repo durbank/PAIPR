@@ -68,7 +68,7 @@ troughs = zeros(size(radar.data_smooth));
 
 for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
-    minProm = 0.25;                 % Prominence threshold for peaks
+    minProm = 0.50;                 % Prominence threshold for peaks
     minDist = 0.08;                 % Min distance between peaks (in meters)
     
     % Find peaks in each trace based on requirements
@@ -102,18 +102,9 @@ end
 % Define size of ~quasi bin confidence interval
 err_bin = round(minDist/core_res);
 
-% Preallocate cell array for layer numbers and initialize values by
-% assigning unique layer numbers to each peak in the first trace
-Groups = Proms;
-Groups{1} = uint32((1:length(Groups{1})))';
 
-% Set value for next unique layer number
-new_group = Groups{1}(end) + 1;
 
-% Preallocate matrix for layer numbers and add initialized values for the
-% first trace (col=1)
-peak_group = zeros(size(peaks_raw));
-peak_group(depth_idx{1},1) = Groups{1};
+
 
 
 
@@ -166,7 +157,18 @@ end
 
 
 
+% Preallocate cell array for layer numbers and initialize values by
+% assigning unique layer numbers to each peak in the first trace
+Groups = Proms;
+Groups{1} = uint32((1:length(Groups{1})))';
 
+% Set value for next unique layer number
+new_group = Groups{1}(end) + 1;
+
+% Preallocate matrix for layer numbers and add initialized values for the
+% first trace (col=1)
+peak_group = zeros(size(peaks_raw));
+peak_group(depth_idx{1},1) = Groups{1};
 
 
 for i = 2:size(peaks_raw, 2)
