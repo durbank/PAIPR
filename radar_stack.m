@@ -12,6 +12,7 @@ if size(mdata.depth, 2) > 1
     rho_stack = zeros(size(mdata.rho_coeff, 1), length(stack_idx)-1);
     var_stack = zeros(size(mdata.rho_var, 1), length(stack_idx)-1);
     depth_stack = zeros(size(mdata.data_out, 1), length(stack_idx)-1);
+    
     for i = 1:length(stack_idx)-1
         E_stack(i) = mean(mdata.Easting(stack_idx(i):stack_idx(i+1)));
         N_stack(i) = mean(mdata.Northing(stack_idx(i):stack_idx(i+1)));
@@ -37,7 +38,17 @@ end
 
 dist_stack = 0:window_length:window_length*(length(stack_idx)-2);
 
-mdata_stack = struct('collect_date', mdata.collect_date, 'Easting', E_stack,...
-    'Northing', N_stack, 'dist', dist_stack,  'depth', depth_stack, ...
-    'data_stack', data_stack, 'rho_coeff', rho_stack, 'rho_var', var_stack);
+if isfield(mdata, 'arr_layers')
+    
+    man_layers = mdata.arr_layers(:,stack_idx(1:end-1));
+    mdata_stack = struct('collect_date', mdata.collect_date, 'Easting', E_stack,...
+        'Northing', N_stack, 'dist', dist_stack,  'depth', depth_stack, ...
+        'data_stack', data_stack, 'rho_coeff', rho_stack, 'rho_var', var_stack,...
+        'man_layers', man_layers);
+else
+    
+    mdata_stack = struct('collect_date', mdata.collect_date, 'Easting', E_stack,...
+        'Northing', N_stack, 'dist', dist_stack,  'depth', depth_stack, ...
+        'data_stack', data_stack, 'rho_coeff', rho_stack, 'rho_var', var_stack);
+end
 end

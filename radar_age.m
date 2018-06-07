@@ -42,6 +42,17 @@ for i = 1:size(radar.data_stack, 2)
     radarZ_interp(:,i) = radarZ_i(1:size(radarZ_interp, 1));
 end
 
+if isfield(radar, 'man_layers')
+    man_interp = zeros(depth_bott/core_res+1, size(radar.data_stack, 2));
+    for i = 1:size(radar.data_stack, 2)
+        depth_interp = (0:core_res:radar.depth(end,i));
+        man_i = interp1(radar.depth(:,i), radar.man_layers(:,i), depth_interp, 'nearest');
+        man_interp(:,i) = man_i(1:size(man_interp, 1));
+    end
+end
+radar.man_layers = man_interp;
+
+
 % Assign output depth to interpolated depths
 radar.depth = (0:core_res:depth_bott)';
 

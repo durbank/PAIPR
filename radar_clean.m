@@ -4,58 +4,105 @@ function [mdata] = radar_clean(file)
 
 mdata = load(file);
 
-% Remove data without valid location values (lat/lon)
-loc_idx = logical(mdata.lat);
-mdata.lat(~loc_idx) = [];
-mdata.lon(~loc_idx) = [];
-mdata.time_gps(~loc_idx) = [];
-mdata.time_trace(~loc_idx) = [];
-mdata.data_out(:,~loc_idx) = [];
-% mdata.arr_layers(:,~loc_idx) = [];
-% mdata.arr_segs(:,~loc_idx) = [];
+manual_layers = isfield(mdata, 'arr_layers');
 
-% Calucate distance along traverse (in meters)
-mdata.dist = pathdist(mdata.lat, mdata.lon);
-
-% Remove data from repeat traces at the same location
-dist_idx = logical(diff(mdata.dist));
-mdata.dist(~dist_idx) = [];
-mdata.lat(~dist_idx) = [];
-mdata.lon(~dist_idx) = [];
-mdata.time_gps(~dist_idx) = [];
-mdata.time_trace(~dist_idx) = [];
-mdata.data_out(:,~dist_idx) = [];
-% mdata.arr_layers(:,~dist_idx) = [];
-% mdata.arr_segs(:,~dist_idx) = [];
-
-% Approximate the surface in the radar trace, and remove data above the
-% surface (this will need to be improved in the future. OIB may have some
-% code that could be helpful)
-%%% FUTURE CHANGES REQUIRED %%%
-min_loc = 100;      % Mininum starting row value to search for surface
-max_loc = 300;
-%%% FUTURE CHANGES REQUIRED %%%
-[~, surf_idx] = max(abs(diff(mdata.data_out(min_loc:max_loc,:))));
-surf_idx = surf_idx + (min_loc-1);
-% surf_row = median(surf_idx);
-% surf_row = mode(surf_idx);
-surf_row = 203;
-
-mdata.data_out(1:surf_row-1,:) = [];
-% mdata.arr_layers(1:surf_row-1,:) = [];
-% mdata.arr_segs(1:surf_row-1,:) = [];
-
-% Identify data columns consisting solely of NaN cells, and remove these
-% columns from all radar data arrays
-nan_idx = all(isnan(mdata.data_out));
-mdata.dist(nan_idx) = [];
-mdata.lat(nan_idx) = [];
-mdata.lon(nan_idx) = [];
-mdata.time_gps(nan_idx) = [];
-mdata.time_trace(nan_idx) = [];
-mdata.data_out(:,nan_idx) = [];
-% mdata.arr_layers(:,nan_idx) = [];
-% mdata.arr_segs(:,nan_idx) = [];
+switch manual_layers
+    case true
+        
+        % Remove data without valid location values (lat/lon)
+        loc_idx = logical(mdata.lat);
+        mdata.lat(~loc_idx) = [];
+        mdata.lon(~loc_idx) = [];
+        mdata.time_gps(~loc_idx) = [];
+        mdata.time_trace(~loc_idx) = [];
+        mdata.data_out(:,~loc_idx) = [];
+        mdata.arr_layers(:,~loc_idx) = [];
+        mdata.arr_segs(:,~loc_idx) = [];
+        
+        % Calucate distance along traverse (in meters)
+        mdata.dist = pathdist(mdata.lat, mdata.lon);
+        
+        % Remove data from repeat traces at the same location
+        dist_idx = logical(diff(mdata.dist));
+        mdata.dist(~dist_idx) = [];
+        mdata.lat(~dist_idx) = [];
+        mdata.lon(~dist_idx) = [];
+        mdata.time_gps(~dist_idx) = [];
+        mdata.time_trace(~dist_idx) = [];
+        mdata.data_out(:,~dist_idx) = [];
+        mdata.arr_layers(:,~dist_idx) = [];
+        mdata.arr_segs(:,~dist_idx) = [];
+        
+        % Approximate the surface in the radar trace, and remove data above the
+        % surface (this will need to be improved in the future. OIB may have some
+        % code that could be helpful)
+        % min_loc = 100;      % Mininum starting row value to search for surface
+        % max_loc = 300;
+        % [~, surf_idx] = max(abs(diff(mdata.data_out(min_loc:max_loc,:))));
+        % surf_idx = surf_idx + (min_loc-1);
+        % surf_row = median(surf_idx);
+        % surf_row = mode(surf_idx);
+        surf_row = 203;
+        mdata.data_out(1:surf_row-1,:) = [];
+        mdata.arr_layers(1:surf_row-1,:) = [];
+        mdata.arr_segs(1:surf_row-1,:) = [];
+        
+        % Identify data columns consisting solely of NaN cells, and remove these
+        % columns from all radar data arrays
+        nan_idx = all(isnan(mdata.data_out));
+        mdata.dist(nan_idx) = [];
+        mdata.lat(nan_idx) = [];
+        mdata.lon(nan_idx) = [];
+        mdata.time_gps(nan_idx) = [];
+        mdata.time_trace(nan_idx) = [];
+        mdata.data_out(:,nan_idx) = [];
+        mdata.arr_layers(:,nan_idx) = [];
+        mdata.arr_segs(:,nan_idx) = [];
+        
+    case false
+        % Remove data without valid location values (lat/lon)
+        loc_idx = logical(mdata.lat);
+        mdata.lat(~loc_idx) = [];
+        mdata.lon(~loc_idx) = [];
+        mdata.time_gps(~loc_idx) = [];
+        mdata.time_trace(~loc_idx) = [];
+        mdata.data_out(:,~loc_idx) = [];
+        
+        % Calucate distance along traverse (in meters)
+        mdata.dist = pathdist(mdata.lat, mdata.lon);
+        
+        % Remove data from repeat traces at the same location
+        dist_idx = logical(diff(mdata.dist));
+        mdata.dist(~dist_idx) = [];
+        mdata.lat(~dist_idx) = [];
+        mdata.lon(~dist_idx) = [];
+        mdata.time_gps(~dist_idx) = [];
+        mdata.time_trace(~dist_idx) = [];
+        mdata.data_out(:,~dist_idx) = [];
+        
+        % Approximate the surface in the radar trace, and remove data above the
+        % surface (this will need to be improved in the future. OIB may have some
+        % code that could be helpful)
+        % min_loc = 100;      % Mininum starting row value to search for surface
+        % max_loc = 300;
+        % [~, surf_idx] = max(abs(diff(mdata.data_out(min_loc:max_loc,:))));
+        % surf_idx = surf_idx + (min_loc-1);
+        % surf_row = median(surf_idx);
+        % surf_row = mode(surf_idx);
+        surf_row = 203;
+        mdata.data_out(1:surf_row-1,:) = [];
+        
+        % Identify data columns consisting solely of NaN cells, and remove these
+        % columns from all radar data arrays
+        nan_idx = all(isnan(mdata.data_out));
+        mdata.dist(nan_idx) = [];
+        mdata.lat(nan_idx) = [];
+        mdata.lon(nan_idx) = [];
+        mdata.time_gps(nan_idx) = [];
+        mdata.time_trace(nan_idx) = [];
+        mdata.data_out(:,nan_idx) = [];
+        
+end
 
 % Fill in missing radar data (missing/nan values) column-wise using a
 % piecewise shape-preserving spline
@@ -85,11 +132,5 @@ if ~isfield(mdata, 'collect_date')
     end
 end
 
-
-
-% Remove uneeded fields from the mdata structure
-% mdata = rmfield(mdata, {'arr_segs', 'lat', 'lon', 'time_gps', 'list_segs'...
-%     'list_segs_vals', 'list_segs_vals_indx1'});
-% mdata = rmfield(mdata, {'lat', 'lon', 'time_gps'});
 
 end
