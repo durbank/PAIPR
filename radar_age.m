@@ -49,8 +49,9 @@ if isfield(radar, 'man_layers')
         man_i = interp1(radar.depth(:,i), radar.man_layers(:,i), depth_interp, 'nearest');
         man_interp(:,i) = man_i(1:size(man_interp, 1));
     end
+    radar.man_layers = man_interp;
 end
-radar.man_layers = man_interp;
+
 
 
 % Assign output depth to interpolated depths
@@ -121,360 +122,463 @@ err_bin = round(minDist/core_res);
 
 peak_group = zeros(size(peaks_raw));
 peak_pool = peaks_raw;
+layers = cell(1, numel(peaks_raw(peaks_raw>0)));
 group_num = 1;
+i = 1;
+search_new = true;
 
-[~, peak_max] = max(peak_pool(:));
-peak_group(peak_max) = group_num;
 
 
-peak_n = peak_max;
-search_R = true;
-
-while search_R == true
+while search_new == true
     
-    [row_n col_n] = ind2sub(size(peaks_raw), peak_n);
-    mag_n = peaks_raw(peak_n);
-    row_idx = [max([row_n-round(0.50/core_res) 1]) ...
-        min([row_n+round(0.50/core_res) size(peaks_raw, 1)])];
-    col_idx = [col_n+1 min([col_n+round(100/horz_res) size(peaks_raw, 2)])];
-    peak_local = peaks_raw(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
-    local_idx = find(peak_local);
-    mag_local = peak_local(local_idx);
-    [row_local, col_local] = ind2sub(size(peak_local), local_idx);
+    [~, peak_max] = max(peak_pool(:));
+    peak_group(peak_max) = group_num;
     
-    dist_n = sqrt((row_n - (row_idx(1)+row_local-1)).^2 + ...
-        2*(col_n - (col_idx(1)+col_local-1)).^2 + (mag_n - mag_local).^2);
     
-    % Select the nearest group neighbor to peak (i,j)
-    [min_dist, dist_idx] = min(dist_n);
+    peak_n = peak_max;
+    search_R = true;
+    
+    while search_R == true
         
-    % Set distance threshold based on peak width and error bin size
-    threshold = (peak_width(peak_n) + err_bin);
+        layer_i = find(peak_group==group_num);
+        group_idx = layer_i(max([1 length(layer_i)-4]):length(layer_i));
+        [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
+        row_n = round(mean(row_i));
+        col_n = max(col_i);
+        mag_n = mean(peaks_raw(group_idx));
+        width_n = mean(peak_width(group_idx));
+        row_idx = [max([row_n-round(0.50/core_res) 1]) ...
+            min([row_n+round(0.50/core_res) size(peaks_raw, 1)])];
+        col_idx = [col_n+1 min([col_n+round(100/horz_res) size(peaks_raw, 2)])];
+        peak_local = peak_pool(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
+        local_idx = find(peak_local);
+        mag_local = peak_local(local_idx);
+        [row_local, col_local] = ind2sub(size(peak_local), local_idx);
+        
+        dist_n = sqrt((row_n - (row_idx(1)+row_local-1)).^2 + ...
+            2*(col_n - (col_idx(1)+col_local-1)).^2 + (mag_n - mag_local).^2);
+        
+        % Select the nearest group neighbor to peak (i,j)
+        [min_dist, dist_idx] = min(dist_n);
+        
+        % Set distance threshold based on peak width and error bin size
+        threshold = 1*width_n + err_bin;
+        
+        if min_dist <= threshold
+            peak_near = sub2ind(size(peaks_raw), ...
+                row_idx(1)+row_local(dist_idx)-1, col_idx(1)+col_local(dist_idx)-1);
+            peak_group(peak_near) = group_num;
+            peak_pool(peak_near) = 0;
+            peak_n = peak_near;
             
-    if min_dist <= threshold
-        peak_near = sub2ind(size(peaks_raw), ...
-            row_idx(1)+row_local(dist_idx)-1, col_idx(1)+col_local(dist_idx)-1);
-        peak_group(peak_near) = group_num;
-        peak_n = peak_near;
+        else
+            search_R = false;
+        end
+    end
+    
+    
+    peak_n = peak_max;
+    search_L = true;
+    
+    while search_L == true
+        
+        layer_i = find(peak_group==group_num);
+        group_idx = layer_i(1:min([5 length(layer_i)]));
+        [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
+        row_n = round(mean(row_i));
+        col_n = min(col_i);
+        mag_n = mean(peaks_raw(group_idx));
+        width_n = mean(peak_width(group_idx));
+        row_idx = [max([row_n-round(0.50/core_res) 1]) ...
+            min([row_n+round(0.50/core_res) size(peaks_raw, 1)])];
+        col_idx = [max([1 col_n-round(100/horz_res)-1]) col_n-1];
+        peak_local = peak_pool(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
+        local_idx = find(peak_local);
+        mag_local = peak_local(local_idx);
+        [row_local, col_local] = ind2sub(size(peak_local), local_idx);
+        
+        dist_n = sqrt((row_n - (row_idx(1)+row_local-1)).^2 + ...
+            2*(col_n - (col_idx(1)+col_local-1)).^2 + (mag_n - mag_local).^2);
+        
+        % Select the nearest group neighbor to peak (i,j)
+        [min_dist, dist_idx] = min(dist_n);
+        
+        % Set distance threshold based on peak width and error bin size
+        threshold = 1*width_n + err_bin;
+        
+        if min_dist <= threshold
+            peak_near = sub2ind(size(peaks_raw), ...
+                row_idx(1)+row_local(dist_idx)-1, col_idx(1)+col_local(dist_idx)-1);
+            peak_group(peak_near) = group_num;
+            peak_pool(peak_near) = 0;
+            peak_n = peak_near;
             
-    else
-        search_R = false;
+        else
+            search_L = false;
+        end
+    end
+    
+    layer_i = find(peak_group==group_num);
+%     peak_pool(layer_i) = 0;
+    
+    [row, col] = ind2sub(size(peaks_raw), layer_i);
+    row = round(movmean(row, 10));
+    for j = 1:length(layer_i)
+        mag_idx = sub2ind(size(peaks_raw), ...
+            row(max([1 j-5]):min([length(row) j+5])), ...
+            col(max([1 j-5]):min([length(col) j+5])));
+        mag_j = mean(peaks_raw(mag_idx));
+        width_j = mean(peak_width(mag_idx));
+        row_idx = [max([row(j)-round(0.50/core_res) 1]) ...
+            min([row(j)+round(0.50/core_res) size(peaks_raw, 1)])];
+        col_idx = [max([1 col(j)-round(100/horz_res)]) ...
+            min([size(peaks_raw, 2) col(j)+round(100/horz_res)])];
+        peak_local = peak_pool(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
+        local_idx = find(peak_local);
+        mag_local = peak_local(local_idx);
+        [row_local, col_local] = ind2sub(size(peak_local), local_idx);
+        
+        dist_j = sqrt((row(j) - (row_idx(1)+row_local-1)).^2 + ...
+            2*(col(j) - (col_idx(1)+col_local-1)).^2 + (mag_j - mag_local).^2);
+        
+        % Set distance threshold based on peak width and error bin size
+        threshold = 1*width_j + err_bin;
+        
+        tol_idx = dist_j <= threshold;
+        group_idx = sub2ind(size(peaks_raw), ...
+            row_idx(1)+row_local(tol_idx)-1, col_idx(1)+col_local(tol_idx)-1);
+        peak_group(group_idx) = group_num;
+        peak_pool(group_idx) = 0;
+        
+    end
+    
+    layer_i = find(peak_group==group_num);
+    layers{i} = layer_i;
+    group_num = group_num + 1;
+    i = i + 1;
+    
+    if max(peak_pool(:)) <= minProm
+        search_new = false;
     end
 end
 
+layers = layers(cellfun(@(x) length(x) > 4, layers));
 
 
 
 
 
 
-% Preallocate cell array for layer numbers and initialize values by
-% assigning unique layer numbers to each peak in the first trace
-Groups = Proms;
-Groups{1} = uint32((1:length(Groups{1})))';
-
-% Set value for next unique layer number
-new_group = Groups{1}(end) + 1;
-
-% Preallocate matrix for layer numbers and add initialized values for the
-% first trace (col=1)
-peak_group = zeros(size(peaks_raw));
-peak_group(depth_idx{1},1) = Groups{1};
 
 
-for i = 2:size(peaks_raw, 2)
-    
-    % Assign column bounds for the ith local search window based on 250 m
-    % window
-    col_idx = [max([i-round(250/horz_res) 1]) i-1];
-%     col_idx = [max([i-round(0.5*err_bin) 1]) i-1];
-    
-    for j = 1:length(Proms{i})
-        
-        % Determine cell array index for jth peak in ith trace
-        j_idx = depth_idx{i}(j);
-        
-        % Determine index values for the row boundaries of the local search
-        % window of peak (i,j) based on the bin error window size and the
-        % half-width of peak (i,j)
-%         row_idx = [max([j_idx - 3*round(err_bin+0.5*widths{i}(j)) 1]) ...
-%             min([j_idx + 3*round(err_bin+0.5*widths{i}(j)) size(peaks_raw, 1)])];
-        row_idx = [max([j_idx-round(0.50/core_res) 1]) ...
-            min([j_idx+round(0.50/core_res) size(peaks_raw, 1)])];
-        
-        % Define local window to search for matching layer numbers
-        peaks_local = peaks_raw(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
-        
-        % Define the local group matrix
-        group_local = peak_group(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
-        
-        % Find the extrapolated row, nearest col, and magnitude of groups within
-        % the local window
-        group_list = unique(group_local(group_local>0));
-        group_row = zeros(length(group_list), 1);
-        group_col = zeros(length(group_list), 1);
-        group_numel = zeros(length(group_list), 1);
-        group_mag = zeros(length(group_list), 1);
-        for k = 1:length(group_list)
-            [k_rows, k_cols] = find(group_local==group_list(k));
-            group_idx = sub2ind(size(group_local), k_rows, k_cols);
-            group_numel(k) = length(group_idx);
-            group_mag(k) = median(peaks_local(group_idx));
-%             group_mag(k) = sum(peaks_local(group_idx));
-            
-%             weights = (peaks_local(group_idx) + k_cols)/...
-%                 sum(peaks_local(group_idx) + k_cols);
-%             group_row(k) = sum(weights.*k_rows);
-            if group_numel(k) > 3
-                p = polyfit(k_cols, k_rows, 1);
-                group_row(k) = polyval(p, size(group_local, 2) + 1);
-            else
-                group_row(k) = mean(k_rows);
-            end
-            group_col(k) = max(k_cols) + 1;
-        end
-        
 
+% % Preallocate cell array for layer numbers and initialize values by
+% % assigning unique layer numbers to each peak in the first trace
+% Groups = Proms;
+% Groups{1} = uint32((1:length(Groups{1})))';
+% 
+% % Set value for next unique layer number
+% new_group = Groups{1}(end) + 1;
+% 
+% % Preallocate matrix for layer numbers and add initialized values for the
+% % first trace (col=1)
+% peak_group = zeros(size(peaks_raw));
+% peak_group(depth_idx{1},1) = Groups{1};
+% 
+% 
+% for i = 2:size(peaks_raw, 2)
+%     
+%     % Assign column bounds for the ith local search window based on 250 m
+%     % window
+%     col_idx = [max([i-round(250/horz_res) 1]) i-1];
+% %     col_idx = [max([i-round(0.5*err_bin) 1]) i-1];
+%     
+%     for j = 1:length(Proms{i})
+%         
+%         % Determine cell array index for jth peak in ith trace
+%         j_idx = depth_idx{i}(j);
+%         
+%         % Determine index values for the row boundaries of the local search
+%         % window of peak (i,j) based on the bin error window size and the
+%         % half-width of peak (i,j)
+% %         row_idx = [max([j_idx - 3*round(err_bin+0.5*widths{i}(j)) 1]) ...
+% %             min([j_idx + 3*round(err_bin+0.5*widths{i}(j)) size(peaks_raw, 1)])];
+%         row_idx = [max([j_idx-round(0.50/core_res) 1]) ...
+%             min([j_idx+round(0.50/core_res) size(peaks_raw, 1)])];
+%         
+%         % Define local window to search for matching layer numbers
+%         peaks_local = peaks_raw(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
+%         
+%         % Define the local group matrix
+%         group_local = peak_group(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
+%         
+%         % Find the extrapolated row, nearest col, and magnitude of groups within
+%         % the local window
+%         group_list = unique(group_local(group_local>0));
+%         group_row = zeros(length(group_list), 1);
+%         group_col = zeros(length(group_list), 1);
+%         group_numel = zeros(length(group_list), 1);
+%         group_mag = zeros(length(group_list), 1);
+%         for k = 1:length(group_list)
+%             [k_rows, k_cols] = find(group_local==group_list(k));
+%             group_idx = sub2ind(size(group_local), k_rows, k_cols);
+%             group_numel(k) = length(group_idx);
+%             group_mag(k) = median(peaks_local(group_idx));
+% %             group_mag(k) = sum(peaks_local(group_idx));
+%             
+% %             weights = (peaks_local(group_idx) + k_cols)/...
+% %                 sum(peaks_local(group_idx) + k_cols);
+% %             group_row(k) = sum(weights.*k_rows);
+%             if group_numel(k) > 3
+%                 p = polyfit(k_cols, k_rows, 1);
+%                 group_row(k) = polyval(p, size(group_local, 2) + 1);
+%             else
+%                 group_row(k) = mean(k_rows);
+%             end
+%             group_col(k) = max(k_cols) + 1;
+%         end
+%         
+% 
+% %         % Calculate distances between peak (i,j) and mean group values
+% %         % within local window based on differences in depth, lateral
+% %         % distance, and peak prominence
+% %         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+% %             (i - (col_idx(1)+group_col-1)).^2 + ...
+% %             (Proms{i}(j)-group_mag).^2);
+% % %         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+% % %             (i - (col_idx(1)+group_col-1)).^2 + ...
+% % %             (Proms{i}(j)-group_mag./group_numel).^2);
+% %         
+% %         % Assign distance threshold based on the (i,j) peak half-width and
+% %         % the error bin size
+% %         threshold = (0.5*widths{i}(j) + err_bin);
+% %         
+% %         % Create logical index of local peak groups within threshold
+% %         % tolerance, and apply to the group_mag array
+% %         tol_idx = w_dist <= threshold;
+% %         
+% %         % Scale local group distances within tolerance using the inverse
+% %         % group magnitude value (stronger peaks have smaller distances than
+% %         % equivalent weaker peaks) and find peak group with the shortest
+% %         % distance
+% %         [~, dist_idx] = min(w_dist(tol_idx));
+% % %         [~, dist_idx] = min((1./group_mag(tol_idx)).*w_dist(tol_idx));
+% %         
+% %         if isempty(dist_idx)
+% %             % If peak (i,j) nearest neighbor has a distance greater than
+% %             % the threshold, assign a new unqiue layer number to peak (i,j)
+% %             Groups{i}(j) = new_group;
+% %             peak_group(j_idx,i) = new_group;
+% %             new_group = new_group + 1;
+% %             
+% % 
+% %         else
+% %             % Assign peak (i,j) to the nearest neighbor group
+% %             group_j = uint32(group_list(dist_idx));
+% %             Groups{i}(j) = group_j;
+% %             peak_group(j_idx,i) = group_j;
+% 
+% 
+% 
+%         
 %         % Calculate distances between peak (i,j) and mean group values
 %         % within local window based on differences in depth, lateral
 %         % distance, and peak prominence
-%         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
-%             (i - (col_idx(1)+group_col-1)).^2 + ...
-%             (Proms{i}(j)-group_mag).^2);
-% %         w_dist = sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+% %         w_dist = (1./group_mag).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
 % %             (i - (col_idx(1)+group_col-1)).^2 + ...
 % %             (Proms{i}(j)-group_mag./group_numel).^2);
+%         w_dist = (1./group_mag).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+%             (i - (col_idx(1)+group_col-1)).^2);
+% %         w_dist = (1./group_mag).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
+% %             (i - (col_idx(1)+group_col-1)).^2 + ...
+% %             (Proms{i}(j)-group_mag).^2);
 %         
-%         % Assign distance threshold based on the (i,j) peak half-width and
-%         % the error bin size
+%         % Select the nearest group neighbor to peak (i,j)
+%         [min_dist, dist_idx] = min(w_dist);
+%         
+%         % Set distance threshold based on peak width and error bin size
 %         threshold = (0.5*widths{i}(j) + err_bin);
-%         
-%         % Create logical index of local peak groups within threshold
-%         % tolerance, and apply to the group_mag array
-%         tol_idx = w_dist <= threshold;
-%         
-%         % Scale local group distances within tolerance using the inverse
-%         % group magnitude value (stronger peaks have smaller distances than
-%         % equivalent weaker peaks) and find peak group with the shortest
-%         % distance
-%         [~, dist_idx] = min(w_dist(tol_idx));
-% %         [~, dist_idx] = min((1./group_mag(tol_idx)).*w_dist(tol_idx));
-%         
-%         if isempty(dist_idx)
+%             
+%         if min_dist.*group_mag(dist_idx) <= threshold
+%             % Assign peak (i,j) to the nearest neighbor group
+%             group_j = uint32(group_list(dist_idx));
+%             Groups{i}(j) = group_j;
+%             peak_group(j_idx,i) = group_j;
+% 
+%         else
 %             % If peak (i,j) nearest neighbor has a distance greater than
 %             % the threshold, assign a new unqiue layer number to peak (i,j)
 %             Groups{i}(j) = new_group;
 %             peak_group(j_idx,i) = new_group;
 %             new_group = new_group + 1;
 %             
+%             
+%             
+%             
+%         end
+%     end
+% end
 % 
-%         else
-%             % Assign peak (i,j) to the nearest neighbor group
-%             group_j = uint32(group_list(dist_idx));
-%             Groups{i}(j) = group_j;
-%             peak_group(j_idx,i) = group_j;
-
-
-
-        
-        % Calculate distances between peak (i,j) and mean group values
-        % within local window based on differences in depth, lateral
-        % distance, and peak prominence
-%         w_dist = (1./group_mag).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
-%             (i - (col_idx(1)+group_col-1)).^2 + ...
-%             (Proms{i}(j)-group_mag./group_numel).^2);
-        w_dist = (1./group_mag).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
-            (i - (col_idx(1)+group_col-1)).^2);
-%         w_dist = (1./group_mag).*sqrt((j_idx - (row_idx(1)+group_row-1)).^2 + ...
-%             (i - (col_idx(1)+group_col-1)).^2 + ...
-%             (Proms{i}(j)-group_mag).^2);
-        
-        % Select the nearest group neighbor to peak (i,j)
-        [min_dist, dist_idx] = min(w_dist);
-        
-        % Set distance threshold based on peak width and error bin size
-        threshold = (0.5*widths{i}(j) + err_bin);
-            
-        if min_dist.*group_mag(dist_idx) <= threshold
-            % Assign peak (i,j) to the nearest neighbor group
-            group_j = uint32(group_list(dist_idx));
-            Groups{i}(j) = group_j;
-            peak_group(j_idx,i) = group_j;
-
-        else
-            % If peak (i,j) nearest neighbor has a distance greater than
-            % the threshold, assign a new unqiue layer number to peak (i,j)
-            Groups{i}(j) = new_group;
-            peak_group(j_idx,i) = new_group;
-            new_group = new_group + 1;
-            
-            
-            
-            
-        end
-    end
-end
-
-
-
-
-
-% Preallocate arrays for the matrix indices of members of each layer
-layers = cell(1,new_group-1);
-
-for i = 1:length(layers)
-    
-    % Find matrix indices of all members of ith layer, and assign to
-    % preallocated cell array
-    layers{i} = find(peak_group==i);
-end
-
-
-
-
-
-
-
-
-% Code to combine overlapping and adjacent layers
-layers_idx = 1:length(layers);
-layer_pool = layers;
-group_pool = peak_group;
-extrap_dist = round(200/horz_res);
-layers_comb = cell(1, length(layers(cellfun(@(x) length(x)>=extrap_dist, layers))));
-i = 0;
-
-while max(cellfun(@length, layer_pool)) >= extrap_dist
-    i = i + 1
-    [~, idx_i] = max(cellfun(@length, layer_pool));
-    layer_i = layer_pool{idx_i};
-    width_i = 0.5*median(peak_width(layer_i));
-    [~, col] = ind2sub(size(peaks_raw), layer_i);
-    
-    if max(col) >= size(peaks_raw, 2) - extrap_dist
-        search_R = false;
-    else
-        search_R = true;
-    end
-    
-    if min(col) <= extrap_dist
-        search_L = false;
-    else
-        search_L = true;
-    end
-    
-    % Connections moving right
-    while search_R == true
-        
-        [row, col] = ind2sub(size(peaks_raw), layer_i);
-        [~,sort_idx] = sort(col);
-        row = row(sort_idx);
-        col = col(sort_idx);
-        i_length = length(col);
-        row_R = row(end-min([15 i_length])+1:end);
-        col_R = col(end-min([15 i_length])+1:end);
-        p = polyfit(col_R, row_R, 1);
-        col_extra_R = col_R(end)+1:min([col_R(end)+extrap_dist size(peaks_raw, 2)]);
-        
-        row_extra_R = round(polyval(p, col_extra_R));
-        row_top = row_extra_R - round(width_i+err_bin);
-        row_top(row_top<1) = 1;
-        row_top(row_top>size(peaks_raw,1)) = size(peaks_raw, 1);
-        row_bott = row_extra_R + round(width_i+err_bin);
-        row_bott(row_bott<1) = 1;
-        row_bott(row_bott > size(peaks_raw, 1)) = size(peaks_raw, 1);
-        adj_idx = cell(1, length(col_extra_R));
-        for j = 1:length(col_extra_R)
-            adj_idx{j} = sub2ind(size(peaks_raw), row_top(j):row_bott(j), ...
-                col_extra_R(j)*ones(1, row_bott(j)-row_top(j)+1));
-        end
-        adj_idx = [adj_idx{:}]';
-        
-        
-        
-        local_adj = group_pool(adj_idx);
-        group_idx = logical(local_adj);
-        group_num = unique(local_adj(group_idx));
-        
-        for j = 1:length(group_num)
-            j_idx = layers_idx==group_num(j);
-            layer_i = [layer_i; layer_pool{j_idx}];
-            
-            layer_pool(j_idx) = [];
-            layers_idx(j_idx) = [];
-        end
-        group_pool(adj_idx) = 0;
-        
-        if isempty(group_num) || col_extra_R(end) >= size(peaks_raw, 2)-extrap_dist
-            search_R = false;
-        end
-    end
-    
-    % Connections moving left
-    while search_L == true
-        
-        [row, col] = ind2sub(size(peaks_raw), layer_i);
-        [~,sort_idx] = sort(col);
-        row = row(sort_idx);
-        col = col(sort_idx);
-        i_length = length(col);
-        row_L = row(1:min([i_length 15]));
-        col_L = col(1:min([i_length 15]));
-        p = polyfit(col_L, row_L, 1);
-        col_extra_L = max([1 col_L(1)-extrap_dist]):col_L(1)-1;
-        
-        row_extra_L = round(polyval(p, col_extra_L));
-        row_top = row_extra_L - round(width_i+err_bin);
-        row_top(row_top<1) = 1;
-        row_top(row_top>size(peaks_raw,1)) = size(peaks_raw, 1);
-        row_bott = row_extra_L + round(width_i+err_bin);
-        row_bott(row_bott<1) = 1;
-        row_bott(row_bott > size(peaks_raw, 1)) = size(peaks_raw, 1);
-        adj_idx = cell(1, length(col_extra_L));
-        for j = 1:length(col_extra_L)
-            adj_idx{j} = sub2ind(size(peaks_raw), row_top(j):row_bott(j), ...
-                col_extra_L(j)*ones(1, row_bott(j)-row_top(j)+1));
-        end
-        
-        adj_idx = [adj_idx{:}]';
-        local_adj = group_pool(adj_idx);
-        group_idx = logical(local_adj);
-        group_num = unique(local_adj(group_idx));
-        
-        for j = 1:length(group_num)
-            j_idx = layers_idx==group_num(j);
-            layer_i = [layer_i; layer_pool{j_idx}];
-            
-            layer_pool(j_idx) = [];
-            layers_idx(j_idx) = [];
-        end
-        group_pool(adj_idx) = 0;
-        
-        if isempty(group_num) || col_extra_L(1) <= extrap_dist
-            search_L = false;
-        end
-        
-        
-    end
-    layers_comb{i} = sort(layer_i);
-    layer_pool(idx_i) = [];
-    layers_idx(idx_i) = [];
-    
-end
-
-layers_comb(cellfun(@isempty, layers_comb)) = [];
+% 
+% 
+% 
+% 
+% % Preallocate arrays for the matrix indices of members of each layer
+% layers = cell(1,new_group-1);
+% 
+% for i = 1:length(layers)
+%     
+%     % Find matrix indices of all members of ith layer, and assign to
+%     % preallocated cell array
+%     layers{i} = find(peak_group==i);
+% end
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+% % Code to combine overlapping and adjacent layers
+% layers_idx = 1:length(layers);
+% layer_pool = layers;
+% group_pool = peak_group;
+% extrap_dist = round(200/horz_res);
+% layers_comb = cell(1, length(layers(cellfun(@(x) length(x)>=extrap_dist, layers))));
+% i = 0;
+% 
+% while max(cellfun(@length, layer_pool)) >= extrap_dist
+%     i = i + 1
+%     [~, idx_i] = max(cellfun(@length, layer_pool));
+%     layer_i = layer_pool{idx_i};
+%     width_i = 0.5*median(peak_width(layer_i));
+%     [~, col] = ind2sub(size(peaks_raw), layer_i);
+%     
+%     if max(col) >= size(peaks_raw, 2) - extrap_dist
+%         search_R = false;
+%     else
+%         search_R = true;
+%     end
+%     
+%     if min(col) <= extrap_dist
+%         search_L = false;
+%     else
+%         search_L = true;
+%     end
+%     
+%     % Connections moving right
+%     while search_R == true
+%         
+%         [row, col] = ind2sub(size(peaks_raw), layer_i);
+%         [~,sort_idx] = sort(col);
+%         row = row(sort_idx);
+%         col = col(sort_idx);
+%         i_length = length(col);
+%         row_R = row(end-min([15 i_length])+1:end);
+%         col_R = col(end-min([15 i_length])+1:end);
+%         p = polyfit(col_R, row_R, 1);
+%         col_extra_R = col_R(end)+1:min([col_R(end)+extrap_dist size(peaks_raw, 2)]);
+%         
+%         row_extra_R = round(polyval(p, col_extra_R));
+%         row_top = row_extra_R - round(width_i+err_bin);
+%         row_top(row_top<1) = 1;
+%         row_top(row_top>size(peaks_raw,1)) = size(peaks_raw, 1);
+%         row_bott = row_extra_R + round(width_i+err_bin);
+%         row_bott(row_bott<1) = 1;
+%         row_bott(row_bott > size(peaks_raw, 1)) = size(peaks_raw, 1);
+%         adj_idx = cell(1, length(col_extra_R));
+%         for j = 1:length(col_extra_R)
+%             adj_idx{j} = sub2ind(size(peaks_raw), row_top(j):row_bott(j), ...
+%                 col_extra_R(j)*ones(1, row_bott(j)-row_top(j)+1));
+%         end
+%         adj_idx = [adj_idx{:}]';
+%         
+%         
+%         
+%         local_adj = group_pool(adj_idx);
+%         group_idx = logical(local_adj);
+%         group_num = unique(local_adj(group_idx));
+%         
+%         for j = 1:length(group_num)
+%             j_idx = layers_idx==group_num(j);
+%             layer_i = [layer_i; layer_pool{j_idx}];
+%             
+%             layer_pool(j_idx) = [];
+%             layers_idx(j_idx) = [];
+%         end
+%         group_pool(adj_idx) = 0;
+%         
+%         if isempty(group_num) || col_extra_R(end) >= size(peaks_raw, 2)-extrap_dist
+%             search_R = false;
+%         end
+%     end
+%     
+%     % Connections moving left
+%     while search_L == true
+%         
+%         [row, col] = ind2sub(size(peaks_raw), layer_i);
+%         [~,sort_idx] = sort(col);
+%         row = row(sort_idx);
+%         col = col(sort_idx);
+%         i_length = length(col);
+%         row_L = row(1:min([i_length 15]));
+%         col_L = col(1:min([i_length 15]));
+%         p = polyfit(col_L, row_L, 1);
+%         col_extra_L = max([1 col_L(1)-extrap_dist]):col_L(1)-1;
+%         
+%         row_extra_L = round(polyval(p, col_extra_L));
+%         row_top = row_extra_L - round(width_i+err_bin);
+%         row_top(row_top<1) = 1;
+%         row_top(row_top>size(peaks_raw,1)) = size(peaks_raw, 1);
+%         row_bott = row_extra_L + round(width_i+err_bin);
+%         row_bott(row_bott<1) = 1;
+%         row_bott(row_bott > size(peaks_raw, 1)) = size(peaks_raw, 1);
+%         adj_idx = cell(1, length(col_extra_L));
+%         for j = 1:length(col_extra_L)
+%             adj_idx{j} = sub2ind(size(peaks_raw), row_top(j):row_bott(j), ...
+%                 col_extra_L(j)*ones(1, row_bott(j)-row_top(j)+1));
+%         end
+%         
+%         adj_idx = [adj_idx{:}]';
+%         local_adj = group_pool(adj_idx);
+%         group_idx = logical(local_adj);
+%         group_num = unique(local_adj(group_idx));
+%         
+%         for j = 1:length(group_num)
+%             j_idx = layers_idx==group_num(j);
+%             layer_i = [layer_i; layer_pool{j_idx}];
+%             
+%             layer_pool(j_idx) = [];
+%             layers_idx(j_idx) = [];
+%         end
+%         group_pool(adj_idx) = 0;
+%         
+%         if isempty(group_num) || col_extra_L(1) <= extrap_dist
+%             search_L = false;
+%         end
+%         
+%         
+%     end
+%     layers_comb{i} = sort(layer_i);
+%     layer_pool(idx_i) = [];
+%     layers_idx(idx_i) = [];
+%     
+% end
+% 
+% layers_comb(cellfun(@isempty, layers_comb)) = [];
 
 
 
 % Preallocate arrays for the matrix indices of members of each layer
-layers_idx = cell(1,length(layers_comb));
-layers_test = cell(1,length(layers_comb));
+layers_idx = cell(1,length(layers));
+layers_test = cell(1,length(layers));
 peaks = zeros(size(peaks_raw));
 for i = 1:length(layers_idx)
     
     % Find matrix indices of all members of ith layer, and assign to
     % preallocated cell array
-    layer_i = layers_comb{i};
+    layer_i = layers{i};
     
     % Find row and col indices of members of ith layer
     [row, col] = ind2sub(size(radar.data_smooth), layer_i);
