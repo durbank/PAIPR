@@ -76,12 +76,12 @@ widths = cell(1,size(radar.data_smooth, 2));
 depths = cell(1, size(radar.data_smooth, 2));
 depth_idx = cell(1, size(radar.data_smooth, 2));
 
-troughs = zeros(size(radar.data_smooth));
+% troughs = zeros(size(radar.data_smooth));
 
 for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
     minProm = 0.50;                 % Prominence threshold for peaks
-    minDist = 0.08;                 % Min distance between peaks (in meters)
+    minDist = 0.10;                 % Min distance between peaks (in meters)
     
     % Find peaks in each trace based on requirements
     [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...
@@ -102,9 +102,9 @@ for i = 1:size(radar.data_smooth, 2)
     depth_idx{i} = peaks_idx_i;
     
     
-    [~, trough_idx_i, ~, P_trough_i] = findpeaks(-data_i, ...
-        'MinPeakProminence', minProm, 'MinPeakDistance', minDist/core_res);
-    troughs(trough_idx_i,i) = -P_trough_i;
+%     [~, trough_idx_i, ~, P_trough_i] = findpeaks(-data_i, ...
+%         'MinPeakProminence', minProm, 'MinPeakDistance', minDist/core_res);
+%     troughs(trough_idx_i,i) = -P_trough_i;
     
     
 end
@@ -126,7 +126,7 @@ layers = cell(1, numel(peaks_raw(peaks_raw>0)));
 group_num = 1;
 i = 1;
 search_new = true;
-
+matrix_idx = reshape(1:numel(peaks_raw), size(peaks_raw));
 
 
 while search_new == true
@@ -140,16 +140,16 @@ while search_new == true
     
     while search_R == true
         
-        layer_i = find(peak_group==group_num);
+        layer_i = matrix_idx(peak_group==group_num);
         group_idx = layer_i(max([1 length(layer_i)-4]):length(layer_i));
-        [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
-        row_n = round(mean(row_i));
-        col_n = max(col_i);
+        [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
+        [row_i, ~] = ind2sub(size(peaks_raw), group_idx);
+        row_n = round((1/2)*(row_n + mean(row_i)));
         mag_n = mean(peaks_raw(group_idx));
         width_n = mean(peak_width(group_idx));
         row_idx = [max([row_n-round(0.50/core_res) 1]) ...
             min([row_n+round(0.50/core_res) size(peaks_raw, 1)])];
-        col_idx = [col_n+1 min([col_n+round(100/horz_res) size(peaks_raw, 2)])];
+        col_idx = [col_n+1 min([col_n+round(250/horz_res) size(peaks_raw, 2)])];
         peak_local = peak_pool(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
         local_idx = find(peak_local);
         mag_local = peak_local(local_idx);
@@ -182,16 +182,16 @@ while search_new == true
     
     while search_L == true
         
-        layer_i = find(peak_group==group_num);
+        layer_i = matrix_idx(peak_group==group_num);
         group_idx = layer_i(1:min([5 length(layer_i)]));
-        [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
-        row_n = round(mean(row_i));
-        col_n = min(col_i);
+        [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
+        [row_i, ~] = ind2sub(size(peaks_raw), group_idx);
+        row_n = round((1/2)*(row_n + mean(row_i)));
         mag_n = mean(peaks_raw(group_idx));
         width_n = mean(peak_width(group_idx));
         row_idx = [max([row_n-round(0.50/core_res) 1]) ...
             min([row_n+round(0.50/core_res) size(peaks_raw, 1)])];
-        col_idx = [max([1 col_n-round(100/horz_res)-1]) col_n-1];
+        col_idx = [max([1 col_n-round(250/horz_res)-1]) col_n-1];
         peak_local = peak_pool(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
         local_idx = find(peak_local);
         mag_local = peak_local(local_idx);
@@ -218,7 +218,7 @@ while search_new == true
         end
     end
     
-    layer_i = find(peak_group==group_num);
+%     layer_i = find(peak_group==group_num);
 %     peak_pool(layer_i) = 0;
     
     [row, col] = ind2sub(size(peaks_raw), layer_i);
@@ -252,7 +252,7 @@ while search_new == true
         
     end
     
-    layer_i = find(peak_group==group_num);
+    layer_i = matrix_idx(peak_group==group_num);
     layers{i} = layer_i;
     group_num = group_num + 1;
     i = i + 1;
@@ -569,10 +569,9 @@ layers = layers(cellfun(@(x) length(x) > 4, layers));
 % layers_comb(cellfun(@isempty, layers_comb)) = [];
 
 
-
 % Preallocate arrays for the matrix indices of members of each layer
 layers_idx = cell(1,length(layers));
-layers_test = cell(1,length(layers));
+% layers_test = cell(1,length(layers));
 peaks = zeros(size(peaks_raw));
 for i = 1:length(layers_idx)
     
@@ -616,12 +615,11 @@ for i = 1:length(layers_idx)
     end
 
 %     % Smooth layer i using a moving average of row indices
-    row_mean = round(movmean(row, round(250/horz_res)));
-    layers_test{i} = sub2ind(size(radar.data_smooth), row_mean, col);
-    layers_idx{i} = sub2ind(size(radar.data_smooth), row, col);
+    row_mean = round(movmean(row, round(100/horz_res)));
+    layers_idx{i} = sub2ind(size(radar.data_smooth), row_mean, col);
+%     layers_idx{i} = sub2ind(size(radar.data_smooth), row, col);
     
 end
-
 
 % Integrate peak magnitudes across ith layer to obtain layer
 % prominence-distance value (accounting for lateral size of stacked
@@ -637,16 +635,13 @@ for i = 1:length(layers_idx)
 end
 
 
-
-%%
-
 % Output layer arrays to radar structure
 radar.peaks = peaks;
 radar.layers = layers_idx;
 radar.layer_vals = layer_peaks;
 
-
-
+%% 
+toc
 ages = zeros([size(radar.data_smooth) Ndraw]);
 radar.likelihood = zeros(size(radar.data_smooth));
 for i = 1:size(layer_peaks, 2)
@@ -656,6 +651,7 @@ for i = 1:size(layer_peaks, 2)
 %     P_50 = 1000*(quantile(radar.data_smooth(:,i), 0.95) - ...
 %         quantile(radar.data_smooth(:,i), 0.05));
     P_50 = 1*500*median(Proms{i});
+%     P_50 = median(Proms{i})*mean(cellfun(@length, layers_idx));
     
     Po = 0.001;
     K = 1;
@@ -684,6 +680,12 @@ for i = 1:size(layer_peaks, 2)
         depths_j = [0; depths_i(logical(yr_idx(:,j)))];
         yrs_j = ([age_top yr_pick1:-1:yr_pick1-length(depths_j)+2])';
         ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
+%         try
+%             ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
+%         catch ME
+%             sprintf('Error age interpolation for trace %u, trial %u. Filling with NAN', i, j);
+%             ages(:,i,j) = nan;
+%         end
     end
 end
 
