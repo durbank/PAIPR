@@ -186,7 +186,7 @@ while search_new == true
     while search_R == true
         
         % Get nearest 10 group members
-        group_idx = layer_i(end-min([19 length(layer_i)])+1:end);
+        group_idx = layer_i(end-min([13 length(layer_i)])+1:end);
         
         % Get row, col, and magnitude of current members of layer group
         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
@@ -286,7 +286,7 @@ while search_new == true
     while search_L == true
         
         % Get nearest 10 group members
-        group_idx = layer_i(1:min([20 length(layer_i)]));
+        group_idx = layer_i(1:min([14 length(layer_i)]));
         
         % Get row, col, and magnitude of current members of layer group
         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
