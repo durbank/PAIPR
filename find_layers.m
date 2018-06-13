@@ -48,7 +48,6 @@ while search_new == true
         % the weighted average of nearest 5 layer members and the farthest
         % right layer member (50/50 weighting)
         [row_temp, ~] = ind2sub(size(peaks_raw), group_idx);
-        %         row_pred = round((1/2)*(row_n + mean(row_temp)));
         row_pred = round(median(row_temp));
         col_pred = col_n + 1;
         

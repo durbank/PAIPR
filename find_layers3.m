@@ -1,10 +1,8 @@
-% Function that builds continuous layers by adding only nearest neighbor
-% (rather than all that meet threshold) based on the position of last
-% member added (rather than predicted position)
+% Same as find_layer2.m except that this function attempts to predict the
+% next layer position based on previous values, rather than simply used the
+% last known position
 
-
-
-function [peak_group, layers] = find_layers2(peaks_raw, peak_width, core_res, horz_res)
+function [peak_group, layers] = find_layers3(peaks_raw, peak_width, core_res, horz_res)
 
 % Preallocate layer group matrix and cell array
 peak_group = zeros(size(peaks_raw));
@@ -32,6 +30,8 @@ while search_new == true
     
     % Find the maximum peak remaining in pool and assign to group
     
+    i
+    
     [~, peak_max] = max(peak_pool(:));
     peak_group(peak_max) = group_num;
     peak_pool(peak_max) = 0;
@@ -50,13 +50,27 @@ while search_new == true
         % Get row, col, and magnitude of current members of layer group
         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
         mag_i = median(peaks_raw(group_idx));
-        mag_var = var(mag_i);
         width_i = median(peak_width(group_idx));
         
-        % Find subscripts of farthest right layer group member
-        [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
-        %         row_n = row_i(end);
-        %         col_n = col_i(end);
+        switch length(group_idx) >= 10
+            case false
+                [row_n, ~] = ind2sub(size(peaks_raw), peak_n);
+%                 col_n = max(col_i) + 1;
+                col_n = max(col_i);
+%                 row_var = var(row_i- mean(row_i));
+            case true
+                col_n = max(col_i);
+%                 yy = smooth(col_i, row_i, 'rlowess');
+%                 row_n = round(yy(end));
+                
+%                 Ri_mean = movmean(row_i, 5);
+% %                 pp = csaps(col_i, Ri_mean, 0.25);
+                pp = csaps(col_i, row_i);
+%                 pp_val = fnval(pp, col_i);
+                row_n = round(fnval(fnxtr(pp), col_n));
+                
+%                 row_var = var(row_i - pp_val);
+        end
         
         
         % Define local  search window as 150 m to right of last known group
@@ -72,30 +86,34 @@ while search_new == true
         local_idx = find(peak_local);
         mag_local = peak_local(local_idx);
         [row_local, col_local] = ind2sub(size(peak_local), local_idx);
+        
         data_local = [(row_idx(1)+row_local-1) (col_idx(1)+col_local-1)];
         
         dist_n = sqrt(((data_local(:,1)-row_n)/(0.50*width_i)).^2 + ...
-            (data_local(:,2)-col_n).^2 + (1*(mag_local-mag_i)).^2);
+            (data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
 
-
-
+        
+        
 %         if row_i <= 5
-%         dist_n = sqrt(((data_local(:,1)-row_n)/(0.50*width_i)).^2 + ...
-%             (data_local(:,2)-col_n).^2 + (2*(mag_local-mag_i)).^2);
-%         
-%         
+%             data_local = [(row_idx(1)+row_local-1) (col_idx(1)+col_local-1)];
+%             
+%             dist_n = sqrt(((data_local(:,1)-row_n)/(0.50*width_i)).^2 + ...
+%                 (data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
+%             
 %         else
+%             data_local = [(row_idx(1)+row_local-1)/(0.5*width_n) ...
+%                 (col_idx(1)+col_local-1) mag_local];
 %             data_i = [row_i col_i mag_i];
-%             data_EX = repmat([row_pred col_pred mag_n], length(local_idx), 1);
+%             data_EX = repmat([row_n col_n mag_n], length(local_idx), 1);
 %             sigma = cov(data_i);
 %             
 %             dist_n = sqrt(diag((data_local - data_EX)*inv(sigma)*...
 %                 (data_local - data_EX)'));
-% %             dist_n = pdist2(data_local, data_EX(1,:), 'mahalanobis', sigma);
-%         
+%             %             dist_n = pdist2(data_local, data_EX(1,:), 'mahalanobis', sigma);
+%             
 %         end
         
-
+        
         
         % Set distance threshold (based on p <= 0.01 for n-1 df on
         % Chi-squared distribution)
@@ -137,19 +155,36 @@ while search_new == true
     while search_L == true
         
         % Get nearest 10 group members
-        group_idx = layer_i(1:min([20 length(layer_i)]));
+        group_idx = layer_i(1:min([19 length(layer_i)]));
         
         % Get row, col, and magnitude of current members of layer group
-        %         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
+        [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
         mag_i = median(peaks_raw(group_idx));
-        mag_var = var(mag_i);
         width_i = median(peak_width(group_idx));
         
-        % Find subscripts of farthest right layer group member
-        [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
-        %         row_n = row_i(1);
-        %         col_n = col_i(1);
-        
+        switch length(group_idx) >= 10
+            case false
+                [row_n, ~] = ind2sub(size(peaks_raw), peak_n);
+                col_n = min(col_i);
+%                 col_n = min(col_i) - 1;
+%                 row_var = var(row_i - mean(row_i));
+                
+            case true
+                col_n = min(col_i);
+%                 col_n = min(col_i) - 1;
+
+%                 yy = smooth(col_i, row_i, 'rlowess');
+%                 row_n = round(yy(1));
+                
+                pp = csaps(col_i, row_i);
+%                 pp_val = fnval(pp, col_i);
+                row_n = round(fnval(fnxtr(pp), col_n));
+                
+%                 row_var = var(row_i - pp_val);
+%                 Ri_mean = movmean(row_i, 5);
+% %                 pp = csaps(col_i, Ri_mean, 0.25);
+        end
+
         
         % Define local  search window as 150 m to left of last known group
         % member, and 0.50 m above and below most recent group member
@@ -170,10 +205,14 @@ while search_new == true
         %         data_EX = repmat([row_pred col_pred mag_n], length(local_idx), 1);
         %         sigma = cov(data_i);
         
+        dist_n = sqrt(((data_local(:,1)-row_n)/(0.5*width_i)).^2 + ...
+            (data_local(:,2)-col_n).^2 + ((mag_local-mag_i)/1).^2);
+        %         dist_n = sqrt(diag((data_local - data_EX)*inv(sigma)*...
+        %             (data_local - data_EX)'));
+        %         dist_n = pdist2(data_local, data_EX(1,:), 'mahalanobis', sigma);
         
-        dist_n = sqrt(((data_local(:,1)-row_n)/(0.50*width_i)).^2 + ...
-            (data_local(:,2)-col_n).^2 + (1*(mag_local-mag_i)).^2);
-        
+        % Select the nearest neighbor to the estimated layer position
+        %         [min_dist, dist_idx] = min(dist_n);
         
         threshold = 5.991;
         [min_dist, dist_idx] = min(dist_n);
@@ -209,8 +248,7 @@ while search_new == true
     [row, col] = ind2sub(size(peaks_raw), layer_i);
     
     % Smooth layer using a moving mean of row positions
-%     row_mean = round(movmean(row, 5));
-    row_mean = round(smooth(col, row, 'rlowess'));
+    row_mean = round(movmean(row, 5));
     
     % For loop to search for additional peaks near current layer
     for j = 1:length(layer_i)
@@ -248,6 +286,8 @@ while search_new == true
         % local search window
         dist_j = sqrt(((data_local(:,1)-row_mean(j))/(0.5*width_j)).^2 + ...
             (data_local(:,2)-col(j)).^2 + (1*(mag_local - mag_j)).^2);
+%         dist_j = sqrt(((data_local(:,1)-row_mean(j))/(0.5*width_j+row_var)).^2 + ...
+%             ((data_local(:,2)-col(j))/(0.5*(col_idx(2)-col_idx(1)))).^2);
         
         % Set distance threshold based on peak width and error bin size
         threshold = 3;

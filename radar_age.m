@@ -127,7 +127,7 @@ end
 % Define size of error (in data bins) for radar
 % err_bin = round(minDist/core_res);
 
-[~, layers] = find_layers(peaks_raw, peak_width, core_res, horz_res);
+[~, layers] = find_layers2(peaks_raw, peak_width, core_res, horz_res);
 
 
 
@@ -230,7 +230,7 @@ for i = 1:size(layer_peaks, 2)
 %     P_50 = 1000*mean(std(radar.data_smooth));
 %     P_50 = 1000*(quantile(radar.data_smooth(:,i), 0.95) - ...
 %         quantile(radar.data_smooth(:,i), 0.05));
-    P_50 = 1*500*median(Proms{i});
+    P_50 = 1*2500*median(Proms{i});
 %     P_50 = median(Proms{i})*mean(cellfun(@length, layers_idx));
     
     Po = 0.001;
