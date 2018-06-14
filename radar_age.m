@@ -136,7 +136,7 @@ end
 
 % Preallocate arrays for the matrix indices of members of each layer
 layers_idx = cell(1,length(layers));
-% layers_test = cell(1,length(layers));
+layer_var = cell(1,length(layers));
 peaks = zeros(size(peaks_raw));
 
 % For loop to coerce layers to have one row position for each trace
@@ -147,6 +147,8 @@ for i = 1:length(layers_idx)
     
     % Find row and col indices of members of ith layer
     [row, col] = ind2sub(size(radar.data_smooth), layer_i);
+    
+    row_var = movvar(row, round(1000/horz_res));
     
 %     [~,sort_idx] = sort(col);
 %     row = row(sort_idx);
@@ -171,9 +173,6 @@ for i = 1:length(layers_idx)
             k_sum = sum(k_peaks.^2);
             k_row = round(sum((k_peaks.^2/k_sum).*row(k_idx)));
             k_peak = sum((k_peaks.^2/k_sum).*k_peaks);
-%             k_sum = sum(k_peaks);
-%             k_row = round(sum((k_peaks/k_sum).*row(k_idx)));
-%             k_peak = sum((k_peaks/k_sum).*k_peaks);
 
             % Assign squared prominence weighted mean position to layer
             % trace
@@ -196,9 +195,11 @@ for i = 1:length(layers_idx)
     row_mean = round(movmean(row, round(100/horz_res)));
     c_interp = min(col):max(col);
     r_interp = round(interp1(col, row_mean, c_interp));
-    layers_idx{i} = sub2ind(size(radar.data_smooth), r_interp, c_interp);
-%     layers_idx{i} = sub2ind(size(radar.data_smooth), row_mean, col);
-%     layers_idx{i} = sub2ind(size(radar.data_smooth), row, col);
+    layer_interp = sub2ind(size(radar.data_smooth), r_interp, c_interp);
+    layers_idx{i} = layer_interp;
+    peaks(layer_interp) = [];
+
+    
     
 end
 

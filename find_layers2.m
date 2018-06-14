@@ -283,6 +283,6 @@ while search_new == true
 end
 
 % Remove empty cells and layers shorter than 250 m
-layers = layers(cellfun(@(x) length(x) > 10, layers));
+layers = layers(cellfun(@(x) length(x) > 4, layers));
 
 end
