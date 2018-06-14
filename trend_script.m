@@ -6,8 +6,17 @@
 PC_true = ispc;
 switch PC_true
     case true
-        data_path = 'E:/Research/Antarctica/Data/';
-        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
+        computer = input('Current PC: ');
+        switch computer
+            case 'work'
+                data_path = 'E:/Research/Antarctica/Data/';
+                addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
+                
+            case 'laptop'
+                data_path = 'E:/Research/Antarctica/Data/';
+                addon_path = 'C:\Users\durba\MATLAB/Addons/';
+        end
+        
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
         addon_path = '/home/durbank/MATLAB/Addons/';
