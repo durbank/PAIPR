@@ -1,8 +1,4 @@
-% Same as find_layers2.m but the distance method used is a true Mahalanobis
-% distance, accounting for the covariance in the local layer values
-
-
-function [peak_group, layers] = find_layers3(peaks_raw, peak_width, core_res, horz_res)
+function [peak_group, layers] = find_layers_old(peaks_raw, peak_width, core_res, horz_res)
 
 % Preallocate layer group matrix and cell array
 peak_group = zeros(size(peaks_raw));
