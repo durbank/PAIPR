@@ -50,15 +50,21 @@ while search_new == true
         group_idx = layer_i(end-min([19 length(layer_i)])+1:end);
         
         % Get row, col, and magnitude of current members of layer group
-        [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
+%         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
         mag_i = median(peaks_raw(group_idx));
-        mag_var = var(mag_i);
+        
+%         if length(group_idx) <= 4
+%             mag_var = 1;
+%             
+%         else
+%             mag_var = var(peaks_raw(group_idx));
+%         end
+        
         width_i = median(peak_width(group_idx));
         
         % Find subscripts of farthest right layer group member
         [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
-        %         row_n = row_i(end);
-        %         col_n = col_i(end);
+        col_n = col_n + 1;
         
         
         % Define local  search window as 150 m to right of last known group
@@ -76,8 +82,8 @@ while search_new == true
         [row_local, col_local] = ind2sub(size(peak_local), local_idx);
         data_local = [(row_idx(1)+row_local-1) (col_idx(1)+col_local-1)];
         
-        dist_n = sqrt(((data_local(:,1)-row_n)/(0.50*width_i)).^2 + ...
-            (data_local(:,2)-col_n).^2 + (1*(mag_local-mag_i)).^2);
+        dist_n = sqrt((((data_local(:,1)-row_n)/(0.50*width_i))).^2 + ...
+            0.25*(data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
 
 
 
@@ -101,8 +107,8 @@ while search_new == true
         
         % Set distance threshold (based on p <= 0.01 for n-1 df on
         % Chi-squared distribution)
-        %         threshold = 5.991;
-        threshold = 5.991;
+                threshold = 5;
+%         threshold = 5 + 1/mag_var;
         [min_dist, dist_idx] = min(dist_n);
         
         if min_dist <= threshold
@@ -144,13 +150,19 @@ while search_new == true
         % Get row, col, and magnitude of current members of layer group
         %         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
         mag_i = median(peaks_raw(group_idx));
-        mag_var = var(mag_i);
+        
+%         if length(group_idx) <= 4
+%             mag_var = 1;
+%             
+%         else
+%             mag_var = var(peaks_raw(group_idx));
+%         end
+        
         width_i = median(peak_width(group_idx));
         
         % Find subscripts of farthest right layer group member
         [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
-        %         row_n = row_i(1);
-        %         col_n = col_i(1);
+        col_n = col_n - 1;
         
         
         % Define local  search window as 150 m to left of last known group
@@ -173,11 +185,12 @@ while search_new == true
         %         sigma = cov(data_i);
         
         
-        dist_n = sqrt(((data_local(:,1)-row_n)/(0.50*width_i)).^2 + ...
-            (data_local(:,2)-col_n).^2 + (1*(mag_local-mag_i)).^2);
+        dist_n = sqrt((((data_local(:,1)-row_n)/(0.50*width_i))).^2 + ...
+            0.25*(data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
         
         
-        threshold = 5.991;
+        threshold = 6;
+%         threshold = 5 + 1/mag_var;
         [min_dist, dist_idx] = min(dist_n);
         
         if min_dist <= threshold

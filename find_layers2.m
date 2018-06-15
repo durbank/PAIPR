@@ -30,8 +30,6 @@ while search_new == true
     
     % Find the maximum peak remaining in pool and assign to group
     
-    i
-    
     [~, peak_max] = max(peak_pool(:));
     peak_group(peak_max) = group_num;
     peak_pool(peak_max) = 0;
@@ -51,6 +49,13 @@ while search_new == true
         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
         mag_i = median(peaks_raw(group_idx));
         width_i = median(peak_width(group_idx));
+        
+%         if length(group_idx) <= 4
+%             mag_var = 1;
+%             
+%         else
+%             mag_var = var(peaks_raw(group_idx));
+%         end
         
         switch length(group_idx) >= 10
             case false
@@ -90,7 +95,7 @@ while search_new == true
         data_local = [(row_idx(1)+row_local-1) (col_idx(1)+col_local-1)];
         
         dist_n = sqrt(((data_local(:,1)-row_n)/(0.50*width_i)).^2 + ...
-            (data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
+            0.25*(data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
 
         
         
@@ -118,7 +123,7 @@ while search_new == true
         % Set distance threshold (based on p <= 0.01 for n-1 df on
         % Chi-squared distribution)
         %         threshold = 5.991;
-        threshold = 5.991;
+        threshold = 6;
         [min_dist, dist_idx] = min(dist_n);
         
         if min_dist <= threshold
@@ -161,6 +166,14 @@ while search_new == true
         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
         mag_i = median(peaks_raw(group_idx));
         width_i = median(peak_width(group_idx));
+        
+        
+%         if length(group_idx) <= 4
+%             mag_var = 1;
+%             
+%         else
+%             mag_var = var(peaks_raw(group_idx));
+%         end
         
         switch length(group_idx) >= 10
             case false
@@ -206,7 +219,7 @@ while search_new == true
         %         sigma = cov(data_i);
         
         dist_n = sqrt(((data_local(:,1)-row_n)/(0.5*width_i)).^2 + ...
-            (data_local(:,2)-col_n).^2 + ((mag_local-mag_i)/1).^2);
+            0.25*(data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
         %         dist_n = sqrt(diag((data_local - data_EX)*inv(sigma)*...
         %             (data_local - data_EX)'));
         %         dist_n = pdist2(data_local, data_EX(1,:), 'mahalanobis', sigma);
@@ -214,7 +227,8 @@ while search_new == true
         % Select the nearest neighbor to the estimated layer position
         %         [min_dist, dist_idx] = min(dist_n);
         
-        threshold = 5.991;
+%         threshold = 5.991;
+        threshold = 6;
         [min_dist, dist_idx] = min(dist_n);
         
         if min_dist <= threshold
