@@ -127,7 +127,7 @@ end
 % Define size of error (in data bins) for radar
 % err_bin = round(minDist/core_res);
 
-[~, layers] = find_layers2(peaks_raw, peak_width, core_res, horz_res);
+[~, layers] = find_layers(peaks_raw, peak_width, core_res, horz_res);
 
 
 
@@ -136,7 +136,7 @@ end
 
 % Preallocate arrays for the matrix indices of members of each layer
 layers_idx = cell(1,length(layers));
-layer_var = cell(1,length(layers));
+% layer_var = cell(1,length(layers));
 peaks = zeros(size(peaks_raw));
 
 % For loop to coerce layers to have one row position for each trace
@@ -147,61 +147,61 @@ for i = 1:length(layers_idx)
     
     % Find row and col indices of members of ith layer
     [row, col] = ind2sub(size(radar.data_smooth), layer_i);
+    mag = peaks_raw(layer_i);
     
-    row_var = movvar(row, round(1000/horz_res));
-    
-%     [~,sort_idx] = sort(col);
-%     row = row(sort_idx);
-%     col = col(sort_idx);
-    
-    % If multiple rows exist for the same column, take the
-    % squared prominence-weighted mean of the rows
-    if length(col) > length(unique(col))
-        
-        % Create matrix of peaks with only layer_i members
-        layer_mat = zeros(size(radar.data_smooth));
-        layer_mat(layer_i) = peaks_raw(layer_i);
-        
-        % Find all traces with multiple peaks within layer_i
-        multi_idx = sum(logical(layer_mat))>1;
-        col_nums = 1:size(layer_mat, 2);
-        for k = col_nums(multi_idx)
-            k_idx = find(col==k);
-            k_peaks = layer_mat(row(k_idx),k);
-            
-            % Create squared prominence weighting matrix
-            k_sum = sum(k_peaks.^2);
-            k_row = round(sum((k_peaks.^2/k_sum).*row(k_idx)));
-            k_peak = sum((k_peaks.^2/k_sum).*k_peaks);
 
-            % Assign squared prominence weighted mean position to layer
-            % trace
-            k_col = zeros(size(layer_mat, 1), 1);
-            k_col(k_row) = k_peak;
-            layer_mat(:,k) = k_col;
-        end
-        peaks_mat = find(layer_mat);
-        [row, col] = ind2sub(size(radar.data_smooth), peaks_mat);
-        peaks(peaks_mat) = layer_mat(peaks_mat);
+    col_interp = min(col):max(col);
+    row_interp = round(fnval(csaps(col, row), col_interp));
+    row_interp(row_interp < 1) = 1;
+    row_interp(row_interp > size(peaks,1)) = size(peaks,1);
+    mag_interp = csaps(col, mag, 1/length(col_interp), col_interp);
+%     row_var = interp1(col, movvar(row, round(1000/horz_res)), col_interp);
     
-    else
-        % Assign weighted peak position and value to preallocated peaks
-        % matrix
-        peaks(layer_i) = peaks_raw(layer_i);
-    end
-
-    % Smooth layer i using a moving average of row indices and assign 
-    % smoothed layer to preallocated cell array
-    row_mean = round(movmean(row, round(100/horz_res)));
-    c_interp = min(col):max(col);
-    r_interp = round(interp1(col, row_mean, c_interp));
-    layer_interp = sub2ind(size(radar.data_smooth), r_interp, c_interp);
+    layer_interp = sub2ind(size(peaks), row_interp, col_interp);
+    peaks(layer_interp) = mag_interp;
     layers_idx{i} = layer_interp;
-    peaks(layer_interp) = [];
-
+%     layer_var = var_interp;
     
+%     % If multiple rows exist for the same column, take the
+%     % squared prominence-weighted mean of the rows
+%     if length(col) > length(unique(col))
+%         
+%         % Create matrix of peaks with only layer_i members
+%         layer_mat = zeros(size(radar.data_smooth));
+%         layer_mat(layer_i) = peaks_raw(layer_i);
+%         
+%         % Find all traces with multiple peaks within layer_i
+%         multi_idx = sum(logical(layer_mat))>1;
+%         col_nums = 1:size(layer_mat, 2);
+%         for k = col_nums(multi_idx)
+%             k_idx = find(col==k);
+%             k_peaks = layer_mat(row(k_idx),k);
+%             
+%             % Create squared prominence weighting matrix
+%             k_sum = sum(k_peaks.^2);
+%             k_row = round(sum((k_peaks.^2/k_sum).*row(k_idx)));
+%             k_peak = sum((k_peaks.^2/k_sum).*k_peaks);
+% 
+%             % Assign squared prominence weighted mean position to layer
+%             % trace
+%             k_col = zeros(size(layer_mat, 1), 1);
+%             k_col(k_row) = k_peak;
+%             layer_mat(:,k) = k_col;
+%         end
+%         peaks_mat = find(layer_mat);
+%         peaks_val = layer_mat(peaks_mat);
+%         [row, col] = ind2sub(size(radar.data_smooth), peaks_mat);
+%         peaks(peaks_mat) = layer_mat(peaks_mat);
+%     
+%     else
+%         % Assign weighted peak position and value to preallocated peaks
+%         % matrix
+%         peaks(layer_i) = peaks_raw(layer_i);
+%     end
     
 end
+
+%%
 
 % Calculate continuous layer distances for each layer (accounting for 
 % lateral size of stacked radar trace bins)
