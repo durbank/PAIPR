@@ -69,11 +69,8 @@ radar.depth = (0:core_res:depth_bott)';
 % order Savitzky-Golay filter with a window of 9 frames (~20 m)
 radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
-% Define surface age and the year associated with the first pick of the 
-% algorithm
-age_top = radar.collect_date;
-yr_pick1 = ceil(radar.collect_date - 1);
 
+clearvars -except radar horz_res core_res
 
 
 % B = ones(5)/5^2;
@@ -159,7 +156,7 @@ for i = 1:length(layers_idx)
     
     layer_interp = sub2ind(size(peaks), row_interp, col_interp);
     peaks(layer_interp) = mag_interp;
-    layers_idx{i} = layer_interp;
+    layers_idx{i} = layer_interp';
 %     layer_var = var_interp;
     
 %     % If multiple rows exist for the same column, take the
@@ -203,6 +200,11 @@ end
 
 %%
 
+% Calculate global and individual layer reliability for each column in
+% radar data
+[RMSE_globe, RSE_layer, depth_slope] = REL_score(peaks, layers_idx);
+
+
 % Calculate continuous layer distances for each layer (accounting for 
 % lateral size of stacked radar trace bins)
 % layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx);
@@ -212,7 +214,7 @@ layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx);
 % matrix of the ith layer
 layer_peaks = zeros(size(peaks));
 for i = 1:length(layers_idx)
-    layer_peaks(layers_idx{i}) = sum(peaks(layers_idx{i})).*layers_dist(i);
+    layer_peaks(layers_idx{i}) = peaks(layers_idx{i}).*layers_dist(i);
 end
 
 
@@ -222,6 +224,11 @@ radar.layers = layers_idx;
 radar.layer_vals = layer_peaks;
 
 %% Assign layer likelihood scores and estimate age-depth scales
+
+% Define surface age and the year associated with the first pick of the 
+% algorithm
+age_top = radar.collect_date;
+yr_pick1 = ceil(radar.collect_date - 1);
 
 ages = zeros([size(radar.data_smooth) Ndraw]);
 radar.likelihood = zeros(size(radar.data_smooth));
