@@ -92,7 +92,8 @@ for i = 1:size(radar.data_smooth, 2)
 %     data_i = data_smooth(:,i);
     
     % Prominence threshold for peaks
-    minProm = 0.50;
+%     minProm = 0.50;
+    minProm = 1*iqr(data_i);
     % Min distance between peaks (in meters)
     minDist = 0.10;
     

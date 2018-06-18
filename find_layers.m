@@ -26,15 +26,23 @@ search_new = true;
 % While loop that iterates on each accumulation layer
 while search_new == true
     
-    %         A = peak_pool;
-    %         B = ones(6)/6^2;
-    %         C = conv2(A,B,'same');
-    %         [~,C_max] = max(C(:));
-    %         [r_C, c_C] = ind2sub(size(C), C_max);
+    A = peak_pool;
+    B = ones(10)/10^2;
+    C = conv2(A,B,'same');
+    [~,C_max] = max(C(:));
+    [r_C, c_C] = ind2sub(size(C), C_max);
+    
+    r_idx = [max([1 r_C-5]) min([size(peaks_raw,1) r_C+5])];
+    c_idx = [max([1 c_C-5]) min([size(peaks_raw,2) c_C+5])];
+    
+    peak_local = peak_pool(r_idx(1):r_idx(2),c_idx(1):c_idx(2));
+    [~, local_max] = max(peak_local(:));
+    [r_max, c_max] = ind2sub(size(peak_local), local_max);
+    peak_max = sub2ind(size(peak_pool), r_idx(1)+r_max-1, c_idx(1)+c_max-1);
     
     % Find the maximum peak remaining in pool and assign to group
     
-    [~, peak_max] = max(peak_pool(:));
+%     [~, peak_max] = max(peak_pool(:));
     peak_group(peak_max) = group_num;
     peak_pool(peak_max) = 0;
     
@@ -52,6 +60,7 @@ while search_new == true
         % Get row, col, and magnitude of current members of layer group
 %         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
         mag_i = median(peaks_raw(group_idx));
+        width_i = median(peak_width(group_idx));
         
 %         if length(group_idx) <= 4
 %             mag_var = 1;
@@ -59,8 +68,6 @@ while search_new == true
 %         else
 %             mag_var = var(peaks_raw(group_idx));
 %         end
-        
-        width_i = median(peak_width(group_idx));
         
         % Find subscripts of farthest right layer group member
         [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
@@ -82,8 +89,8 @@ while search_new == true
         [row_local, col_local] = ind2sub(size(peak_local), local_idx);
         data_local = [(row_idx(1)+row_local-1) (col_idx(1)+col_local-1)];
         
-        dist_n = sqrt((((data_local(:,1)-row_n)/(0.50*width_i))).^2 + ...
-            0.25*(data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
+        dist_n = sqrt(1*(((data_local(:,1)-row_n)/(0.5*width_i))).^2 + ...
+            1*(data_local(:,2)-col_n).^2 + 0.5*(mag_local-mag_i).^2);
 
 
 
@@ -107,7 +114,7 @@ while search_new == true
         
         % Set distance threshold (based on p <= 0.01 for n-1 df on
         % Chi-squared distribution)
-                threshold = 5;
+                threshold = 4;
 %         threshold = 5 + 1/mag_var;
         [min_dist, dist_idx] = min(dist_n);
         
@@ -185,11 +192,11 @@ while search_new == true
         %         sigma = cov(data_i);
         
         
-        dist_n = sqrt((((data_local(:,1)-row_n)/(0.50*width_i))).^2 + ...
-            0.25*(data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
+        dist_n = sqrt(1*(((data_local(:,1)-row_n)/(0.5*width_i))).^2 + ...
+            1*(data_local(:,2)-col_n).^2 + 0.5*(mag_local-mag_i).^2);
         
         
-        threshold = 6;
+        threshold = 4;
 %         threshold = 5 + 1/mag_var;
         [min_dist, dist_idx] = min(dist_n);
         
@@ -297,7 +304,8 @@ while search_new == true
     
 end
 
-% Remove empty cells and layers shorter than 250 m
-layers = layers(cellfun(@(x) length(x) > 4, layers));
+% Remove empty cells and layers shorter than 100 m
+layers = layers(cellfun(@(x) length(x) > 3, layers));
+% layers = layers(~cellfun(@isempty, layers));
 
 end

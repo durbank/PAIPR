@@ -22,15 +22,23 @@ search_new = true;
 % While loop that iterates on each accumulation layer
 while search_new == true
     
-    %         A = peak_pool;
-    %         B = ones(6)/6^2;
-    %         C = conv2(A,B,'same');
-    %         [~,C_max] = max(C(:));
-    %         [r_C, c_C] = ind2sub(size(C), C_max);
+    A = peak_pool;
+    B = ones(10)/10^2;
+    C = conv2(A,B,'same');
+    [~,C_max] = max(C(:));
+    [r_C, c_C] = ind2sub(size(C), C_max);
+    
+    r_idx = [max([1 r_C-5]) min([size(peaks_raw,1) r_C+5])];
+    c_idx = [max([1 c_C-5]) min([size(peaks_raw,2) c_C+5])];
+    
+    peak_local = peak_pool(r_idx(1):r_idx(2),c_idx(1):c_idx(2));
+    [~, local_max] = max(peak_local(:));
+    [r_max, c_max] = ind2sub(size(peak_local), local_max);
+    peak_max = sub2ind(size(peak_pool), r_idx(1)+r_max-1, c_idx(1)+c_max-1);
     
     % Find the maximum peak remaining in pool and assign to group
     
-    [~, peak_max] = max(peak_pool(:));
+%     [~, peak_max] = max(peak_pool(:));
     peak_group(peak_max) = group_num;
     peak_pool(peak_max) = 0;
     
@@ -43,7 +51,7 @@ while search_new == true
     while search_R == true
         
         % Get nearest 10 group members
-        group_idx = layer_i(end-min([19 length(layer_i)])+1:end);
+        group_idx = layer_i(end-min([39 length(layer_i)])+1:end);
         
         % Get row, col, and magnitude of current members of layer group
         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
@@ -57,20 +65,21 @@ while search_new == true
 %             mag_var = var(peaks_raw(group_idx));
 %         end
         
-        switch length(group_idx) >= 10
+        switch length(group_idx) >= 8
             case false
-                [row_n, ~] = ind2sub(size(peaks_raw), peak_n);
+                [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
 %                 col_n = max(col_i) + 1;
-                col_n = max(col_i);
+                col_n = col_n + 1;
 %                 row_var = var(row_i- mean(row_i));
             case true
-                col_n = max(col_i);
+%                 col_n = max(col_i) + 1;
+                col_n = col_n + 1;
 %                 yy = smooth(col_i, row_i, 'rlowess');
 %                 row_n = round(yy(end));
                 
 %                 Ri_mean = movmean(row_i, 5);
 % %                 pp = csaps(col_i, Ri_mean, 0.25);
-                pp = csaps(col_i, row_i);
+                pp = csaps(col_i, row_i, 0.05);
 %                 pp_val = fnval(pp, col_i);
                 row_n = round(fnval(fnxtr(pp), col_n));
                 
@@ -94,8 +103,10 @@ while search_new == true
         
         data_local = [(row_idx(1)+row_local-1) (col_idx(1)+col_local-1)];
         
-        dist_n = sqrt(((data_local(:,1)-row_n)/(0.50*width_i)).^2 + ...
-            0.25*(data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
+%         dist_n = sqrt(2*((data_local(:,1)-row_n)/(0.50*width_i)).^2 + ...
+%             (data_local(:,2)-col_n).^2 + (1./mag_local).*(mag_local-mag_i).^2);
+        dist_n = sqrt(1*((data_local(:,1)-row_n)/(0.5*width_i)).^2 + ...
+            (data_local(:,2)-col_n).^2 + 0.5*(mag_local-mag_i).^2);
 
         
         
@@ -123,7 +134,7 @@ while search_new == true
         % Set distance threshold (based on p <= 0.01 for n-1 df on
         % Chi-squared distribution)
         %         threshold = 5.991;
-        threshold = 6;
+        threshold = 3;
         [min_dist, dist_idx] = min(dist_n);
         
         if min_dist <= threshold
@@ -160,7 +171,7 @@ while search_new == true
     while search_L == true
         
         % Get nearest 10 group members
-        group_idx = layer_i(1:min([19 length(layer_i)]));
+        group_idx = layer_i(1:min([40 length(layer_i)]));
         
         % Get row, col, and magnitude of current members of layer group
         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx);
@@ -175,21 +186,23 @@ while search_new == true
 %             mag_var = var(peaks_raw(group_idx));
 %         end
         
-        switch length(group_idx) >= 10
+        switch length(group_idx) >= 8
             case false
-                [row_n, ~] = ind2sub(size(peaks_raw), peak_n);
-                col_n = min(col_i);
+                [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
+%                 col_n = min(col_i);
 %                 col_n = min(col_i) - 1;
+                col_n = col_n - 1;
 %                 row_var = var(row_i - mean(row_i));
                 
             case true
-                col_n = min(col_i);
+%                 col_n = min(col_i);
 %                 col_n = min(col_i) - 1;
+                col_n = col_n - 1;
 
 %                 yy = smooth(col_i, row_i, 'rlowess');
 %                 row_n = round(yy(1));
                 
-                pp = csaps(col_i, row_i);
+                pp = csaps(col_i, row_i, 0.05);
 %                 pp_val = fnval(pp, col_i);
                 row_n = round(fnval(fnxtr(pp), col_n));
                 
@@ -218,8 +231,8 @@ while search_new == true
         %         data_EX = repmat([row_pred col_pred mag_n], length(local_idx), 1);
         %         sigma = cov(data_i);
         
-        dist_n = sqrt(((data_local(:,1)-row_n)/(0.5*width_i)).^2 + ...
-            0.25*(data_local(:,2)-col_n).^2 + ((mag_local-mag_i)).^2);
+        dist_n = sqrt(1*((data_local(:,1)-row_n)/(0.5*width_i)).^2 + ...
+            (data_local(:,2)-col_n).^2 + 0.5*(mag_local-mag_i).^2);
         %         dist_n = sqrt(diag((data_local - data_EX)*inv(sigma)*...
         %             (data_local - data_EX)'));
         %         dist_n = pdist2(data_local, data_EX(1,:), 'mahalanobis', sigma);
@@ -228,7 +241,7 @@ while search_new == true
         %         [min_dist, dist_idx] = min(dist_n);
         
 %         threshold = 5.991;
-        threshold = 6;
+        threshold = 3;
         [min_dist, dist_idx] = min(dist_n);
         
         if min_dist <= threshold
