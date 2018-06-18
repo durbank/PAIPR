@@ -40,14 +40,14 @@ end
 
 mdl = (depth_slope+1).*row_depth;
 
-% figure
-% hold on
-% for i = 1:length(rows)
-% plot(cols, rows{i}, 'LineWidth', 2)
-% end
-% set(gca, 'Ydir', 'reverse')
-% plot(cols, mdl, 'k')
-% hold off
+figure
+hold on
+for i = 1:length(rows)
+plot(cols, rows{i}, 'LineWidth', 2)
+end
+set(gca, 'Ydir', 'reverse')
+plot(cols, mdl, 'k')
+hold off
 
 % m = zeros(1, length(cols));
 % RMSE = zeros(1, length(cols));
