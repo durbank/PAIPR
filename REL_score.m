@@ -2,78 +2,132 @@
 % different picked layers (a measure of how effectively/consistently the
 % method picked layers in the given data)
 
-function [RMSE_globe, RSE_layer, depth_slope] = REL_score(peaks, layers_idx)
+function [RMSE, s_matrix] = REL_score(peaks, layers_idx)
 
-[~, global_idx] = sort(cellfun(@length, layers_idx), 'descend');
-layers_global = {sub2ind(size(peaks), ones(size(peaks,2),1), ...
-    (1:size(peaks,2))') layers_idx{global_idx(1:24)}};
+% Add horizontal surface layer to layer groups
+layers_idx{end+1} = sub2ind(size(peaks), ...
+    ones(size(peaks,2),1), (1:size(peaks,2))');
 
-[r_all, c_all] = cellfun(@(x) ind2sub(size(peaks), x), layers_global, 'UniformOutput', false);
+% Find the row and column locations of all members of all layers
+[~, c_all] = cellfun(@(x) ind2sub(size(peaks), x), ...
+    layers_idx, 'UniformOutput', false);
 
-col_idx = [max(cellfun(@min, c_all)) min(cellfun(@max, c_all))];
+% Define length of data chunk segments over which to estimate layer
+% deviation from segment mean as the mean length of picked layers
+% seg_length = round(mean(cellfun(@length, layers_idx)));
+seg_length = 20;
+
+% Preallocate arrays
+depth_slope = zeros(2, size(peaks,2));
+% depth_cells = cell(1, size(peaks,2));
+RMSE = zeros(1, size(peaks,2));
+
+
+col_idx = [1 seg_length/2];
+
+% Define column range for data chunk
 cols = col_idx(1):col_idx(2);
 
-% rows = cellfun(@(x) x(col_idx(1):col_idx(2)), r_all, 'UniformOutput', false);
-rows = cell(1, length(c_all));
-for i = 1:length(rows)
-    r_idx = c_all{i} >= col_idx(1) & c_all{i} <= col_idx(2);
-    rows{i} = r_all{i}(r_idx);
+% Find subset of picked layers which cover the full span of the data
+% chunk, and find the row/col subscripts for those subsetted layers
+layers_set = layers_idx(cellfun(@(x) min(x) <= col_idx(1) & ...
+    max(x) >= col_idx(2), c_all));
+[r_set, c_set] = cellfun(@(x) ind2sub(size(peaks), x), ...
+    layers_set, 'UniformOutput', false);
+
+% Extract row positions of layer subset that lies within data chunk
+% range
+rows = cell(1, length(c_set));
+for j = 1:length(rows)
+    r_idx = c_set{j} >= col_idx(1) & c_set{j} <= col_idx(2);
+    rows{j} = r_set{j}(r_idx);
+end
+
+p = cellfun(@(y) polyfit(cols, y', 1), rows, 'UniformOutput', false);
+slope = cellfun(@(x) x(1), p);
+row_depth = cellfun(@mean, rows);
+[p, stats] = robustfit(row_depth, slope);
+depth_slope(:,cols) = repmat(p, 1, length(cols));
+RMSE(cols) = repmat(stats.robust_s, 1, length(cols));
+
+
+
+
+
+col_i = (seg_length/2)+1:size(peaks,2)-(seg_length/2);
+
+for i = col_i
+    cols = i-(seg_length/2):i+(seg_length/2);
+    
+    % Find subset of picked layers which cover the full span of the data
+    % chunk, and find the row/col subscripts for those subsetted layers
+    layers_set = layers_idx(cellfun(@(x) min(x) <= cols(1) & ...
+        max(x) >= cols(end), c_all));
+    [r_set, c_set] = cellfun(@(x) ind2sub(size(peaks), x), ...
+        layers_set, 'UniformOutput', false);
+    
+    % Extract row positions of layer subset that lies within data chunk
+    % range
+    rows = cell(1, length(c_set));
+    for j = 1:length(rows)
+        r_idx = c_set{j} >= cols(1) & c_set{j} <= cols(end);
+        rows{j} = r_set{j}(r_idx);
+    end
+    
+    p = cellfun(@(y) polyfit(cols, y', 1), rows, 'UniformOutput', false);
+    slope = cellfun(@(x) x(1), p);
+    row_depth = cellfun(@mean, rows);
+    [depth_slope(:,i), stats] = robustfit(row_depth, slope);
+    RMSE(i) = stats.robust_s;
+    
 end
 
 
+col_idx = [size(peaks,2)-seg_length/2+1 size(peaks,2)];
 
-[row_depth, sort_idx] = sort(cellfun(@mean, rows'));
-row_mat = (cell2mat(cellfun(@(x) movmean(x - mean(x), 10), rows, 'UniformOutput', false)))';
-row_dev = row_mat(sort_idx,:);
+% Define column range for data chunk
+cols = col_idx(1):col_idx(2);
 
-depth_slope = zeros(1, length(cols));
-RMSE_globe = zeros(1, length(cols));
-for i = 1:length(cols)
-%     [p] = polyfit(row_depth, row_dev(:,i), 1);
-%     depth_slope(i) = p(1);
-%     RMSE(i) = sqrt(mean((row_dev(:,i) - polyval(p, row_depth)).^2));
-    [p, stats] = robustfit(row_depth, row_dev(:,i));
-    depth_slope(i) = p(2);
-    RMSE_globe(i) = stats.robust_s;
+% Find subset of picked layers which cover the full span of the data
+% chunk, and find the row/col subscripts for those subsetted layers
+layers_set = layers_idx(cellfun(@(x) min(x) <= col_idx(1) & ...
+    max(x) >= col_idx(2), c_all));
+[r_set, c_set] = cellfun(@(x) ind2sub(size(peaks), x), ...
+    layers_set, 'UniformOutput', false);
+
+% Extract row positions of layer subset that lies within data chunk
+% range
+rows = cell(1, length(c_set));
+for j = 1:length(rows)
+    r_idx = c_set{j} >= col_idx(1) & c_set{j} <= col_idx(2);
+    rows{j} = r_set{j}(r_idx);
 end
 
+p = cellfun(@(y) polyfit(cols, y', 1), rows, 'UniformOutput', false);
+slope = cellfun(@(x) x(1), p);
+row_depth = cellfun(@mean, rows);
+[p, stats] = robustfit(row_depth, slope);
+depth_slope(:,cols) = repmat(p, 1, length(cols));
+RMSE(cols) = repmat(stats.robust_s, 1, length(cols));
 
-mdl = (depth_slope+1).*row_depth;
+
+depths = (1:size(peaks,1))';
+s_matrix = depths*depth_slope(2,:) + depth_slope(1,:);
+
+
+
+% Diagnostic vector field plot
+[y,x] = ind2sub(size(peaks), 1:numel(peaks));
+u = ones(1, length(x));
+v = s_matrix(:)';
+plot_idx = randi(length(v), 1, 25000);
 
 figure
+imagesc(peaks)
 hold on
-for i = 1:length(rows)
-plot(cols, rows{i}, 'LineWidth', 2)
-end
-set(gca, 'Ydir', 'reverse')
-plot(cols, mdl, 'k')
+quiver(x(plot_idx),y(plot_idx),u(plot_idx),v(plot_idx), 'r')
 hold off
 
-% m = zeros(1, length(cols));
-% RMSE = zeros(1, length(cols));
-% for i = 1:length(cols)
-%     mdl = fitlm(row_depth, row_dev(:,i));
-%     m(i) = mdl.Coefficients.Estimate(2);
-%     RMSE(i) = mdl.RMSE;
-% end
-
-% p = row_depth\row_dev;
-% row_diff = mean(rows{sort_idx(15)} - (p*row_depth(15)+row_depth(15))');
-
-
-%% Individual reliability scores
-
-[r_all, c_all] = cellfun(@(x) ind2sub(size(peaks), x), layers_idx, 'UniformOutput', false);
-row_depth = cellfun(@mean, r_all');
-
-RSE_layer = cell(1, length(layers_idx));
-for i = 1:length(RSE_layer)
-    mdl = (depth_slope(c_all{i}(1):c_all{i}(end))+1).*row_depth(i);
-    RSE_layer{i} = sqrt((r_all{i} - mdl').^2);
-end
-
-
-
-
 
 end
+
