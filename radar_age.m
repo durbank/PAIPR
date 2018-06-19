@@ -207,6 +207,22 @@ end
 % [RMSE_globe, depth_slope] = REL_score2(peaks, layers_idx);
 [RMSE, s_matrix] = REL_score(peaks, layers_idx);
 
+% Diagnostic plot
+ystart = 10:25:size(peaks,1);
+xstart = ones(1, length(ystart));
+XY = stream2(ones(size(peaks)), s_matrix, xstart, ystart, 1);
+figure
+imagesc(radar.data_smooth, [-2 2])
+hold on
+hlines = streamline(XY);
+set(hlines, 'LineWidth', 1.5, 'Color', 'r')
+hold off
+
+
+
+
+
+%%
 
 % Calculate continuous layer distances for each layer (accounting for 
 % lateral size of stacked radar trace bins)

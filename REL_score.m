@@ -116,17 +116,17 @@ s_matrix = depths*depth_slope(2,:) + depth_slope(1,:);
 
 
 
-% Diagnostic vector field plot
-[y,x] = ind2sub(size(peaks), 1:numel(peaks));
-u = ones(1, length(x));
-v = s_matrix(:)';
-plot_idx = randi(length(v), 1, 25000);
-
-figure
-imagesc(peaks)
-hold on
-quiver(x(plot_idx),y(plot_idx),u(plot_idx),v(plot_idx), 'r')
-hold off
+% % Diagnostic plot
+% ystart = 10:25:size(peaks,1);
+% xstart = ones(1, length(ystart));
+% XY = stream2(ones(size(peaks)), s_matrix, xstart, ystart, 1);
+% 
+% figure
+% imagesc(peaks)
+% hold on
+% hlines = streamline(XY);
+% set(hlines, 'LineWidth', 1.5, 'Color', 'r')
+% hold off
 
 
 end
