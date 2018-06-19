@@ -70,7 +70,7 @@ radar.depth = (0:core_res:depth_bott)';
 radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
 
-clearvars -except radar horz_res core_res
+clearvars -except radar Ndraw horz_res core_res
 
 
 % B = ones(5)/5^2;
@@ -159,45 +159,6 @@ for i = 1:length(layers_idx)
     layer_interp = sub2ind(size(peaks), row_interp, col_interp);
     peaks(layer_interp) = mag_interp;
     layers_idx{i} = layer_interp';
-%     layer_var = var_interp;
-    
-%     % If multiple rows exist for the same column, take the
-%     % squared prominence-weighted mean of the rows
-%     if length(col) > length(unique(col))
-%         
-%         % Create matrix of peaks with only layer_i members
-%         layer_mat = zeros(size(radar.data_smooth));
-%         layer_mat(layer_i) = peaks_raw(layer_i);
-%         
-%         % Find all traces with multiple peaks within layer_i
-%         multi_idx = sum(logical(layer_mat))>1;
-%         col_nums = 1:size(layer_mat, 2);
-%         for k = col_nums(multi_idx)
-%             k_idx = find(col==k);
-%             k_peaks = layer_mat(row(k_idx),k);
-%             
-%             % Create squared prominence weighting matrix
-%             k_sum = sum(k_peaks.^2);
-%             k_row = round(sum((k_peaks.^2/k_sum).*row(k_idx)));
-%             k_peak = sum((k_peaks.^2/k_sum).*k_peaks);
-% 
-%             % Assign squared prominence weighted mean position to layer
-%             % trace
-%             k_col = zeros(size(layer_mat, 1), 1);
-%             k_col(k_row) = k_peak;
-%             layer_mat(:,k) = k_col;
-%         end
-%         peaks_mat = find(layer_mat);
-%         peaks_val = layer_mat(peaks_mat);
-%         [row, col] = ind2sub(size(radar.data_smooth), peaks_mat);
-%         peaks(peaks_mat) = layer_mat(peaks_mat);
-%     
-%     else
-%         % Assign weighted peak position and value to preallocated peaks
-%         % matrix
-%         peaks(layer_i) = peaks_raw(layer_i);
-%     end
-    
 end
 
 %%
@@ -205,7 +166,9 @@ end
 % Calculate global and individual layer reliability for each column in
 % radar data
 % [RMSE_globe, depth_slope] = REL_score2(peaks, layers_idx);
-[RMSE, s_matrix] = REL_score(peaks, layers_idx);
+[RMSE, s_matrix] = REL_score(peaks, layers_idx, horz_res);
+
+RMSE_mat = RMSE.*(1:size(peaks,1))'.*abs(s_matrix);
 
 % Diagnostic plot
 ystart = 10:25:size(peaks,1);
@@ -218,8 +181,42 @@ hlines = streamline(XY);
 set(hlines, 'LineWidth', 1.5, 'Color', 'r')
 hold off
 
+[~, layers2] = find_layers2(peaks_raw, peak_width, s_matrix, core_res, horz_res);
 
 
+% Preallocate arrays for the matrix indices of members of each layer
+layers_idx2 = cell(1,length(layers2));
+peaks2 = zeros(size(peaks_raw));
+
+% For loop to coerce layers to have one row position for each trace
+for i = 1:length(layers_idx2)
+    
+    % Find matrix indices of all members of ith layer
+    layer_i = layers2{i};
+    
+    % Find row and col indices of members of ith layer
+    [row, col] = ind2sub(size(radar.data_smooth), layer_i);
+    mag = peaks_raw(layer_i);
+    
+    % Interpolate data to all column positions within the range of the
+    % layer
+    col_interp = min(col):max(col);
+    
+    % Interpolate row positions using a cubic smoothing spline
+    row_interp = round(fnval(csaps(col, row), col_interp));
+    row_interp(row_interp < 1) = 1;
+    row_interp(row_interp > size(peaks2,1)) = size(peaks2,1);
+    
+    % Interpolate peak prominence magnitudes to all columns in range using
+    % a cubic smoothing spline
+    mag_interp = csaps(col, mag, 1/length(col_interp), col_interp);
+%     row_var = interp1(col, movvar(row, round(1000/horz_res)), col_interp);
+    
+    % Assign interpolated layer to output
+    layer_interp = sub2ind(size(peaks2), row_interp, col_interp);
+    peaks2(layer_interp) = mag_interp;
+    layers_idx2{i} = layer_interp';
+end
 
 
 %%
@@ -227,19 +224,19 @@ hold off
 % Calculate continuous layer distances for each layer (accounting for 
 % lateral size of stacked radar trace bins)
 % layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx);
-layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx);
+layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx2);
 
 % Map layer prominence-distance values to the location within the radar
 % matrix of the ith layer
-layer_peaks = zeros(size(peaks));
-for i = 1:length(layers_idx)
-    layer_peaks(layers_idx{i}) = peaks(layers_idx{i}).*layers_dist(i);
+layer_peaks = zeros(size(peaks2));
+for i = 1:length(layers_idx2)
+    layer_peaks(layers_idx2{i}) = peaks2(layers_idx2{i}).*layers_dist(i);
 end
 
 
 % Output layer arrays to radar structure
-radar.peaks = peaks;
-radar.layers = layers_idx;
+radar.peaks = peaks2;
+radar.layers = layers_idx2;
 radar.layer_vals = layer_peaks;
 
 %% Assign layer likelihood scores and estimate age-depth scales
