@@ -122,15 +122,9 @@ end
 
 %%
 
-% Define size of error (in data bins) for radar
-% err_bin = round(minDist/core_res);
-
+% Search for continuous layers within radargram
 [~, layers] = find_layers(peaks_raw, peak_width, core_res, horz_res);
 
-
-
-
-%%
 
 % Preallocate arrays for the matrix indices of members of each layer
 layers_idx = cell(1,length(layers));
@@ -147,14 +141,21 @@ for i = 1:length(layers_idx)
     [row, col] = ind2sub(size(radar.data_smooth), layer_i);
     mag = peaks_raw(layer_i);
     
-
+    % Interpolate data to all column positions within the range of the
+    % layer
     col_interp = min(col):max(col);
+    
+    % Interpolate row positions using a cubic smoothing spline
     row_interp = round(fnval(csaps(col, row), col_interp));
     row_interp(row_interp < 1) = 1;
     row_interp(row_interp > size(peaks,1)) = size(peaks,1);
+    
+    % Interpolate peak prominence magnitudes to all columns in range using
+    % a cubic smoothing spline
     mag_interp = csaps(col, mag, 1/length(col_interp), col_interp);
 %     row_var = interp1(col, movvar(row, round(1000/horz_res)), col_interp);
     
+    % Assign interpolated layer to output
     layer_interp = sub2ind(size(peaks), row_interp, col_interp);
     peaks(layer_interp) = mag_interp;
     layers_idx{i} = layer_interp';
@@ -203,7 +204,8 @@ end
 
 % Calculate global and individual layer reliability for each column in
 % radar data
-[RMSE_globe, RSE_layer, depth_slope] = REL_score(peaks, layers_idx);
+% [RMSE_globe, depth_slope] = REL_score2(peaks, layers_idx);
+[RMSE, s_matrix] = REL_score(peaks, layers_idx);
 
 
 % Calculate continuous layer distances for each layer (accounting for 
