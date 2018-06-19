@@ -2,20 +2,20 @@
 % different picked layers (a measure of how effectively/consistently the
 % method picked layers in the given data)
 
-function [RMSE, s_matrix] = REL_score(peaks, layers_idx)
+function [RMSE, s_matrix] = REL_score(peaks, layers, horz_res)
 
 % Add horizontal surface layer to layer groups
-layers_idx{end+1} = sub2ind(size(peaks), ...
+layers{end+1} = sub2ind(size(peaks), ...
     ones(size(peaks,2),1), (1:size(peaks,2))');
 
 % Find the row and column locations of all members of all layers
 [~, c_all] = cellfun(@(x) ind2sub(size(peaks), x), ...
-    layers_idx, 'UniformOutput', false);
+    layers, 'UniformOutput', false);
 
 % Define length of data chunk segments over which to estimate layer
 % deviation from segment mean as the mean length of picked layers
 % seg_length = round(mean(cellfun(@length, layers_idx)));
-seg_length = 20;
+seg_length = round(500/horz_res);
 
 % Preallocate arrays
 depth_slope = zeros(2, size(peaks,2));
@@ -30,7 +30,7 @@ cols = col_idx(1):col_idx(2);
 
 % Find subset of picked layers which cover the full span of the data
 % chunk, and find the row/col subscripts for those subsetted layers
-layers_set = layers_idx(cellfun(@(x) min(x) <= col_idx(1) & ...
+layers_set = layers(cellfun(@(x) min(x) <= col_idx(1) & ...
     max(x) >= col_idx(2), c_all));
 [r_set, c_set] = cellfun(@(x) ind2sub(size(peaks), x), ...
     layers_set, 'UniformOutput', false);
@@ -42,6 +42,7 @@ for j = 1:length(rows)
     r_idx = c_set{j} >= col_idx(1) & c_set{j} <= col_idx(2);
     rows{j} = r_set{j}(r_idx);
 end
+
 
 p = cellfun(@(y) polyfit(cols, y', 1), rows, 'UniformOutput', false);
 slope = cellfun(@(x) x(1), p);
@@ -61,7 +62,7 @@ for i = col_i
     
     % Find subset of picked layers which cover the full span of the data
     % chunk, and find the row/col subscripts for those subsetted layers
-    layers_set = layers_idx(cellfun(@(x) min(x) <= cols(1) & ...
+    layers_set = layers(cellfun(@(x) min(x) <= cols(1) & ...
         max(x) >= cols(end), c_all));
     [r_set, c_set] = cellfun(@(x) ind2sub(size(peaks), x), ...
         layers_set, 'UniformOutput', false);
@@ -90,7 +91,7 @@ cols = col_idx(1):col_idx(2);
 
 % Find subset of picked layers which cover the full span of the data
 % chunk, and find the row/col subscripts for those subsetted layers
-layers_set = layers_idx(cellfun(@(x) min(x) <= col_idx(1) & ...
+layers_set = layers(cellfun(@(x) min(x) <= col_idx(1) & ...
     max(x) >= col_idx(2), c_all));
 [r_set, c_set] = cellfun(@(x) ind2sub(size(peaks), x), ...
     layers_set, 'UniformOutput', false);
@@ -113,8 +114,7 @@ RMSE(cols) = repmat(stats.robust_s, 1, length(cols));
 
 depths = (1:size(peaks,1))';
 s_matrix = depths*depth_slope(2,:) + depth_slope(1,:);
-
-
+% s_matrix = depths.*(depth_slope(2,:)+1);
 
 % % Diagnostic plot
 % ystart = 10:25:size(peaks,1);
