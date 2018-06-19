@@ -4,10 +4,9 @@
 
 function [RMSE_globe, RSE_layer, depth_slope] = REL_score2(peaks, layers, layers_idx)
 
-
+layers_idx{end+1} = sub2ind(size(peaks), ones(size(peaks,2),1), (1:size(peaks,2))');
 [r_all, c_all] = cellfun(@(x) ind2sub(size(peaks), x), ...
-    {sub2ind(size(peaks), ones(size(peaks,2),1), (1:size(peaks,2))') ...
-    layers_idx}, 'UniformOutput', false);
+    layers_idx, 'UniformOutput', false);
 
 
 
@@ -25,8 +24,13 @@ set(gca, 'Ydir', 'reverse')
 for i = 1:length(col_idx)-1
     
     cols = col_idx(i):col_idx(i+1);
-    layers_set = {sub2ind(size(peaks), ones(length(cols),1), (layers_idx(cellfun(@(x) min(x) <= col_idx(i) & max(x) >= col_idx(i+1), c_all));
-    [r_set, c_set] = cellfun(@(x) ind2sub(size(peaks), x), layers_set, 'UniformOutput', false);
+    layers_set = layers_idx(cellfun(@(x) min(x) <= col_idx(i) & ...
+        max(x) >= col_idx(i+1), c_all));
+%     layers_set = {sub2ind(size(peaks), ones(length(cols),1) ...
+%         layers_idx(cellfun(@(x) min(x) <= col_idx(i) & ...
+%         max(x) >= col_idx(i+1), c_all))};
+    [r_set, c_set] = cellfun(@(x) ind2sub(size(peaks), x), ...
+        layers_set, 'UniformOutput', false);
     
     rows = cell(1, length(c_set));
     for j = 1:length(rows)
@@ -50,7 +54,7 @@ for i = 1:length(col_idx)-1
     end
     
     depth_cells(col_idx(i):col_idx(i+1)) = {row_depth};
-    
+    mdl = (depth_slope(col_idx(i):col_idx(i+1))+1).*row_depth;
     
     for j = 1:length(rows)
         plot(cols, rows{j}, 'LineWidth', 2)
