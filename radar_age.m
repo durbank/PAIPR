@@ -178,7 +178,7 @@ figure
 imagesc(radar.data_smooth, [-2 2])
 hold on
 hlines = streamline(XY);
-set(hlines, 'LineWidth', 1.5, 'Color', 'r')
+set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
 hold off
 
 [~, layers2] = find_layers2(peaks_raw, peak_width, s_matrix, core_res, horz_res);
@@ -254,10 +254,10 @@ for i = 1:size(layer_peaks, 2)
 %     P_50 = 1000*mean(std(radar.data_smooth));
 %     P_50 = 1000*(quantile(radar.data_smooth(:,i), 0.95) - ...
 %         quantile(radar.data_smooth(:,i), 0.05));
-    P_50 = 1*2500*median(Proms{i});
+    P_50 = 1*1000*median(Proms{i});
 %     P_50 = median(Proms{i})*mean(cellfun(@length, layers_idx));
     
-    Po = 0.001;
+    Po = 0.10;
     K = 1;
     r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
     

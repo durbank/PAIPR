@@ -101,7 +101,7 @@ while search_new == true
         
         % Set distance threshold for group membership and find the nearest
         % neighbor within local search
-        threshold = 4;
+        threshold = 3;
         [min_dist, dist_idx] = min(dist_n);
         
         % Determine if nearest neighbor is within tolerance of layer group
@@ -190,7 +190,7 @@ while search_new == true
         
         % Set distance threshold for group membership and find the nearest
         % neighbor within local search
-        threshold = 4;
+        threshold = 3;
         [min_dist, dist_idx] = min(dist_n);
         
         % Determine if nearest neighbor is within tolerance of layer group
