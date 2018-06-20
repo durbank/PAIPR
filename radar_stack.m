@@ -2,6 +2,8 @@
 
 function [mdata_stack] = radar_stack(mdata, window_length)
 
+% Calculate stack bin sizes based on original data lateral resolution and
+% defined stack interval
 window_sz = round(window_length/mean(diff(mdata.dist)));
 
 if size(mdata.depth, 2) > 1
@@ -21,6 +23,7 @@ if size(mdata.depth, 2) > 1
         var_stack(:,i) = mean(mdata.rho_var(:,stack_idx(i):stack_idx(i+1)), 2);
         depth_stack(:,i) = mean(mdata.depth(:,stack_idx(i):stack_idx(i+1)), 2);
     end
+    
 else
     stack_idx = 1:window_sz:size(mdata.data_out, 2);
     E_stack = zeros(1, length(stack_idx)-1);
@@ -38,15 +41,16 @@ end
 
 dist_stack = 0:window_length:window_length*(length(stack_idx)-2);
 
+% Determine whether manual layers are present in data, and extract layers
+% at same resolution of stacked data where present
 if isfield(mdata, 'arr_layers')
-    
     man_layers = mdata.arr_layers(:,stack_idx(1:end-1));
     mdata_stack = struct('collect_date', mdata.collect_date, 'Easting', E_stack,...
         'Northing', N_stack, 'dist', dist_stack,  'depth', depth_stack, ...
         'data_stack', data_stack, 'rho_coeff', rho_stack, 'rho_var', var_stack,...
         'man_layers', man_layers);
 else
-    
+    % Export stacked radar data as a data structure with specified fields
     mdata_stack = struct('collect_date', mdata.collect_date, 'Easting', E_stack,...
         'Northing', N_stack, 'dist', dist_stack,  'depth', depth_stack, ...
         'data_stack', data_stack, 'rho_coeff', rho_stack, 'rho_var', var_stack);

@@ -85,6 +85,8 @@ for i = 1:length(comp_idx)
     depths(:,i) = interp1(time_mod, depth_mod, 0.5*radar.TWTT);
 end
 
+% Interpolate between data points for core composites with more than 1
+% component
 if length(comp_idx) > 1
     radar.rho_coeff = (interp1(comp_idx, rho_coeff', ...
         1:size(radar.data_out, 2), 'linear', 'extrap'))';

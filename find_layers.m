@@ -65,17 +65,9 @@ while search_new == true
         mag_i = median(peaks_raw(group_idx));
         width_i = median(peak_width(group_idx));
         
-%         if length(group_idx) <= 4
-%             mag_var = 1;
-%             
-%         else
-%             mag_var = var(peaks_raw(group_idx));
-%         end
-        
         % Find subscripts of farthest right layer group member
         [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
         col_n = col_n + 1;
-        
         
         % Define local  search window as 150 m to right of last known group
         % member, and 0.50 m above and below estimated row position for the
@@ -97,7 +89,7 @@ while search_new == true
         % magnitude is weighted 0.5 and the row distance is scaled by the
         % layer's half-width
         dist_n = sqrt(1*(((data_local(:,1)-row_n)/(0.5*width_i))).^2 + ...
-            1*(data_local(:,2)-col_n).^2 + 0.5*(mag_local-mag_i).^2);
+            (data_local(:,2)-col_n).^2 + 0.5*(mag_local-mag_i).^2);
         
         % Set distance threshold for group membership and find the nearest
         % neighbor within local search
@@ -153,19 +145,9 @@ while search_new == true
         mag_i = median(peaks_raw(group_idx));
         width_i = median(peak_width(group_idx));
         
-%         if length(group_idx) <= 4
-%             mag_var = 1;
-%             
-%         else
-%             mag_var = var(peaks_raw(group_idx));
-%         end
-        
-        
-        
         % Find subscripts of farthest left layer group member
         [row_n, col_n] = ind2sub(size(peaks_raw), peak_n);
         col_n = col_n - 1;
-        
         
         % Define local  search window as 150 m to left of last known group
         % member, and 0.50 m above and below most recent group member

@@ -95,41 +95,41 @@ file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
 
 %%
 
-% % Calculate mean accumulation rate and std at each location
-% SMB_mean = cellfun(@mean, radar.SMB, 'UniformOutput', 0);
-% SMB_std = cellfun(@std, radar.SMB, 'UniformOutput', 0);
-% 
-% trend = cell(1, length(radar.SMB));
-% p_val = cell(1, length(radar.SMB));
-% for i = 1:length(radar.SMB)
-%     
-%     trend_i = zeros(1, Ndraw);
-%     p_val_i = zeros(1, Ndraw);
-%     for j = 1:Ndraw
-%         % Regression using regress function (average of MC simulations)
-%         [b, ~, ~, ~, stats] = regress(radar.SMB{i}(:,j), ...
-%             [ones(length(radar.SMB_yr{i}), 1) radar.SMB_yr{i}]);
-%         trend_i(j) = b(2);
-%         p_val_i(j) = stats(3);
-%     end
-%     trend{i} = trend_i;
-%     p_val{i} = p_val_i;
-% end
-% 
-% trend_mean = cellfun(@mean, trend);
-% trend_std = cellfun(@std, trend);
-% 
-% % Find indices of significant trends (at 95% confidence level)
-% p_star = cellfun(@(x) find(x<=0.05), p_val, 'UniformOutput', 0);
-% 
-% % Calculate percentage of MC realizations with significant trends
-% p_ratio = cellfun(@(sig, all) length(sig)/length(all), p_star, p_val);
-% 
-% % Regression of SMB trend on mean SMB (all traces)
-% [trend_b, trend_int, ~, ~, trend_stats] = regress(trend_mean', ...
-%     [ones(length(trend_mean), 1) cellfun(@mean, SMB_mean)']);
-% [p_b, S_b] = polyfit(cellfun(@mean, SMB_mean), trend_mean, 1);
-% [trend_Y, trend_D] = polyconf(p_b, cellfun(@mean, SMB_mean), S_b);
+% Calculate mean accumulation rate and std at each location
+SMB_mean = cellfun(@mean, radar.SMB, 'UniformOutput', 0);
+SMB_std = cellfun(@std, radar.SMB, 'UniformOutput', 0);
+
+trend = cell(1, length(radar.SMB));
+p_val = cell(1, length(radar.SMB));
+for i = 1:length(radar.SMB)
+    
+    trend_i = zeros(1, Ndraw);
+    p_val_i = zeros(1, Ndraw);
+    for j = 1:Ndraw
+        % Regression using regress function (average of MC simulations)
+        [b, ~, ~, ~, stats] = regress(radar.SMB{i}(:,j), ...
+            [ones(length(radar.SMB_yr{i}), 1) radar.SMB_yr{i}]);
+        trend_i(j) = b(2);
+        p_val_i(j) = stats(3);
+    end
+    trend{i} = trend_i;
+    p_val{i} = p_val_i;
+end
+
+trend_mean = cellfun(@mean, trend);
+trend_std = cellfun(@std, trend);
+
+% Find indices of significant trends (at 95% confidence level)
+p_star = cellfun(@(x) find(x<=0.05), p_val, 'UniformOutput', 0);
+
+% Calculate percentage of MC realizations with significant trends
+p_ratio = cellfun(@(sig, all) length(sig)/length(all), p_star, p_val);
+
+% Regression of SMB trend on mean SMB (all traces)
+[trend_b, trend_int, ~, ~, trend_stats] = regress(trend_mean', ...
+    [ones(length(trend_mean), 1) cellfun(@mean, SMB_mean)']);
+[p_b, S_b] = polyfit(cellfun(@mean, SMB_mean), trend_mean, 1);
+[trend_Y, trend_D] = polyconf(p_b, cellfun(@mean, SMB_mean), S_b);
 
 %% Diagnostic plots for single random trace
 
@@ -212,25 +212,25 @@ hold off
 
 % Mean SMB across entire radargram (mean of all realizations for each trace)
 % figure
-% scatter(radar.Easting, radar.Northing, 30, cellfun(@mean, SMB_mean), 'filled')
-% hcb = colorbar;
-% ylabel(hcb, 'Mean annual SMB (mm/a')
-% colormap(cool)
-% 
-% % Mean trend in SMB across entire radargram
-% figure
-% scatter(radar.Easting, radar.Northing, 30, trend_mean, 'filled')
-% hcb = colorbar;
-% ylabel(hcb, 'Trend in SMB (mm/a)')
-% colormap(cool)
-% 
-% % Mean SMB vs mean trend
-% figure
-% hold on
-% plot(cellfun(@mean, SMB_mean), trend_mean, 'b.')
-% h1 = plot(cellfun(@mean, SMB_mean), trend_Y, 'b', 'LineWidth', 2);
-% plot(cellfun(@mean, SMB_mean), trend_Y + trend_D, 'b--')
-% plot(cellfun(@mean, SMB_mean), trend_Y - trend_D, 'b--')
-% xlabel('Mean annual accumulation (mm w.e.)')
-% ylabel('Annual accumulation trend (mm/a)')
-% hold off
+scatter(radar.Easting, radar.Northing, 30, cellfun(@mean, SMB_mean), 'filled')
+hcb = colorbar;
+ylabel(hcb, 'Mean annual SMB (mm/a')
+colormap(cool)
+
+% Mean trend in SMB across entire radargram
+figure
+scatter(radar.Easting, radar.Northing, 30, trend_mean, 'filled')
+hcb = colorbar;
+ylabel(hcb, 'Trend in SMB (mm/a)')
+colormap(cool)
+
+% Mean SMB vs mean trend
+figure
+hold on
+plot(cellfun(@mean, SMB_mean), trend_mean, 'b.')
+h1 = plot(cellfun(@mean, SMB_mean), trend_Y, 'b', 'LineWidth', 2);
+plot(cellfun(@mean, SMB_mean), trend_Y + trend_D, 'b--')
+plot(cellfun(@mean, SMB_mean), trend_Y - trend_D, 'b--')
+xlabel('Mean annual accumulation (mm w.e.)')
+ylabel('Annual accumulation trend (mm/a)')
+hold off

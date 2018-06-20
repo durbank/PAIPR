@@ -69,12 +69,8 @@ radar.depth = (0:core_res:depth_bott)';
 % order Savitzky-Golay filter with a window of 9 frames (~20 m)
 radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
-
+% Clear unnecessary variables
 clearvars -except file cores Ndraw radar horz_res core_res
-
-
-% B = ones(5)/5^2;
-% data_smooth = conv2(radar.data_smooth, B, 'same');
 
 %% Find depth, width, and prominence of peaks for each radar trace
 
@@ -85,15 +81,14 @@ Proms = cell(1, size(radar.data_smooth, 2));
 widths = cell(1,size(radar.data_smooth, 2));
 depths = cell(1, size(radar.data_smooth, 2));
 depth_idx = cell(1, size(radar.data_smooth, 2));
-% troughs = zeros(size(radar.data_smooth));
 
 for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
-%     data_i = data_smooth(:,i);
     
     % Prominence threshold for peaks
-%     minProm = 0.50;
-    minProm = 0.5*iqr(data_i);
+    minProm = 0.50;
+%     minProm = 0.5*iqr(data_i);
+    
     % Min distance between peaks (in meters)
     minDist = 0.08;
     
@@ -111,13 +106,6 @@ for i = 1:size(radar.data_smooth, 2)
     widths{i} = widths_i;
     depths{i} = radar.depth(peaks_idx_i);
     depth_idx{i} = peaks_idx_i;
-    
-    
-%     [~, trough_idx_i, ~, P_trough_i] = findpeaks(-data_i, ...
-%         'MinPeakProminence', minProm, 'MinPeakDistance', minDist/core_res);
-%     troughs(trough_idx_i,i) = -P_trough_i;
-    
-    
 end
 
 %%
@@ -128,7 +116,6 @@ end
 
 % Preallocate arrays for the matrix indices of members of each layer
 layers_idx = cell(1,length(layers));
-% layer_var = cell(1,length(layers));
 peaks = zeros(size(peaks_raw));
 
 % For loop to coerce layers to have one row position for each trace
@@ -153,9 +140,8 @@ for i = 1:length(layers_idx)
     % Interpolate peak prominence magnitudes to all columns in range using
     % a cubic smoothing spline
     mag_interp = csaps(col, mag, 1/length(col_interp), col_interp);
-%     row_var = interp1(col, movvar(row, round(1000/horz_res)), col_interp);
     
-    % Assign interpolated layer to output
+    % Assign interpolated layer to outputs
     layer_interp = sub2ind(size(peaks), row_interp, col_interp);
     peaks(layer_interp) = mag_interp;
     layers_idx{i} = layer_interp';
@@ -170,17 +156,19 @@ end
 
 % RMSE_mat = RMSE.*(1:size(peaks,1))'.*abs(s_matrix);
 
-% Diagnostic plot
-ystart = 10:25:size(peaks,1);
-xstart = ones(1, length(ystart));
-XY = stream2(ones(size(peaks)), s_matrix, xstart, ystart, 1);
-figure
-imagesc(radar.data_smooth, [-2 2])
-hold on
-hlines = streamline(XY);
-set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
-hold off
+% % Diagnostic plot
+% ystart = 10:25:size(peaks,1);
+% xstart = ones(1, length(ystart));
+% XY = stream2(ones(size(peaks)), s_matrix, xstart, ystart, 1);
+% figure
+% imagesc(radar.data_smooth, [-2 2])
+% hold on
+% hlines = streamline(XY);
+% set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
+% hold off
 
+% Perform secondary layer search using scaled Euclidean nearest neighbor 
+% and estimated radargram stream functions
 [~, layers2] = find_layers2(peaks_raw, peak_width, s_matrix, core_res, horz_res);
 
 
@@ -210,7 +198,6 @@ for i = 1:length(layers_idx2)
     % Interpolate peak prominence magnitudes to all columns in range using
     % a cubic smoothing spline
     mag_interp = csaps(col, mag, 1/length(col_interp), col_interp);
-%     row_var = interp1(col, movvar(row, round(1000/horz_res)), col_interp);
     
     % Assign interpolated layer to output
     layer_interp = sub2ind(size(peaks2), row_interp, col_interp);
@@ -223,7 +210,6 @@ end
 
 % Calculate continuous layer distances for each layer (accounting for 
 % lateral size of stacked radar trace bins)
-% layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx);
 layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx2);
 
 % Map layer prominence-distance values to the location within the radar
@@ -246,35 +232,36 @@ radar.layer_vals = layer_peaks;
 age_top = radar.collect_date;
 yr_pick1 = ceil(radar.collect_date - 1);
 
+% Preallocate arrays for layer likelihoods and anges
 ages = zeros([size(radar.data_smooth) Ndraw]);
 radar.likelihood = zeros(size(radar.data_smooth));
 err_out = [];
 for i = 1:size(layer_peaks, 2)
     
-%     P_50 = 2*1000;
-%     P_50 = 1000*mean(std(radar.data_smooth));
-%     P_50 = 1000*(quantile(radar.data_smooth(:,i), 0.95) - ...
-%         quantile(radar.data_smooth(:,i), 0.05));
+    % Assign the 50% likelihood point based on median trace prominence and
+    % layer length
     P_50 = median(Proms{i})*min([5000 0.5*radar.dist(end)]);
 %     P_50 = median(Proms{i})*mean(cellfun(@length, layers_idx));
     
+    % Assign min/max layer likelihoods, and calculate the logistic rate
+    % coefficient
     Po = 0.05;
     K = 1;
     r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
     
-    
+    % Get layer prom-distance values and depths for layers in ith trace
     peaks_i = layer_peaks(:,i);
-    %     peaks_i = peaks(:,i).*layer_peaks(:,i);
-
     peaks_idx = peaks_i>0;
     peaks_i = peaks_i(peaks_idx);
     depths_i = radar.depth(peaks_idx);
     
-    % Probability of peak representing a year based on a logistic function
+    % Likelihood of layer representing a year based on a logistic function
     % with rate (r) calculated above
-    likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i)); % times the prominence at that location?
+    likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
     radar.likelihood(peaks_idx,i) = likelihood;
     
+    % Assign MC simulation annual layer presence based on layer likelihood
+    % values
     yr_idx = zeros(length(depths_i), Ndraw);
     for j = 1:length(depths_i)
         R = rand(Ndraw, 1) <= likelihood(j);
@@ -284,14 +271,11 @@ for i = 1:size(layer_peaks, 2)
     for j = 1:Ndraw
         depths_j = [0; depths_i(logical(yr_idx(:,j)))];
         yrs_j = ([age_top yr_pick1:-1:yr_pick1-length(depths_j)+2])';
-%         ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
         try
             ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
         catch
             sprintf('Error in age interpolation for trace %u, trial %u. Filling with mean ages.', i, j)
-%             err_out_i = [err_out_i i];
             err_out = [err_out j];
-%             ages(:,i,j) = sum(squeeze(ages(:,i,:)), 2) ./ sum(squeeze(ages(:,i,:))~=0, 2);
         end
     end
     if ~isempty(err_out)
