@@ -70,7 +70,7 @@ radar.depth = (0:core_res:depth_bott)';
 radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
 
-clearvars -except radar Ndraw horz_res core_res
+clearvars -except file cores Ndraw radar horz_res core_res
 
 
 % B = ones(5)/5^2;
@@ -93,9 +93,9 @@ for i = 1:size(radar.data_smooth, 2)
     
     % Prominence threshold for peaks
 %     minProm = 0.50;
-    minProm = 1*iqr(data_i);
+    minProm = 0.5*iqr(data_i);
     % Min distance between peaks (in meters)
-    minDist = 0.10;
+    minDist = 0.08;
     
     % Find peak statistics in each trace based on criteria
     [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...
@@ -168,7 +168,7 @@ end
 % [RMSE_globe, depth_slope] = REL_score2(peaks, layers_idx);
 [RMSE, s_matrix] = REL_score(peaks, layers_idx, horz_res);
 
-RMSE_mat = RMSE.*(1:size(peaks,1))'.*abs(s_matrix);
+% RMSE_mat = RMSE.*(1:size(peaks,1))'.*abs(s_matrix);
 
 % Diagnostic plot
 ystart = 10:25:size(peaks,1);
@@ -248,16 +248,17 @@ yr_pick1 = ceil(radar.collect_date - 1);
 
 ages = zeros([size(radar.data_smooth) Ndraw]);
 radar.likelihood = zeros(size(radar.data_smooth));
+err_out = [];
 for i = 1:size(layer_peaks, 2)
     
 %     P_50 = 2*1000;
 %     P_50 = 1000*mean(std(radar.data_smooth));
 %     P_50 = 1000*(quantile(radar.data_smooth(:,i), 0.95) - ...
 %         quantile(radar.data_smooth(:,i), 0.05));
-    P_50 = 1*1000*median(Proms{i});
+    P_50 = median(Proms{i})*min([5000 0.5*radar.dist(end)]);
 %     P_50 = median(Proms{i})*mean(cellfun(@length, layers_idx));
     
-    Po = 0.10;
+    Po = 0.05;
     K = 1;
     r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
     
@@ -283,14 +284,21 @@ for i = 1:size(layer_peaks, 2)
     for j = 1:Ndraw
         depths_j = [0; depths_i(logical(yr_idx(:,j)))];
         yrs_j = ([age_top yr_pick1:-1:yr_pick1-length(depths_j)+2])';
-        ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
-%         try
-%             ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
-%         catch ME
-%             sprintf('Error age interpolation for trace %u, trial %u. Filling with NAN', i, j);
-%             ages(:,i,j) = nan;
-%         end
+%         ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
+        try
+            ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
+        catch
+            sprintf('Error in age interpolation for trace %u, trial %u. Filling with mean ages.', i, j)
+%             err_out_i = [err_out_i i];
+            err_out = [err_out j];
+%             ages(:,i,j) = sum(squeeze(ages(:,i,:)), 2) ./ sum(squeeze(ages(:,i,:))~=0, 2);
+        end
     end
+    if ~isempty(err_out)
+        ages(:,i,err_out) = repmat(sum(squeeze(ages(:,i,:)), 2)./...
+            sum(squeeze(ages(:,i,:))~=0, 2), 1, length(err_out));
+    end
+    err_out = [];
 end
 
 radar.ages = ages;
