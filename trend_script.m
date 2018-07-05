@@ -40,19 +40,22 @@ Ndraw = 100;
 
 %% Define radar files to import/process
 
-radar_dir = strcat(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
+radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
     'ProcessedSEAT2010/transectSEAT10_5_6/');
 
 % List all files matching 'wild' within radar directory
-wild = 'layers*';
-files = dir(strcat(radar_dir, wild));
+wild = '*.mat';
+files = dir(fullfile(radar_dir, wild));
 
 i = randi(length(files));
 file = strcat(radar_dir, files(i).name);
 
 % Path to full SEAT transect
-file = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_6.mat');
+file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
+    'layers_ku_band_SEAT10_5.mat');
+
+% file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
+%     'layers_ku_band_SEAT10_4toSEAT10_6.mat');
 
 % % Path of the OIB file to process
 % % SEAT10_4
@@ -149,7 +152,9 @@ age_std = std(squeeze(radar.ages(:,i,:)), [], 2);
 
 % Plot full radargram
 yr_idx = logical([diff(floor(age_mean)); 0]);
-depth = radar.depth(yr_idx);
+layer_idx = radar.likelihood(:,i) >= 0.10;
+% depth = radar.depth(yr_idx);
+depth = radar.depth(layer_idx);
 col = i*ones(length(depth),1);
 % row = find(radar.likelihood(:,i)>0.75);
 % col = i*ones(length(row),1);

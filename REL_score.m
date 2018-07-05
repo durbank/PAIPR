@@ -2,7 +2,7 @@
 % different picked layers (a measure of how effectively/consistently the
 % method picked layers in the given data)
 
-function [RMSE, s_matrix] = REL_score(peaks, layers, horz_res)
+function [reliability, RMSE, s_matrix] = REL_score(peaks, layers, horz_res)
 
 % Add horizontal surface layer to layer groups
 layers{end+1} = sub2ind(size(peaks), ...
@@ -20,6 +20,7 @@ seg_length = round(500/horz_res);
 % Preallocate arrays
 depth_slope = zeros(2, size(peaks,2));
 RMSE = zeros(1, size(peaks,2));
+R = zeros(1, size(peaks,2));
 
 %% Calculations for first chunk of data (non-iterative)
 
@@ -58,8 +59,8 @@ depth_slope(:,cols) = repmat(p, 1, length(cols));
 
 % Output the root-mean-squared error for the rate of change in layer slope
 % with depth
-RMSE(cols) = repmat(stats.robust_s, 1, length(cols));
-
+RMSE(cols) = repmat(stats.s, 1, length(cols));
+R(cols) = repmat(stats.coeffcorr(2,1), 1, length(cols));
 
 %% Iterative calculations for each trace of radargram data
 
@@ -100,8 +101,8 @@ for i = col_i
     
     % Output the root-mean-squared error for the rate of change in layer 
     % slope with depth
-    RMSE(i) = stats.robust_s;
-    
+    RMSE(i) = stats.s;
+    R(i) = stats.coeffcorr(2,1);
 end
 
 %% Calculations for final chunk of data (non-iterative)
@@ -141,13 +142,16 @@ depth_slope(:,cols) = repmat(p, 1, length(cols));
 
 % Output the root-mean-squared error for the rate of change in layer slope
 % with depth
-RMSE(cols) = repmat(stats.robust_s, 1, length(cols));
-
+RMSE(cols) = repmat(stats.s, 1, length(cols));
+R(cols) = repmat(stats.coeffcorr(2,1), 1, length(cols));
 
 % Generate matrix of estimated/interpolated layer slopes for each data
 % point in radargram
 depths = (1:size(peaks,1))';
-s_matrix = depths*depth_slope(2,:) + depth_slope(1,:);
+% s_matrix = depths*depth_slope(2,:) + depth_slope(1,:);
+s_matrix = depths*sgolayfilt(depth_slope(2,:), 2, 2*round((length(R)/10)/2)-1);
+RMSE = sgolayfilt(RMSE, 2, 2*round((length(R)/10)/2)-1);
+reliability = abs(sgolayfilt(R, 2, 2*round((length(R)/10)/2)-1));
 % s_matrix = depths.*(depth_slope(2,:)+1);
 
 

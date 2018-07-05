@@ -3,6 +3,11 @@ function [radar] = radar_age(file, cores, Ndraw)
 % Conversion to depth
 [radar] = radar_depth(file, cores);
 
+% Determine if there are data break points (large gaps in data that would
+% necessitate data processing over segments of the whole data)
+distance = [0 diff(radar.dist)];
+dist_idx = distance >= 500;
+
 % Find the mean response with depth in the radar data attributes across a
 % given horizontal resolution (in meters)
 horz_res = 25;
@@ -152,11 +157,11 @@ end
 % Calculate global and individual layer reliability for each column in
 % radar data
 % [RMSE_globe, depth_slope] = REL_score2(peaks, layers_idx);
-[RMSE, s_matrix] = REL_score(peaks, layers_idx, horz_res);
+[reliability, RMSE, s_matrix] = REL_score(peaks, layers_idx, horz_res);
 
 % RMSE_mat = RMSE.*(1:size(peaks,1))'.*abs(s_matrix);
 
-% % Diagnostic plot
+% Diagnostic plot
 % ystart = 10:25:size(peaks,1);
 % xstart = ones(1, length(ystart));
 % XY = stream2(ones(size(peaks)), s_matrix, xstart, ystart, 1);
