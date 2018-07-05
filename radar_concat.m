@@ -32,25 +32,24 @@ addpath(genpath(addon_folder))
 
 
 
-data_name = 'SEAT11_8';
-radar_dir = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/', data_name, '/');
+data_name = 'SEAT10_4toSEAT10_6_new';
+radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband', data_name);
 file_name = strcat('layers_ku_band_',data_name, '.mat');
-
-output_dir = strcat(data_path, 'radar/SEAT_Traverses/core-site_tests/');
+output_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband');
 
 
 % Get list of radar files in directory
-wild = 'layers*';
-files = dir(strcat(radar_dir, wild));
+wild = '*.mat';
+files = dir(fullfile(radar_dir, wild));
 
 % Initialize for loop with first file in directory
-data_struct = load(strcat(radar_dir, files(1).name));
+data_struct = load(fullfile(radar_dir, files(1).name));
 fld_names = fieldnames(data_struct);
 data_cells = struct2cell(data_struct);
 data_cells = data_cells(1:5);
 
 for i = 2:length(files)
-    data_i = struct2cell(load(strcat(radar_dir, files(i).name)));
+    data_i = struct2cell(load(fullfile(radar_dir, files(i).name)));
     data_cells = cellfun(@horzcat, data_cells, data_i(1:5), 'UniformOutput', 0);
 end
 
@@ -79,7 +78,7 @@ else
     disp('Check collection date')
 end
 
-output_path = strcat(output_dir, file_name);
+output_path = fullfile(output_dir, file_name);
 save(output_path, 'lat', 'lon', 'time_gps', ...
     'time_trace', 'data_out', 'collect_date', '-v7.3')
 
