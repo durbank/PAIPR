@@ -215,7 +215,8 @@ while search_new == true
     
     % Smooth layer using locally weighted regression
 %     row_mean = round(movmean(row, 5));
-    row_mean = round(smooth(col, row, 'rlowess'));
+%     row_mean = round(smooth(col, row, 'rlowess'));
+    row_mean = round(smooth(row, 'rlowess'));
     
     % For loop to search for additional peaks near current layer
     for j = 1:length(layer_i)

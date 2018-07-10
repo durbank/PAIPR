@@ -35,7 +35,7 @@ addpath cresis-L1B-matlab-readers/
 Ndraw = 100;
 
 % Import firn core data
-[cores] = import_cores(strcat(data_path, 'Ice-cores/SEAT_cores/', ...
+[cores] = import_cores(fullfile(data_path, 'Ice-cores/SEAT_cores/', ...
     'DGK_core_data.xlsx'), Ndraw);
 
 %% Define radar files to import/process
@@ -52,7 +52,7 @@ file = strcat(radar_dir, files(i).name);
 
 % Path to full SEAT transect
 file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_5.mat');
+    'layers_ku_band_SEAT10_4.mat');
 
 file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
     'layers_ku_band_SEAT10_4toSEAT10_6.mat');
