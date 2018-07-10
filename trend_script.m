@@ -20,7 +20,7 @@ switch PC_true
         
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
-        addon_path = '/home/durbank/MATLAB/Addons/';
+        addon_path = '/home/durbank/MATLAB/Add-Ons/';
 end
 
 % Addons needed for analysis
@@ -54,8 +54,8 @@ file = strcat(radar_dir, files(i).name);
 file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
     'layers_ku_band_SEAT10_5.mat');
 
-% file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
-%     'layers_ku_band_SEAT10_4toSEAT10_6.mat');
+file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
+    'layers_ku_band_SEAT10_4toSEAT10_6.mat');
 
 % % Path of the OIB file to process
 % % SEAT10_4
