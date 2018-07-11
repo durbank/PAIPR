@@ -97,7 +97,7 @@ file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
 % radar.SMB = radar0.SMB(edge:end-edge);
 
 %%
-
+tic
 % Calculate mean accumulation rate and std at each location
 SMB_mean = cellfun(@mean, radar.SMB, 'UniformOutput', 0);
 SMB_std = cellfun(@std, radar.SMB, 'UniformOutput', 0);
@@ -134,6 +134,7 @@ p_ratio = cellfun(@(sig, all) length(sig)/length(all), p_star, p_val);
 [p_b, S_b] = polyfit(cellfun(@mean, SMB_mean), trend_mean, 1);
 [trend_Y, trend_D] = polyconf(p_b, cellfun(@mean, SMB_mean), S_b);
 
+toc
 %% Diagnostic plots for single random trace
 
 % Trace idx to investigate
@@ -165,7 +166,7 @@ xlabel('Distance along profile (m)')
 ylabel('Depth (m)')
 hold on
 plot(radar.dist(col), depth, 'r.', 'MarkerSize', 25)
-xlim([0 radar.dist(end)])
+xlim([radar.dist(1) radar.dist(end)])
 ylim([0 radar.depth(end)])
 set(gca, 'Ydir', 'reverse', 'FontSize', 18)
 hold off
