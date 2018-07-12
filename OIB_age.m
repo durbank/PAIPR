@@ -1,7 +1,7 @@
-function [radar] = radar_age(file, cores, Ndraw)
+function [radar] = OIB_age(radar, cores, Ndraw)
 
 % Conversion to depth
-[radar] = radar_depth(file, cores);
+[radar] = OIB_depth(radar, cores);
 
 % Determine if there are data break points (large gaps in data that would
 % necessitate data processing over segments of the whole data)
@@ -12,7 +12,7 @@ data_endpts = [1 data_col(dist_idx)-1 length(data_col)];
 
 % Find the mean response with depth in the radar data attributes across a
 % given horizontal resolution (in meters)
-horz_res = 15;
+horz_res = 25;
 [radar] = radar_stack(radar, horz_res);
 
 % Stationarize the radar response by differencing traces with a smoothing 

@@ -10,7 +10,7 @@ end
 stack_idx = [unique(stack_idx) length(mdata.dist)];
 
 
-
+% mdata.data_out = movmean(mdata.data_out, 9, 2);
 
 
 % Calculate stack bin sizes based on original data lateral resolution and

@@ -23,9 +23,11 @@ vDist = mDist(1, 2:end);
 % Subset all cores to only those within the defined range of
 % influence/covariance
 core_idx = find(vDist <= range);
-cores_SWM = fieldnames(cores);
-cores_SWM = cores_SWM(7:end);
-cores_SWM = cores_SWM(core_idx);
+cores_fd_nm = fieldnames(cores);
+core_log = contains(cores_fd_nm, 'SEAT');
+cores_all = cores_fd_nm(core_log);
+% cores_SWM = cores_SWM(7:end);
+cores_SWM = cores_all(core_idx);
 vDist_SWM = vDist(core_idx);
 
 % Set depth of synthetic core to depth of the shallowest core used in

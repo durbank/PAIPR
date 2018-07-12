@@ -33,29 +33,66 @@ addpath(genpath(addon_folder))
 
 %%
 
-% % Load previously processed radar accumulation data
-% load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_processed.mat'))
+% Load previously processed radar accumulation data
+load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_processed.mat'))
 
-% Load individual segment data, and other pertinent data
-seg1 = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_seg1.mat'));
-seg2 = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_seg2.mat'));
-seg3 = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_seg3.mat'));
-Ndraw = seg1.Ndraw;
-cores = seg1.cores;
+% % Load individual segment data, and other pertinent data
+% seg1 = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_seg1.mat'));
+% seg2 = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_seg2.mat'));
+% seg3 = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_seg3.mat'));
+% Ndraw = seg1.Ndraw;
+% cores = seg1.cores;
+% 
+% % Combine radar segments into a single radar structure, clipping the ends
+% % off of each segment
+% clip = 120;
+% radar = struct('collect_date', seg1.radar.collect_date, 'Easting', ...
+%     [seg1.radar.Easting(clip:end-clip) seg2.radar.Easting(clip:end-clip) seg3.radar.Easting(clip:end-clip)],...
+%     'Northing', [seg1.radar.Northing(clip:end-clip) seg2.radar.Northing(clip:end-clip) seg3.radar.Northing(clip:end-clip)],...
+%     'dist', [seg1.radar.dist(clip:end-clip) seg2.radar.dist(clip:end-clip) seg3.radar.dist(clip:end-clip)],...
+%     'depth', seg1.radar.depth, ...
+%     'data_smooth', [seg1.radar.data_smooth(:,clip:end-clip) seg2.radar.data_smooth(:,clip:end-clip) seg3.radar.data_smooth(:,clip:end-clip)],...
+%     'likelihood', [seg1.radar.likelihood(:,clip:end-clip) seg2.radar.likelihood(:,clip:end-clip) seg3.radar.likelihood(:,clip:end-clip)],...
+%     'ages', [seg1.radar.ages(:,clip:end-clip,:) seg2.radar.ages(:,clip:end-clip,:) seg3.radar.ages(:,clip:end-clip,:)]);
+% radar.SMB_yr = [seg1.radar.SMB_yr(clip:end-clip) seg2.radar.SMB_yr(clip:end-clip) seg3.radar.SMB_yr(clip:end-clip)];
+% radar.SMB = [seg1.radar.SMB(clip:end-clip) seg2.radar.SMB(clip:end-clip) seg3.radar.SMB(clip:end-clip)];
 
-% Combine radar segments into a single radar structure, clipping the ends
-% off of each segment
-clip = 120;
-radar = struct('collect_date', seg1.radar.collect_date, 'Easting', ...
-    [seg1.radar.Easting(clip:end-clip) seg2.radar.Easting(clip:end-clip) seg3.radar.Easting(clip:end-clip)],...
-    'Northing', [seg1.radar.Northing(clip:end-clip) seg2.radar.Northing(clip:end-clip) seg3.radar.Northing(clip:end-clip)],...
-    'dist', [seg1.radar.dist(clip:end-clip) seg2.radar.dist(clip:end-clip) seg3.radar.dist(clip:end-clip)],...
-    'depth', seg1.radar.depth, ...
-    'data_smooth', [seg1.radar.data_smooth(:,clip:end-clip) seg2.radar.data_smooth(:,clip:end-clip) seg3.radar.data_smooth(:,clip:end-clip)],...
-    'likelihood', [seg1.radar.likelihood(:,clip:end-clip) seg2.radar.likelihood(:,clip:end-clip) seg3.radar.likelihood(:,clip:end-clip)],...
-    'ages', [seg1.radar.ages(:,clip:end-clip,:) seg2.radar.ages(:,clip:end-clip,:) seg3.radar.ages(:,clip:end-clip,:)]);
-radar.SMB_yr = [seg1.radar.SMB_yr(clip:end-clip) seg2.radar.SMB_yr(clip:end-clip) seg3.radar.SMB_yr(clip:end-clip)];
-radar.SMB = [seg1.radar.SMB(clip:end-clip) seg2.radar.SMB(clip:end-clip) seg3.radar.SMB(clip:end-clip)];
+%% Index map and study site
+
+labels = strrep(cores.name, '_', '-');
+basins = shaperead(strcat(data_path, 'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
+
+Easting_lims = [min(cores.Easting)-0.10*(max(cores.Easting)-min(cores.Easting)) ...
+    max(cores.Easting)+0.15*(max(cores.Easting)-min(cores.Easting))];
+Northing_lims = [min(cores.Northing)-0.1*(max(cores.Northing)-min(cores.Northing)) ...
+    max(cores.Northing)+0.1*(max(cores.Northing)-min(cores.Northing))];
+elev = cryosat2_data(Easting_lims, Northing_lims);
+
+figure('Position', [10 10 1400 800])
+hold on
+h0 = image(Easting_lims, Northing_lims, elev, 'CDataMapping', 'scaled');
+colormap(gray)
+mapshow(basins, 'FaceAlpha', 0, 'LineWidth', 3)
+h1 = scatter(cores.Easting, cores.Northing, 100, 'b', 'filled');
+h2 = plot(radar.Easting(1), radar.Northing(1), 'r', 'LineWidth', 2);     % Correctly display radar as line in legend
+plot(radar.Easting, radar.Northing, 'r.', 'MarkerSize', 0.10)
+text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), 'FontSize', 18, 'Interpreter', 'tex');
+h3 = plot(cores.Easting(1), cores.Northing(1), 'k', 'LineWidth', 2);
+h4 = plot(OIB.Easting(1), OIB.Northing(1), 'm', 'LineWidth', 2);
+plot(OIB.Easting, OIB.Northing, 'm.', 'MarkerSize', 0.05)
+c0 = colorbar;
+c0.Label.String = 'Elevation (m asl)';
+c0.Label.FontSize = 18;
+graticuleps(-81:0.5:-77,-125:2:-105, 'c')
+xlim(Easting_lims)
+ylim(Northing_lims)
+scalebarps
+box on
+mapzoomps('ne', 'insetsize', 0.30)
+legend([h1 h2 h4 h3], 'Firn cores', 'Radar transects', 'OIB', 'WAIS Divide', 'Location', 'northwest')
+set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+hold off
+
 
 %% Core site comparisons
 
@@ -70,7 +107,7 @@ for i = 1:length(inputs)
     core_dist = pdist2([ cores.(name).Easting  cores.(name).Northing], ...
         [radar.Easting', radar.Northing']);
     trace_idx = 1:length(radar.SMB);
-    dist_idx = trace_idx(core_dist<=15000);
+    dist_idx = trace_idx(core_dist<=10000);
     [near_dist, near_idx] = min(core_dist);
     core_pos = radar.dist(near_idx);
     
@@ -131,11 +168,11 @@ for i = 1:length(inputs)
     title(strcat(text_name, ' annual SMB'))
     for n = dist_idx
         h0 = plot(radar.SMB_yr{n}, median(radar.SMB{n}, 2), 'r', 'LineWidth', 0.5);
-        h0.Color(4) = 0.01;
+        h0.Color(4) = 0.02;
     end
     yr_end = min(cellfun(@length, radar.SMB_yr(dist_idx)));
-    h1 = plot(radar.SMB_yr{irand}, median(radar.SMB{dist_idx}(1:yr_end), 2),...
-        'r', 'LineWidth', 2);
+    SMB_data = cell2mat(cellfun(@(x) x(1:yr_end), radar.SMB(dist_idx), 'Uniform', false)')';
+    h1 = plot(radar.SMB_yr{dist_idx(1)}(1:yr_end), median(SMB_data, 2), 'r', 'LineWidth', 2);
 %     plot(radar.(name).SMB_yr{irand}, median(radar.(name).SMB{irand}, 2) + ...
 %         2*std(radar.(name).SMB{irand}, [], 2), 'r--');
 %     plot(radar.(name).SMB_yr{irand}, median(radar.(name).SMB{irand}, 2) - ...

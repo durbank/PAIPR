@@ -1,28 +1,29 @@
 % Small script to contcatonate all radar files within a given directory to
 % a single radar file
 
-% % User defines radar directory path
-% radar_dir = input('Path to radar directory:', 's');
-% if radar_dir(end) ~= filesep
-%     radar_dir = strcat(radar_dir, filesep);
-% end
-% 
-% % User defines radar output location
-% output_dir = input('Location to save output to:', 's');
-% if output_dir(end) ~= filesep
-%     output = strcat(output_dir, filesep);
-% end
+% THIS IS THE SCRIPT USED TO CONCATONATE 2010 SEAT RADAR ALONG THE
+% SEAT10-4 TO SEAT10-6 TRAVERSE
 
 % Directories to data of interest based on computer (eventually will be
 % replaced with GUI for data directory selection)
 PC_true = ispc;
 switch PC_true
     case true
-        data_path = 'F:/Research/Antarctica/Data/';
-        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
+        computer = 'work';
+%         computer = input('Current PC: ');
+        switch computer
+            case 'work'
+                data_path = 'E:/Research/Antarctica/Data/';
+                addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
+                
+            case 'laptop'
+                data_path = 'C:/Users/durba/Documents/Research/Antarctica/Data/';
+                addon_path = 'C:/Users/durba/Documents/MATLAB/Addons/';
+        end
+        
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
-        addon_path = '/home/durbank/MATLAB/Addons/';
+        addon_path = '/home/durbank/MATLAB/Add-Ons/';
 end
 
 % Addons needed for analysis
@@ -30,13 +31,10 @@ end
 addon_folder = strcat(addon_path, 'AntarcticMappingTools_v5.03/');
 addpath(genpath(addon_folder))
 
-
-
 data_name = 'SEAT10_4toSEAT10_6_new';
 radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband', data_name);
 file_name = strcat('layers_ku_band_',data_name, '.mat');
 output_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband');
-
 
 % Get list of radar files in directory
 wild = '*.mat';
