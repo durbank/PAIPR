@@ -12,7 +12,7 @@ data_endpts = [1 data_col(dist_idx)-1 length(data_col)];
 
 % Find the mean response with depth in the radar data attributes across a
 % given horizontal resolution (in meters)
-horz_res = 15;
+horz_res = 25;
 [radar] = radar_stack(radar, horz_res);
 
 % Stationarize the radar response by differencing traces with a smoothing 
