@@ -31,7 +31,7 @@ end
 addon_folder = strcat(addon_path, 'AntarcticMappingTools_v5.03/');
 addpath(genpath(addon_folder))
 
-data_name = 'SEAT10_4toSEAT10_6_new';
+data_name = 'SEAT10_4toSEAT10_6';
 radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband', data_name);
 file_name = strcat('layers_ku_band_',data_name, '.mat');
 output_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband');
@@ -53,12 +53,12 @@ end
 
 output_struct = cell2struct(data_cells, fld_names(1:5), 1);
 
-lat = output_struct.lat;
-lon = output_struct.lon;
-time_gps = output_struct.time_gps;
-time_trace = output_struct.time_trace;
-data_out = output_struct.data_out;
-
+% lat = output_struct.lat;
+% lon = output_struct.lon;
+% time_gps = output_struct.time_gps;
+% time_trace = output_struct.time_trace;
+% data_out = output_struct.data_out;
+% 
 % Define the age of the top of the radar (the date the radar was collected)
 % (this will require modification when incorporating data beyond SEAT
 % traverses)
@@ -76,7 +76,11 @@ else
     disp('Check collection date')
 end
 
+
+output_struct.collect_date = collect_date;
 output_path = fullfile(output_dir, file_name);
-save(output_path, 'lat', 'lon', 'time_gps', ...
-    'time_trace', 'data_out', 'collect_date', '-v7.3')
+save(output_path, '-struct', 'output_struct', '-v7.3')
+
+% save(output_path, 'lat', 'lon', 'time_gps', ...
+%     'time_trace', 'data_out', 'collect_date', '-v7.3')
 
