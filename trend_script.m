@@ -35,8 +35,13 @@ addpath cresis-L1B-matlab-readers/
 Ndraw = 100;
 
 % Import firn core data
-[cores] = import_cores(fullfile(data_path, 'Ice-cores/SEAT_cores/', ...
-    'DGK_core_data.xlsx'), Ndraw);
+% [cores] = import_cores(fullfile(data_path, 'Ice-cores/SEAT_cores/', ...
+%     'DGK_core_data.xlsx'), Ndraw);
+
+% Load core data from file (data used was previously generated using
+% import_cores.m)
+core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
+cores = load(core_file);
 
 %% Define radar files to import/process
 
@@ -55,7 +60,7 @@ file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
     'layers_ku_band_SEAT10_4.mat');
 
 file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
-    'layers_ku_band_SEAT10_4toSEAT10_6.mat');
+    'layers_ku_band_gridSEAT10_4.mat');
 
 % % Path of the OIB file to process
 % % SEAT10_4
@@ -77,24 +82,19 @@ file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
 % Calculate annual accumulation rates from data
 [radar] = calc_SWE(radar, Ndraw);
 
-% radar = radar0;
-% 
-% % Remove first/last 10 traces in radar (addresses some edge effect problems
-% % present in many data sets
-% edge = 25;
-% 
-% radar.Easting = radar0.Easting(edge:end-edge);
-% radar.Northing = radar0.Northing(edge:end-edge);
-% radar.dist = radar0.dist(edge:end-edge);
-% radar.data_stack = radar0.data_stack(:,edge:end-edge);
-% radar.rho_coeff = radar0.rho_coeff(:,edge:end-edge);
-% radar.rho_var = radar0.rho_var(:,edge:end-edge);
-% radar.data_smooth = radar0.data_smooth(:,edge:end-edge);
-% radar.layer_vals = radar0.layer_vals(:,edge:end-edge);
-% radar.likelihood = radar0.likelihood(:,edge:end-edge);
-% radar.ages = radar0.ages(:,edge:end-edge,:);
-% radar.SMB_yr = radar0.SMB_yr(edge:end-edge);
-% radar.SMB = radar0.SMB(edge:end-edge);
+
+clip = round (2500/25);
+radar0 = radar;
+radar = struct('collect_date', radar.collect_date, 'Easting', radar.Easting(clip:end-clip),...
+    'Northing', radar.Northing(clip:end-clip), 'dist', radar.dist(clip:end-clip),...
+    'depth', radar.depth, 'data_smooth', radar.data_smooth(:,clip:end-clip),...
+    'peaks', radar.peaks(:,clip:end-clip), 'groups', radar.groups(:,clip:end-clip),...
+    'likelihood', radar.likelihood(:,clip:end-clip), 'ages', radar.ages(:,clip:end-clip,:));
+radar.SMB_yr =  radar0.SMB_yr(clip:end-clip);
+radar.SMB = radar0.SMB(clip:end-clip);
+
+% output_path = fullfile(data_path, 'radar/SEAT_Traverses/results_data/gridSEAT10_4.mat');
+% save(output_path, '-struct', 'radar', '-v7.3')
 
 %%
 % Calculate mean accumulation rate and std at each location
