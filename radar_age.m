@@ -212,6 +212,11 @@ for i = 1:length(layers_idx2)
     layers_idx2{i} = layer_interp';
 end
 
+% Create matrix of layer group assignments
+group_num = zeros(size(peaks2));
+for i = 1:length(layers_idx2)
+    group_num(layers_idx2{i}) = i;
+end
 
 %%
 
@@ -230,7 +235,7 @@ end
 % Output layer arrays to radar structure
 radar.peaks = peaks2;
 radar.layers = layers_idx2;
-radar.layer_vals = layer_peaks;
+radar.groups = group_num;
 
 %% Assign layer likelihood scores and estimate age-depth scales
 
