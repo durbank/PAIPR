@@ -16,6 +16,59 @@ for k = 1:length(radar.layers)
 end
 hold off
 
+%% Map concat (combine N-E points of multiple files to determine map position
+
+% Directories to data of interest based on computer (eventually will be
+% replaced with GUI for data directory selection)
+PC_true = ispc;
+switch PC_true
+    case true
+        computer = 'work';
+%         computer = input('Current PC: ');
+        switch computer
+            case 'work'
+                data_path = 'E:/Research/Antarctica/Data/';
+                addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
+                
+            case 'laptop'
+                data_path = 'C:/Users/durba/Documents/Research/Antarctica/Data/';
+                addon_path = 'C:/Users/durba/Documents/MATLAB/Addons/';
+        end
+        
+    case false
+        data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
+        addon_path = '/home/durbank/MATLAB/Add-Ons/';
+end
+
+% Addons needed for analysis
+% Add Antarctic Mapping Toolbox (AMT) to path
+addon_folder = strcat(addon_path, 'AntarcticMappingTools_v5.03/');
+addpath(genpath(addon_folder))
+
+% Load core data from file (data used was previously generated using
+% import_cores.m)
+core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
+cores = load(core_file);
+
+path2 = 'radar/SEAT_Traverses/SEAT2010Kuband/ProcessedSEAT2010/grid_SEAT10_6';
+radar_dir = fullfile(data_path, path2);
+
+% Get list of radar files in directory
+wild = '*.mat';
+files = dir(fullfile(radar_dir, wild));
+
+figure
+hold on
+h1 = scatter(cores.Easting, cores.Northing, 100, 'b', 'filled');
+h2 = plot(radar.Easting(1), radar.Northing(1), 'r', 'LineWidth', 2);     % Correctly display radar as line in legend
+plot(radar.Easting, radar.Northing, 'r.', 'MarkerSize', 0.10)
+
+for i = 1:length(files)
+    data = radar_clean(fullfile(radar_dir, files(i).name));
+    plot(data.Easting, data.Northing, '.')
+end
+hold off
+
 %%
 
 Ndraw = seg1.Ndraw;

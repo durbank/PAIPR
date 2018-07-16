@@ -33,8 +33,15 @@ addpath(genpath(addon_folder))
 
 %%
 
+% Load core data from file (data used was previously generated using
+% import_cores.m)
+core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
+cores = load(core_file);
+
+Ndraw = 100;
+
 % Load previously processed radar accumulation data
-load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_processed.mat'))
+radar = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_processed.mat'));
 
 % % Load individual segment data, and other pertinent data
 % seg1 = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_seg1.mat'));
@@ -45,7 +52,7 @@ load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_proce
 % 
 % % Combine radar segments into a single radar structure, clipping the ends
 % % off of each segment
-% clip = 120;
+% clip = 100;
 % radar = struct('collect_date', seg1.radar.collect_date, 'Easting', ...
 %     [seg1.radar.Easting(clip:end-clip) seg2.radar.Easting(clip:end-clip) seg3.radar.Easting(clip:end-clip)],...
 %     'Northing', [seg1.radar.Northing(clip:end-clip) seg2.radar.Northing(clip:end-clip) seg3.radar.Northing(clip:end-clip)],...
@@ -78,8 +85,8 @@ h2 = plot(radar.Easting(1), radar.Northing(1), 'r', 'LineWidth', 2);     % Corre
 plot(radar.Easting, radar.Northing, 'r.', 'MarkerSize', 0.10)
 text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), 'FontSize', 18, 'Interpreter', 'tex');
 h3 = plot(cores.Easting(1), cores.Northing(1), 'k', 'LineWidth', 2);
-h4 = plot(OIB.Easting(1), OIB.Northing(1), 'm', 'LineWidth', 2);
-plot(OIB.Easting, OIB.Northing, 'm.', 'MarkerSize', 0.05)
+% h4 = plot(OIB.Easting(1), OIB.Northing(1), 'm', 'LineWidth', 2);
+% plot(OIB.Easting, OIB.Northing, 'm.', 'MarkerSize', 0.05)
 c0 = colorbar;
 c0.Label.String = 'Elevation (m asl)';
 c0.Label.FontSize = 18;
@@ -89,7 +96,7 @@ ylim(Northing_lims)
 scalebarps
 box on
 mapzoomps('ne', 'insetsize', 0.30)
-legend([h1 h2 h4 h3], 'Firn cores', 'Radar transects', 'OIB', 'WAIS Divide', 'Location', 'northwest')
+legend([h1 h2 h3], 'Firn cores', 'Radar transects', 'WAIS Divide', 'Location', 'northwest')
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
 hold off
 
@@ -102,27 +109,27 @@ for i = 1:length(inputs)
     
     % Name of ith core site to perform analysis/stats on
     name = inputs{i};
+    file = fullfile(data_path, 'radar/SEAT_Traverses/results_data', ...
+        strcat('grid', name, '.mat'));
+    radar_i = load(file);
     
 %     core_i = cores.(name);
     core_dist = pdist2([ cores.(name).Easting  cores.(name).Northing], ...
-        [radar.Easting', radar.Northing']);
-    trace_idx = 1:length(radar.SMB);
-    dist_idx = trace_idx(core_dist<=10000);
+        [radar_i.Easting', radar_i.Northing']);
+%     trace_idx = 1:length(radar.SMB);
+%     dist_idx = trace_idx(core_dist<=10000);
     [near_dist, near_idx] = min(core_dist);
     core_pos = radar.dist(near_idx);
     
     
     text_name = strrep(name, '_', '-');
     f1 = figure('Position', [200 200 1000 550]);
-    imagesc(radar.dist(dist_idx), radar.depth, radar.data_smooth(:,dist_idx), [-2 2])
+    imagesc(radar.dist, radar_i.depth, radar_i.data_smooth, [-2 2])
     colorbar
     xlabel('Distance along profile (m)')
     ylabel('Depth (m)')
     hold on
-%     plot([radar.dist(irand) radar.dist(irand)], ...
-%         [0 radar.depth(end)], 'r', 'LineWidth', 2)
-%     xlim([0 radar.(name).dist(end)])
-%     ylim([0 radar.(name).depth(end)])
+%     plot([core_pos core_pos], [radar_i.depth(1) radar_i.depth(end)], 'b', 'LineWidth', 2)
     set(gca, 'Ydir', 'reverse', 'FontSize', 14)
     title(strcat(text_name, ' radargram'));
     hold off
@@ -132,17 +139,17 @@ for i = 1:length(inputs)
 
     f2 = figure('Position', [200 200 750 550]);
     hold on
-    for n = dist_idx
-        h0 = plot(radar.depth, median(radar.ages(:,n,:), 3), 'r', 'LineWidth', 0.5);
+    for n = 1:length(radar_i.SMB)
+        h0 = plot(radar_i.depth, median(radar_i.ages(:,n,:), 3), 'r', 'LineWidth', 0.5);
         h0.Color(4) = 0.02;
     end
 %     for n = find(dist_idx)
 %         for k = 1:Ndraw
-%             h0 = plot(radar.depth, squeeze(radar.ages(:,n,k)), 'r', 'LineWidth', 0.5);
+%             h0 = plot(radar_i.depth, squeeze(radar_i.ages(:,n,k)), 'r', 'LineWidth', 0.5);
 %             h0.Color(4) = 0.01;
 %         end
 %     end
-    h1 = plot(radar.depth, median(median(radar.ages(:,dist_idx,:), 3), 2),...
+    h1 = plot(radar_i.depth, median(median(radar_i.ages, 3), 2),...
         'r', 'LineWidth', 2);
 %     plot(radar.(name).depth, median(radar.(name).ages(:,irand,:), 3)...
 %         + 2*std(squeeze(radar.(name).ages(:,irand,:)), [], 2), 'r--')
@@ -154,7 +161,7 @@ for i = 1:length(inputs)
     plot(cores.(name).depth, mean(cores.(name).ages, 2) - ...
         2*std(cores.(name).ages, [], 2), 'b--')
     title(strcat(text_name, ' age-depth scale'))
-    legend([h1 h2],'Radar', 'Core')
+    legend([h1 h2],'Radar traces', 'Core')
     ylabel('Calendar years')
     xlabel('Depth (m)')
     hold off
@@ -166,13 +173,19 @@ for i = 1:length(inputs)
     f3 = figure('Position', [200 200 1300 700]);
     hold on
     title(strcat(text_name, ' annual SMB'))
-    for n = dist_idx
-        h0 = plot(radar.SMB_yr{n}, median(radar.SMB{n}, 2), 'r', 'LineWidth', 0.5);
-        h0.Color(4) = 0.02;
-    end
-    yr_end = min(cellfun(@length, radar.SMB_yr(dist_idx)));
-    SMB_data = cell2mat(cellfun(@(x) x(1:yr_end), radar.SMB(dist_idx), 'Uniform', false)')';
-    h1 = plot(radar.SMB_yr{dist_idx(1)}(1:yr_end), median(SMB_data, 2), 'r', 'LineWidth', 2);
+%     for n = dist_idx
+%         for k = 1:Ndraw
+%             h0 = plot(radar.SMB_yr{n}, radar.SMB{n}(:,k), 'r', 'LineWidth', 0.5);
+%             h0.Color(4) = 0.02;
+%         end
+%     end
+        for n = 1:length(radar_i.SMB)
+            h0 = plot(radar_i.SMB_yr{n}, median(radar_i.SMB{n}, 2), 'r', 'LineWidth', 0.5);
+            h0.Color(4) = 0.02;
+        end
+    yr_end = min(cellfun(@length, radar_i.SMB_yr));
+    SMB_data = cell2mat(cellfun(@(x) x(1:yr_end), radar_i.SMB, 'Uniform', false)')';
+    h1 = plot(radar_i.SMB_yr{1}(1:yr_end), median(SMB_data, 2), 'r--', 'LineWidth', 2);
 %     plot(radar.(name).SMB_yr{irand}, median(radar.(name).SMB{irand}, 2) + ...
 %         2*std(radar.(name).SMB{irand}, [], 2), 'r--');
 %     plot(radar.(name).SMB_yr{irand}, median(radar.(name).SMB{irand}, 2) - ...
@@ -182,10 +195,9 @@ for i = 1:length(inputs)
         2*std(cores.(name).SMB, [], 2), 'b--');
     plot(cores.(name).SMB_yr, median(cores.(name).SMB, 2) - ...
         2*std(cores.(name).SMB, [], 2), 'b--');
-    legend([h1 h2], 'Sample radar trace', 'Core')
+    legend([h1 h2], 'Radar traces', 'Core')
     xlabel('Calendar years')
     ylabel('Annual SMB (mm w.e.)')
-    
     f3_name = strcat(name, '_SMB');
 %     export_fig(f1, strcat(out_dir, f3_name), '-png');
 %     close(f3)
