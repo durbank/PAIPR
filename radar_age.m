@@ -1,7 +1,16 @@
-function [radar] = radar_age(file, cores, Ndraw)
+function [radar] = radar_age(radar_file, cores, Ndraw)
 
-% Conversion to depth
-[radar] = radar_depth(file, cores);
+radar_type = isstruct(radar_file);
+
+switch radar_type
+    case false
+        % Conversion to depth
+        [radar] = radar_depth(radar_file, cores);
+        
+    case true
+        % Conversion to depth
+        [radar] = OIB_depth(radar_file, cores);
+end
 
 % Determine if there are data break points (large gaps in data that would
 % necessitate data processing over segments of the whole data)
