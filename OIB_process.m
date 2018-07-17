@@ -45,7 +45,7 @@ cores = load(core_file);
 Ndraw = 100;
 
 % Generate estimates of annual horizons and age-depth scale estimates
-[radar] = OIB_age(radar, cores, Ndraw);
+[radar] = radar_age(radar, cores, Ndraw);
 
 % Calculate annual accumulation rates from data
 [radar] = calc_SWE(radar, Ndraw);
