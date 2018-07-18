@@ -12,12 +12,12 @@ switch radar_type
         [radar] = OIB_depth(radar_file, cores);
 end
 
-% Determine if there are data break points (large gaps in data that would
-% necessitate data processing over segments of the whole data)
-distance = [0 diff(radar.dist)];
-dist_idx = distance >= 500;
-data_col = 1:size(radar.data_out, 2);
-data_endpts = [1 data_col(dist_idx)-1 length(data_col)];
+% % Determine if there are data break points (large gaps in data that would
+% % necessitate data processing over segments of the whole data)
+% distance = [0 diff(radar.dist)];
+% dist_idx = distance >= 500;
+% data_col = 1:size(radar.data_out, 2);
+% data_endpts = [1 data_col(dist_idx)-1 length(data_col)];
 
 % Find the mean response with depth in the radar data attributes across a
 % given horizontal resolution (in meters)
@@ -103,7 +103,6 @@ for i = 1:size(radar.data_smooth, 2)
     
     % Prominence threshold for peaks
     minProm = 0.50;
-%     minProm = 0.5*iqr(data_i);
     
     % Min distance between peaks (in meters)
     minDist = 0.08;
@@ -169,8 +168,6 @@ end
 % radar data
 % [RMSE_globe, depth_slope] = REL_score2(peaks, layers_idx);
 [reliability, RMSE, s_matrix] = REL_score(peaks, layers_idx, horz_res);
-
-% RMSE_mat = RMSE.*(1:size(peaks,1))'.*abs(s_matrix);
 
 % Diagnostic plot
 % ystart = 10:25:size(peaks,1);
