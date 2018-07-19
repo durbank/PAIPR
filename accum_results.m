@@ -44,6 +44,7 @@ Ndraw = 100;
 % radar = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_processed.mat'));
 radar_OIB = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/OIB_SEAT10_4to10_6.mat'));
 
+radar_manual = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_manual_layers.mat'));
 
 % % Load individual segment data, and other pertinent data
 % seg1 = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_seg1.mat'));

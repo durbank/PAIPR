@@ -48,7 +48,7 @@ data_cells = data_cells(1:5);
 
 for i = 2:length(files)
     data_i = struct2cell(load(fullfile(radar_dir, files(i).name)));
-    data_cells = cellfun(@horzcat, data_cells, data_i(1:5), 'UniformOutput', 0);
+    data_cells = cellfun(@horzcat, data_cells, data_i(1:5), 'UniformOutput', false);
 end
 
 output_struct = cell2struct(data_cells, fld_names(1:5), 1);
