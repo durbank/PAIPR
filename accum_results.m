@@ -44,7 +44,7 @@ Ndraw = 100;
 % radar = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_processed.mat'));
 radar_OIB = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/OIB_SEAT10_4to10_6.mat'));
 
-radar_manual = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_manual_layers.mat'));
+radar_man = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_manual_layers.mat'));
 
 % % Load individual segment data, and other pertinent data
 % seg1 = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_seg1.mat'));
@@ -117,18 +117,26 @@ for i = 1:length(inputs)
         strcat('grid', name, '.mat'));
     radar_i = load(file);
     
-    dist_OIB = pdist2([ cores.(name).Easting  cores.(name).Northing], ...
+
+    dist_OIB = pdist2([cores.(name).Easting  cores.(name).Northing], ...
         [radar_OIB.Easting', radar_OIB.Northing']);
     trace_idx = 1:length(radar_OIB.SMB);
     OIB_idx = trace_idx(dist_OIB<=5000);
     [~, OIB_near] = min(dist_OIB);
     %     core_pos = radar.dist(near_idx);
     
-    dist_SEAT = pdist2([ cores.(name).Easting  cores.(name).Northing], ...
+    dist_SEAT = pdist2([cores.(name).Easting  cores.(name).Northing], ...
         [radar_i.Easting', radar_i.Northing']);
 %     trace_idx = 1:length(radar_OIB.SMB);
 %     SEAT_idx = trace_idx(dist_SEAT<=5000);
     [~, SEAT_near] = min(dist_SEAT);
+    
+    dist_man = pdist2([cores.(name).Easting  cores.(name).Northing], ...
+        [radar_man.Easting', radar_man.Northing']);
+    trace_idx = 1:length(radar_man.Easting);
+    man_idx = trace_idx(dist_man<=5000);
+    [~, man_near] = min(dist_man);
+    man_cutoff = median(sum(~logical(isnan(radar_man.ages(:,man_idx)))));
     
     text_name = strrep(name, '_', '-');
     f1 = figure('Position', [200 200 1000 550]);
@@ -156,6 +164,10 @@ for i = 1:length(inputs)
         h0 = plot(radar_i.depth, median(radar_i.ages(:,n,:), 3), 'r', 'LineWidth', 0.5);
         h0.Color(4) = 0.02;
     end
+    for n = man_idx
+        h0 = plot(radar_man.depth, radar_man.ages(:,n), 'k', 'LineWidth', 0.5);
+        h0.Color(4) = 0.02;
+    end
     h1 = plot(radar_OIB.depth, median(median(radar_OIB.ages(:,OIB_idx,:), 3), 2),...
         'm--', 'LineWidth', 2);
     h2 = plot(radar_i.depth, median(median(radar_i.ages, 3), 2),...
@@ -165,8 +177,10 @@ for i = 1:length(inputs)
         2*std(cores.(name).ages, [], 2), 'b--')
     plot(cores.(name).depth, mean(cores.(name).ages, 2) - ...
         2*std(cores.(name).ages, [], 2), 'b--')
+    h4 = plot(radar_man.depth(1:man_cutoff), ...
+        median(radar_man.ages(1:man_cutoff,man_idx), 2, 'omitnan'), 'k');
     title(strcat(text_name, ' age-depth scale'))
-    legend([h1 h2 h3],'SEAT traces', 'OIB traces', 'Core')
+    legend([h1 h2 h3 h4],'SEAT traces', 'OIB traces', 'Core', 'SEAT manual')
     ylabel('Calendar years')
     xlabel('Depth (m)')
     hold off
@@ -201,8 +215,9 @@ for i = 1:length(inputs)
         2*std(cores.(name).ages, [], 2), 'b--')
     plot(cores.(name).depth, mean(cores.(name).ages, 2) - ...
         2*std(cores.(name).ages, [], 2), 'b--')
+    h4 = plot(radar_man.depth, radar_man.ages(:,man_near), 'k');
     title(strcat(text_name, ' age-depth scale'))
-    legend([h1 h2 h3],'OIB traces', 'SEAT traces', 'Core')
+    legend([h1 h2 h3 h4],'OIB traces', 'SEAT traces', 'Core', 'SEAT manual')
     ylabel('Calendar years')
     xlabel('Depth (m)')
     hold off
