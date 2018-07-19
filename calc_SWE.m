@@ -8,13 +8,12 @@ rho_std = sqrt((radar.rho_var(1,:)-radar.rho_var(2,:))./...
 rho_mod = radar.rho_coeff(1,:).*radar.depth.^radar.rho_coeff(2,:) + ...
     radar.rho_coeff(3,:);
 
-% %% Calculate annual accumulation for each radar trace
+%% Calculate annual accumulation for each radar trace
 
-% % Calculate accumulation at each depth interval (0.02 m) with simulated
-% % noise based on the variance in core density
+% Calculate accumulation at each depth interval (0.02 m) with simulated
+% noise based on the variance in core density
 noise_rho = 1000*repmat(rho_std, 1, 1, Ndraw).*randn(size(radar.ages));
 accum_dt = 0.02*(1000*repmat(rho_mod, 1, 1, Ndraw) + noise_rho);
-
 
 % Linearly interpolate traces with missing or problematic age-depth scales
 % sim_nan = all(isnan(radar.ages), 3);

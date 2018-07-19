@@ -69,11 +69,14 @@ end
 % If manual layer picks are present, transform them to same depth and
 % vertical scale as the interpolated radar data
 if isfield(radar, 'man_layers')
-    man_interp = zeros(depth_bott/core_res+1, size(radar.data_stack, 2));
+    man_interp = zeros(size(radarZ_interp));
     for i = 1:size(radar.data_stack, 2)
-        depth_interp = (0:core_res:radar.depth(end,i));
-        man_i = interp1(radar.depth(:,i), radar.man_layers(:,i), depth_interp, 'nearest');
-        man_interp(:,i) = man_i(1:size(man_interp, 1));
+%         depth_interp = (0:core_res:radar.depth(end,i))';
+        layer_idx = logical(radar.man_layers(:,i));
+        layer_num = radar.man_layers(layer_idx,i);
+        man_depth_i = radar.depth(layer_idx,i);
+        depth_idx = round(man_depth_i/core_res) + 1;
+        man_interp(depth_idx(man_depth_i<=cutoff),i) = layer_num(man_depth_i<=cutoff);
     end
     radar.man_layers = man_interp;
 end
