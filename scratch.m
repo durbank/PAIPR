@@ -69,70 +69,46 @@ for i = 1:length(files)
 end
 hold off
 
-%%
 
-Ndraw = seg1.Ndraw;
-cores = seg1.cores;
-radar = struct('collect_date', seg1.radar.collect_date, 'Easting', ...
-    [seg1.radar.Easting(100:end-100) seg2.radar.Easting(100:end-100) seg3.radar.Easting(100:end-100)],...
-    'Northing', [seg1.radar.Northing(100:end-100) seg2.radar.Northing(100:end-100) seg3.radar.Northing(100:end-100)],...
-    'dist', [seg1.radar.dist(100:end-100) seg2.radar.dist(100:end-100) seg3.radar.dist(100:end-100)],...
-    'depth', seg1.radar.depth, ...
-    'data_smooth', [seg1.radar.data_smooth(:,100:end-100) seg2.radar.data_smooth(:,100:end-100) seg3.radar.data_smooth(:,100:end-100)],...
-    'likelihood', [seg1.radar.likelihood(:,100:end-100) seg2.radar.likelihood(:,100:end-100) seg3.radar.likelihood(:,100:end-100)],...
-    'ages', [seg1.radar.ages(:,100:end-100,:) seg2.radar.ages(:,100:end-100,:) seg3.radar.ages(:,100:end-100,:)]);
-radar.SMB_yr = [seg1.radar.SMB_yr(100:end-100) seg2.radar.SMB_yr(100:end-100) seg3.radar.SMB_yr(100:end-100)];
-radar.SMB = [seg1.radar.SMB(100:end-100) seg2.radar.SMB(100:end-100) seg3.radar.SMB(100:end-100)];
+%% Comparison of trends across divide
+
+% run import functions from accum_results
+
+smb_oib = cellfun(@(x) median(median(x)), radar_OIB.SMB);
+p = cellfun(@(x,y) robustfit(x, median(y,2)), radar_OIB.SMB_yr, radar_OIB.SMB, ...
+    'UniformOutput', false);
+trend_oib = cellfun(@(x) x(2), p);
+change_oib = trend_oib./smb_oib;
 
 
 
-%% 
-% Trace idx to investigate
-i = randi(size(radar.data_smooth, 2));
+inputs = {'SEAT10_4', 'SEAT10_5', 'SEAT10_6'};
 
-% Find the nearest cores to the radar data (for comparison plots)
-[~, cores_near_idx] = sort(pdist2([radar.Easting(i) radar.Northing(i)], ...
-    [cores.Easting' cores.Northing'], 'Euclidean'));
-core_near1 = cores.(cores.name{cores_near_idx(1)});
-core_near2 = cores.(cores.name{cores_near_idx(2)});
-core_near3 = cores.(cores.name{cores_near_idx(3)});
+change_seat = zeros(1, length(inputs));
+seat_Easting = zeros(size(change_seat));
+seat_elev = cores.elev(3:5);
+for i = 1:length(inputs)
+    name = inputs{i};
+    file = fullfile(data_path, 'radar/SEAT_Traverses/results_data', ...
+        strcat('grid', name, '.mat'));
+    radar_i = load(file);
+    smb1 = cellfun(@(x) median(median(x)), radar_i.SMB);
+    p = cellfun(@(x,y) robustfit(x, median(y,2)), radar_i.SMB_yr, radar_i.SMB, ...
+        'UniformOutput', false);
+    trend1 = cellfun(@(x) x(2), p);
+    change_seat(i) = median(trend1./smb1);
+    seat_Easting(i) = mean(radar_i.Easting);
+end
 
-% Calculate the mean age-depth scale and std for radar trace i
-age_mean = mean(squeeze(radar.ages(:,i,:)), 2);
-age_std = std(squeeze(radar.ages(:,i,:)), [], 2);
-
-% Plot full radargram
-yr_idx = logical([diff(floor(age_mean)); 0]);
-depth = radar.depth(yr_idx);
-col = i*ones(length(depth),1);
-% row = find(radar.likelihood(:,i)>0.75);
-% col = i*ones(length(row),1);
-figure('Position', [200 200 1500 800])
-imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
-colorbar
-xlabel('Distance along profile (m)')
-ylabel('Depth (m)')
-hold on
-plot(radar.dist(col), depth, 'r.', 'MarkerSize', 25)
-xlim([0 radar.dist(end)])
-ylim([0 radar.depth(end)])
-set(gca, 'Ydir', 'reverse', 'FontSize', 18)
-hold off
-
-% Age-depth scale comparison between radar trace and nearest cores
 figure
 hold on
-h1 = plot(core_near1.depth, mean(core_near1.ages, 2), 'b', 'LineWidth', 2);
-plot(core_near1.depth, mean(core_near1.ages, 2) + 2*std(core_near1.ages, [], 2), 'b--')
-plot(core_near1.depth, mean(core_near1.ages, 2) - 2*std(core_near1.ages, [], 2), 'b--')
-h2 = plot(core_near2.depth, core_near2.age, 'c', 'LineWidth', 2);
-h3 = plot(core_near3.depth, core_near3.age, 'c--', 'LineWidth', 1);
-h4 = plot(radar.depth, age_mean, 'r', 'LineWidth', 2);
-plot(radar.depth, age_mean + 2*age_std, 'r--', 'LineWidth', 0.5)
-plot(radar.depth, age_mean - 2*age_std, 'r--', 'LineWidth', 0.5)
-ylabel('Calendar Year')
-xlabel('Depth (m)')
-legend([h1 h2 h3 h4], 'Nearest core age (manual)', '2nd nearest core', ...
-    '3rd nearest core', 'Radar age (automated)', 'Location', 'ne')
-set(gca, 'FontSize', 10)
+plot(radar_OIB.Easting, change_oib, 'm.', 'MarkerSize', 10)
+plot(seat_Easting, change_seat, 'rx', 'MarkerSize', 25)
 hold off
+
+figure
+hold on
+plot(seat_elev, change_seat, 'ro')
+% label(seat_elev, change_seat, inputs)
+
+
