@@ -41,7 +41,7 @@ cores = load(core_file);
 Ndraw = 100;
 
 % Load previously processed radar accumulation data
-% radar = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_processed.mat'));
+radar_SEAT = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_processed.mat'));
 radar_OIB = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/OIB_SEAT10_4to10_6.mat'));
 
 radar_man = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_manual_layers.mat'));
@@ -312,6 +312,34 @@ for i = 1:length(inputs)
     hold off
     
 end
+
+%% Comparison of SEAT and OIB estimates
+
+dist_SEAT = pdist2([radar_SEAT.Easting' radar_SEAT.Northing'], ...
+    [radar_OIB.Easting' radar_OIB.Northing']);
+[~, dist_idx] = min(dist_OIB, [], 2);
+
+res = zeros(size(radar_SEAT.data_smooth));
+for i = 1:length(radar_SEAT.Easting)
+    res(:,i) = median(squeeze(radar_SEAT.ages(:,i,:)), 2) - ...
+        median(squeeze(radar_OIB.ages(:,dist_idx(i),:)), 2) + 1;
+%     ho = plot(radar_SEAT.depth, res(:,i), 'r');
+%     ho.Color(4) = 0.01;
+end
+
+res_med = median(res, 2);
+res_std = std(res, [], 2);
+
+figure
+
+
+% figure
+% hold on
+% plot(radar_SEAT.depth, res_med, 'k')
+% plot(radar_SEAT.depth, res_med + 2*res_std, 'k--')
+% plot(radar_SEAT.depth, res_med - 2*res_std, 'k--')
+% hold off
+
 %%
 radar = radar_OIB;
 
