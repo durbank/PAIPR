@@ -317,7 +317,8 @@ end
 
 dist_SEAT = pdist2([radar_SEAT.Easting' radar_SEAT.Northing'], ...
     [radar_OIB.Easting' radar_OIB.Northing']);
-[~, dist_idx] = min(dist_OIB, [], 2);
+% [~, dist_idx] = min(dist_OIB, [], 2);
+[~, dist_idx] = min(dist_SEAT, [], 2);
 
 res = zeros(size(radar_SEAT.data_smooth));
 for i = 1:length(radar_SEAT.Easting)
