@@ -40,15 +40,36 @@ cores = load(core_file);
 Ndraw = 100;
 
 % Load previously processed radar accumulation data
-radar_SEAT = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_processed.mat'));
-radar_OIB = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/OIB_SEAT10_4to10_6.mat'));
+radar_SEAT = load(fullfile(data_path, ...
+    'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_processed.mat'));
+radar_OIB = load(fullfile(data_path, ...
+    'radar/SEAT_Traverses/results_data/OIB_SEAT10_4to10_6.mat'));
 
 % Load previously processed manual counting of radar layers
-radar_man = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_manual_layers.mat'));
-
+radar_man = load(fullfile(data_path, ...
+    'radar/SEAT_Traverses/results_data/SEAT10_manual_layers.mat'));
 % Remove data below 15 m and beyond idx 4600 (unreliable in many instances)
 radar_man.ages(752:end,4600:end) = NaN;
 
+
+% % Load full OIB radar file
+% OIB = load(fullfile(data_path, ...
+%     'radar/SEAT_Traverses/results_data/OIB_SEAT10_4to10_6_full.mat'));
+% 
+% % Clip the tail ends of the data, and remove unneeded fields
+% clip = 100; % 2.5 km from either end
+% radar_OIB = struct('collect_date', OIB.collect_date, ...
+%     'Easting', OIB.Easting(clip:end-clip), 'Northing', OIB.Northing(clip:end-clip),...
+%     'elev', OIB.elev(clip:end-clip), 'dist', OIB.dist(clip:end-clip), ...
+%     'depth', OIB.depth, 'data_smooth', OIB.data_smooth(:,clip:end-clip),...
+%     'peaks', OIB.peaks(:,clip:end-clip), 'groups', OIB.groups(:,clip:end-clip),...
+%     'likelihood', OIB.likelihood(:,clip:end-clip), 'ages', OIB.ages(:,clip:end-clip,:));
+% radar_OIB.SMB_yr = OIB.SMB_yr(clip:end-clip);
+% radar_OIB.SMB = OIB.SMB(clip:end-clip);
+% 
+% % % Save the clipped OIB radar for future use
+% % out_fn = fullfile(data_path, 'radar/SEAT_Traverses/results_data/OIB_SEAT10_4to10_6.mat');
+% % save(out_fn, '-struct', 'radar_OIB', '-v7.3')
 
 % % Load individual segment data, and other pertinent data
 % seg1 = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/SEAT10_4to10_6_seg1.mat'));
@@ -72,7 +93,8 @@ radar_man.ages(752:end,4600:end) = NaN;
 %% Index map and study site
 
 labels = strrep(cores.name, '_', '-');
-basins = shaperead(strcat(data_path, 'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
+basins = shaperead(strcat(data_path, ...
+    'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
 
 Easting_lims = [min(cores.Easting)-0.10*(max(cores.Easting)-min(cores.Easting)) ...
     max(cores.Easting)+0.15*(max(cores.Easting)-min(cores.Easting))];
@@ -308,23 +330,28 @@ for i = 1:length(inputs)
     %         h0 = plot(radar_i.SMB_yr{SEAT_near}, radar_i.SMB{SEAT_near}(:,n), 'r', 'LineWidth', 0.5);
     %         h0.Color(4) = 0.02;
     %     end
-    h1 = plot(radar_i.SMB_yr{SEATi_near}, median(radar_i.SMB{SEATi_near}, 2), 'r', 'LineWidth', 2);
+    h1 = plot(radar_i.SMB_yr{SEATi_near}, median(radar_i.SMB{SEATi_near}, 2),...
+        'r', 'LineWidth', 2);
     plot(radar_i.SMB_yr{SEATi_near}, median(radar_i.SMB{SEATi_near}, 2) + ...
         2*std(radar_i.SMB{SEATi_near}, [], 2), 'r--');
     plot(radar_i.SMB_yr{SEATi_near}, median(radar_i.SMB{SEATi_near}, 2) - ...
         2*std(radar_i.SMB{SEATi_near}, [], 2), 'r--');
-    h2 = plot(radar_OIB.SMB_yr{OIB_near}, median(radar_OIB.SMB{OIB_near}, 2), 'm', 'LineWidth', 2);
+    h2 = plot(radar_OIB.SMB_yr{OIB_near}, median(radar_OIB.SMB{OIB_near}, 2), ...
+        'm', 'LineWidth', 2);
     plot(radar_OIB.SMB_yr{OIB_near}, median(radar_OIB.SMB{OIB_near}, 2) + ...
         2*std(radar_OIB.SMB{OIB_near}, [], 2), 'm--');
     plot(radar_OIB.SMB_yr{OIB_near}, median(radar_OIB.SMB{OIB_near}, 2) - ...
         2*std(radar_OIB.SMB{OIB_near}, [], 2), 'm--');
-    h3 = plot(cores.(name).SMB_yr, median(cores.(name).SMB, 2), 'b', 'LineWidth', 2);
+    h3 = plot(cores.(name).SMB_yr, median(cores.(name).SMB, 2), ...
+        'b', 'LineWidth', 2);
     plot(cores.(name).SMB_yr, median(cores.(name).SMB, 2) + ...
         2*std(cores.(name).SMB, [], 2), 'b--');
     plot(cores.(name).SMB_yr, median(cores.(name).SMB, 2) - ...
         2*std(cores.(name).SMB, [], 2), 'b--');
-    xlim([min([min(radar_i.SMB_yr{SEATi_near}) min(radar_OIB.SMB_yr{OIB_near}) min(cores.(name).SMB_yr)]) ...
-        max([max(radar_i.SMB_yr{SEATi_near}) max(radar_OIB.SMB_yr{OIB_near}) max(cores.(name).SMB_yr)])])
+    xlim([min([min(radar_i.SMB_yr{SEATi_near}) min(radar_OIB.SMB_yr{OIB_near}) ...
+        min(cores.(name).SMB_yr)]) ...
+        max([max(radar_i.SMB_yr{SEATi_near}) max(radar_OIB.SMB_yr{OIB_near}) ...
+        max(cores.(name).SMB_yr)])])
     legend([h1 h2 h3], 'SEAT traces', 'OIB traces', 'Core')
     xlabel('Calendar years')
     ylabel('Annual SMB (mm w.e.)')
