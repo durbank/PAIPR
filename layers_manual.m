@@ -147,7 +147,7 @@ for i = 1:size(yr_idx, 2)
     
 %     depths_i = [0; radar.depth(yr_idx(:,i))];
 %     yrs_i = ([age_top yr_pick1:-1:yr_pick1-length(depths_i)+2])';
-    depths_i = [radar.depth(yr_idx(:,i))];
+    depths_i = radar.depth(yr_idx(:,i));
     yrs_i = (yr_pick1:-1:yr_pick1-length(depths_i)+1)';
     try
         ages(:,i) = interp1(depths_i, yrs_i, radar.depth, 'linear');
