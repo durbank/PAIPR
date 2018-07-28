@@ -83,7 +83,8 @@ radar_full = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/OIB_SEA
 % [radar_tmp] = OIB_age(radar_tmp, cores, Ndraw);
 % [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
 % toc
-% 
+% %%% NEED TO FIX FIELD NAMES (NAME FIELDS EXPLICITLY TO AVOID
+% DIFFICULTLIES IN TRACING ERRORS IN THE FUTURE %%%
 % clip = 100;
 % fld_names = fieldnames(radar_tmp);
 % radar_15km = struct(fld_names{1}, radar_tmp.(fld_names{1}), fld_names{2}, ...
