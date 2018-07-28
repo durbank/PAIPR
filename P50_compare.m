@@ -113,7 +113,7 @@ for i = 1:size(layer_peaks, 2)
     end
     err_out = [];
 end
-
+ages_500 = median(ages_500, 3);
 
 %%% Distance for P_50 is 1 km
 
@@ -167,6 +167,7 @@ for i = 1:size(layer_peaks, 2)
     end
     err_out = [];
 end
+ages_1km = median(ages_1km, 3);
 
 %%% Distance for P_50 is 10 km
 
@@ -220,6 +221,7 @@ for i = 1:size(layer_peaks, 2)
     end
     err_out = [];
 end
+ages_10km = median(ages_10km, 3);
 
 %%% Distance for P_50 is 10 km
 
@@ -273,31 +275,33 @@ for i = 1:size(layer_peaks, 2)
     end
     err_out = [];
 end
-
+ages_25km = median(ages_25km, 3);
 toc
 
 %% 
 clearvars -except radar_full ages* cores
+ages_5km = median(radar_full.ages, 3);
 
 figure
 hold on
-h1 = plot(median(squeeze(radar_full.ages(end,:,:)), 2), 'b', 'LineWidth', 2);
-plot(median(squeeze(radar_full.ages(end,:,:)), 2) + ...
-    2*std(squeeze(radar_full.ages(end,:,:)), [], 2), 'b--', 'LineWidth', 0.5)
-plot(median(squeeze(radar_full.ages(end,:,:)), 2) - ...
-    2*std(squeeze(radar_full.ages(end,:,:)), [], 2), 'b--', 'LineWidth', 0.5)
-h2 = plot(median(squeeze(ages_500(end,:,:)), 2), 'r', 'LineWidth', 2);
-plot(median(squeeze(ages_500(end,:,:)), 2) + ...
-    2*std(squeeze(ages_500(end,:,:)), [], 2), 'r--', 'LineWidth', 0.5)
-plot(median(squeeze(ages_500(end,:,:)), 2) - ...
-    2*std(squeeze(ages_500(end,:,:)), [], 2), 'r--', 'LineWidth', 0.5)
-h3 = plot(median(squeeze(ages_1km(end,:,:)), 2), 'm', 'LineWidth', 2);
-plot(median(squeeze(ages_1km(end,:,:)), 2) + ...
-    2*std(squeeze(ages_1km(end,:,:)), [], 2), 'm--', 'LineWidth', 0.5)
-plot(median(squeeze(ages_1km(end,:,:)), 2) - ...
-    2*std(squeeze(ages_1km(end,:,:)), [], 2), 'm--', 'LineWidth', 0.5)
-h4 = plot(median(squeeze(ages_10km(end,:,:)), 2), 'c', 'LineWidth', 2);
-plot(median(squeeze(ages_10km(end,:,:)), 2) + ...
-    2*std(squeeze(ages_10km(end,:,:)), [], 2), 'c--', 'LineWidth', 0.5)
-plot(median(squeeze(ages_10km(end,:,:)), 2) - ...
-    2*std(squeeze(ages_10km(end,:,:)), [], 2), 'c--', 'LineWidth', 0.5)
+h1 = plot(ages_5km(end,:), 'b', 'LineWidth', 2);
+% plot(median(squeeze(radar_full.ages(end,:,:)), 2) + ...
+%     2*std(squeeze(radar_full.ages(end,:,:)), [], 2), 'b--', 'LineWidth', 0.5)
+% plot(median(squeeze(radar_full.ages(end,:,:)), 2) - ...
+%     2*std(squeeze(radar_full.ages(end,:,:)), [], 2), 'b--', 'LineWidth', 0.5)
+h2 = plot(ages_500(end,:), 'r', 'LineWidth', 2);
+% plot(median(squeeze(ages_500(end,:,:)), 2) + ...
+%     2*std(squeeze(ages_500(end,:,:)), [], 2), 'r--', 'LineWidth', 0.5)
+% plot(median(squeeze(ages_500(end,:,:)), 2) - ...
+%     2*std(squeeze(ages_500(end,:,:)), [], 2), 'r--', 'LineWidth', 0.5)
+h3 = plot(ages_1km(end,:), 'm', 'LineWidth', 2);
+% plot(median(squeeze(ages_1km(end,:,:)), 2) + ...
+%     2*std(squeeze(ages_1km(end,:,:)), [], 2), 'm--', 'LineWidth', 0.5)
+% plot(median(squeeze(ages_1km(end,:,:)), 2) - ...
+%     2*std(squeeze(ages_1km(end,:,:)), [], 2), 'm--', 'LineWidth', 0.5)
+h4 = plot(ages_10km(end,:), 'c', 'LineWidth', 2);
+% plot(median(squeeze(ages_10km(end,:,:)), 2) + ...
+%     2*std(squeeze(ages_10km(end,:,:)), [], 2), 'c--', 'LineWidth', 0.5)
+% plot(median(squeeze(ages_10km(end,:,:)), 2) - ...
+%     2*std(squeeze(ages_10km(end,:,:)), [], 2), 'c--', 'LineWidth', 0.5)
+h5 = plot(ages_25km(end,:), 'g', 'LineWidth', 2);
