@@ -63,6 +63,71 @@ end
 age_top = radar_full.collect_date;
 yr_pick1 = ceil(radar_full.collect_date - 1);
 
+
+
+
+trace_idx = 1:20:size(layer_peaks, 2);
+ages = struct('age500', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw),...
+    'age1km', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw),...
+    'age10km', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw),...
+    'age25km', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw));
+P_50dist = [500 1000 10000 25000];
+
+for n = 1:length(P_50dist)
+    err_out = [];
+    for i = 1:length(trace_idx)
+        % Assign the 50% likelihood point based on median trace prominence and
+        % layer length
+        P_50 = median(radar_full.peaks(:,i))*min([P_50dist(n) 0.5*radar_full.dist(end)]);
+        
+        % Assign min/max layer likelihoods, and calculate the logistic rate
+    % coefficient
+    Po = 0.05;
+    K = 1;
+    r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
+    
+    % Get layer prom-distance values and depths for layers in ith trace
+    peaks_i = layer_peaks(:,i);
+    peaks_idx = peaks_i>0;
+    peaks_i = peaks_i(peaks_idx);
+    depths_i = radar_full.depth(peaks_idx);
+    
+    % Likelihood of layer representing a year based on a logistic function
+    % with rate (r) calculated above
+    likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
+    
+    % Assign MC simulation annual layer presence based on layer likelihood
+    % values
+    yr_idx = zeros(length(depths_i), Ndraw);
+    for j = 1:length(depths_i)
+        R = rand(Ndraw, 1) <= likelihood(j);
+        yr_idx(j,:) = R;
+    end
+    
+    for j = 1:Ndraw
+        depths_j = [0; depths_i(logical(yr_idx(:,j)))];
+        yrs_j = ([age_top yr_pick1:-1:yr_pick1-length(depths_j)+2])';
+        try
+            ages_500(:,i,j) = interp1(depths_j, yrs_j, radar_full.depth, 'linear', 'extrap');
+        catch
+            sprintf('Error in age interpolation for trace %u, trial %u. Filling with mean ages.', i, j)
+            err_out = [err_out j];
+        end
+    end
+    if ~isempty(err_out)
+        ages_500(:,i,err_out) = repmat(sum(squeeze(ages_500(:,i,:)), 2)./...
+            sum(squeeze(ages_500(:,i,:))~=0, 2), 1, length(err_out));
+    end
+    end
+end
+
+
+
+
+
+
+
+
 ages_500 = zeros([size(radar_full.data_smooth) Ndraw]);
 err_out = [];
 P_50_dist = 500;
