@@ -191,36 +191,44 @@ radar_25km = load(fullfile(data_path, ...
 radar_50km = load(fullfile(data_path, ...
     'radar/SEAT_Traverses/results_data/comparisons/dataset_length/OIB_50km.mat'));
 
+
 %%
+bias = [];
 
 dist_50km = pdist2([radar_50km.Easting' radar_50km.Northing'], ...
     [radar_full.Easting' radar_full.Northing']);
 [~, dist_idx] = min(dist_50km, [], 2);
-
 ages_sub = median(radar_50km.ages, 3);
 ages_full = median(radar_full.ages(:,dist_idx,:), 3);
+bias = [bias median(ages_full(end,:)-ages_sub(end,:))];
 
 figure
 h1 = histogram(ages_full(end,:)-ages_sub(end,:), 50);
+hold on
 
-%%
+
 dist_25km = pdist2([radar_25km.Easting' radar_25km.Northing'], ...
     [radar_full.Easting' radar_full.Northing']);
 [~, dist_idx] = min(dist_25km, [], 2);
-
 ages_sub = median(radar_25km.ages, 3);
 ages_full = median(radar_full.ages(:,dist_idx,:), 3);
+bias = [bias median(ages_full(end,:)-ages_sub(end,:))];
 
 hold on
 h2 = histogram(ages_full(end,:)-ages_sub(end,:), 50);
 
-%%
+
 dist_15km = pdist2([radar_15km.Easting' radar_15km.Northing'], ...
     [radar_full.Easting' radar_full.Northing']);
 [~, dist_idx] = min(dist_15km, [], 2);
-
 ages_sub = median(radar_15km.ages, 3);
 ages_full = median(radar_full.ages(:,dist_idx,:), 3);
+bias = [bias median(ages_full(end,:)-ages_sub(end,:))];
 
 hold on
 h3 = histogram(ages_full(end,:)-ages_sub(end,:), 50);
+hold off
+
+
+figure
+plot([50 25 15], bias)
