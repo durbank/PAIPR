@@ -133,7 +133,7 @@ hold off
 %% Core site comparisons
 
 inputs = {'SEAT10_4', 'SEAT10_5', 'SEAT10_6'};
-out_dir = fullfile('F:\New figs');
+out_dir = fullfile('/media/durbank/CUmind/proposal/Figures/');
 
 for i = 1:length(inputs)
     
@@ -245,31 +245,35 @@ for i = 1:length(inputs)
     % and core data (only nearest trace)
     f1 = figure('Position', [200 200 700 700]);
     hold on
-    %     for n = 1:Ndraw
-    %         h0 = plot(radar_OIB.depth, radar_OIB.ages(:,OIB_near,n), 'm', 'LineWidth', 0.5);
-    %         h0.Color(4) = 0.02;
-    %     end
-    %     for n = 1:Ndraw
-    %         h0 = plot(radar_i.depth, radar_i.ages(:,SEAT_near,n), 'r', 'LineWidth', 0.5);
-    %         h0.Color(4) = 0.02;
-    %     end
+        for n = 1:Ndraw
+            h0 = plot(radar_OIB.depth, radar_OIB.ages(:,OIB_near,n), 'm', 'LineWidth', 0.5);
+            h0.Color(4) = 0.05;
+        end
+        for n = 1:Ndraw
+            h0 = plot(radar_i.depth, radar_i.ages(:,SEATi_near,n), 'r', 'LineWidth', 0.5);
+            h0.Color(4) = 0.05;
+        end
+        for n = 1:Ndraw
+            h0 = plot(cores.(name).depth, cores.(name).ages(:,n), 'b', 'LineWidth', 0.5);
+            h0.Color(4) = 0.05;
+        end
     h1 = plot(radar_i.depth, median(radar_i.ages(:,SEATi_near,:), 3),...
         'r', 'LineWidth', 2);
-    plot(radar_i.depth, median(radar_i.ages(:,SEATi_near,:), 3)...
-        + 2*std(squeeze(radar_i.ages(:,SEATi_near,:)), [], 2), 'r--')
-    plot(radar_i.depth, median(radar_i.ages(:,SEATi_near,:), 3)...
-        - 2*std(squeeze(radar_i.ages(:,SEATi_near,:)), [], 2), 'r--')
+%     plot(radar_i.depth, median(radar_i.ages(:,SEATi_near,:), 3)...
+%         + 2*std(squeeze(radar_i.ages(:,SEATi_near,:)), [], 2), 'r--')
+%     plot(radar_i.depth, median(radar_i.ages(:,SEATi_near,:), 3)...
+%         - 2*std(squeeze(radar_i.ages(:,SEATi_near,:)), [], 2), 'r--')
     h2 = plot(radar_OIB.depth, median(radar_OIB.ages(:,OIB_near,:), 3),...
         'm', 'LineWidth', 2);
-    plot(radar_OIB.depth, median(radar_OIB.ages(:,OIB_near,:), 3)...
-        + 2*std(squeeze(radar_OIB.ages(:,OIB_near,:)), [], 2), 'm--')
-    plot(radar_OIB.depth, median(radar_OIB.ages(:,OIB_near,:), 3)...
-        - 2*std(squeeze(radar_OIB.ages(:,OIB_near,:)), [], 2), 'm--')
+%     plot(radar_OIB.depth, median(radar_OIB.ages(:,OIB_near,:), 3)...
+%         + 2*std(squeeze(radar_OIB.ages(:,OIB_near,:)), [], 2), 'm--')
+%     plot(radar_OIB.depth, median(radar_OIB.ages(:,OIB_near,:), 3)...
+%         - 2*std(squeeze(radar_OIB.ages(:,OIB_near,:)), [], 2), 'm--')
     h3 = plot(cores.(name).depth, mean(cores.(name).ages, 2), 'b', 'LineWidth', 2);
-    plot(cores.(name).depth, mean(cores.(name).ages, 2) + ...
-        2*std(cores.(name).ages, [], 2), 'b--')
-    plot(cores.(name).depth, mean(cores.(name).ages, 2) - ...
-        2*std(cores.(name).ages, [], 2), 'b--')
+%     plot(cores.(name).depth, mean(cores.(name).ages, 2) + ...
+%         2*std(cores.(name).ages, [], 2), 'b--')
+%     plot(cores.(name).depth, mean(cores.(name).ages, 2) - ...
+%         2*std(cores.(name).ages, [], 2), 'b--')
     try
         h4 = plot(radar_man.depth, radar_man.ages(:,man_near), 'k', 'LineWidth', 2);
         legend([h1 h2 h3 h4], 'SEAT traces', 'OIB traces', 'Core', 'SEAT manual')
@@ -322,32 +326,36 @@ for i = 1:length(inputs)
     f2 = figure('Position', [200 200 1000 700]);
     hold on
     title(strcat(text_name, ' annual SMB'))
-    %     for n = 1:Ndraw
-    %         h0 = plot(radar_OIB.SMB_yr{OIB_near}, radar_OIB.SMB{OIB_near}(:,n), 'm', 'LineWidth', 0.5);
-    %         h0.Color(4) = 0.02;
-    %     end
-    %     for n = 1:Ndraw
-    %         h0 = plot(radar_i.SMB_yr{SEAT_near}, radar_i.SMB{SEAT_near}(:,n), 'r', 'LineWidth', 0.5);
-    %         h0.Color(4) = 0.02;
-    %     end
+        for n = 1:Ndraw
+            h0 = plot(radar_OIB.SMB_yr{OIB_near}, radar_OIB.SMB{OIB_near}(:,n), 'm', 'LineWidth', 0.5);
+            h0.Color(4) = 0.05;
+        end
+        for n = 1:Ndraw
+            h0 = plot(radar_i.SMB_yr{SEATi_near}, radar_i.SMB{SEATi_near}(:,n), 'r', 'LineWidth', 0.5);
+            h0.Color(4) = 0.05;
+        end
+        for n = 1:Ndraw
+            h0 = plot(cores.(name).SMB_yr, cores.(name).SMB(:,n), 'b', 'LineWidth', 0.5);
+            h0.Color(4) = 0.05;
+        end
     h1 = plot(radar_i.SMB_yr{SEATi_near}, median(radar_i.SMB{SEATi_near}, 2),...
         'r', 'LineWidth', 2);
-    plot(radar_i.SMB_yr{SEATi_near}, median(radar_i.SMB{SEATi_near}, 2) + ...
-        2*std(radar_i.SMB{SEATi_near}, [], 2), 'r--');
-    plot(radar_i.SMB_yr{SEATi_near}, median(radar_i.SMB{SEATi_near}, 2) - ...
-        2*std(radar_i.SMB{SEATi_near}, [], 2), 'r--');
+%     plot(radar_i.SMB_yr{SEATi_near}, median(radar_i.SMB{SEATi_near}, 2) + ...
+%         2*std(radar_i.SMB{SEATi_near}, [], 2), 'r--');
+%     plot(radar_i.SMB_yr{SEATi_near}, median(radar_i.SMB{SEATi_near}, 2) - ...
+%         2*std(radar_i.SMB{SEATi_near}, [], 2), 'r--');
     h2 = plot(radar_OIB.SMB_yr{OIB_near}, median(radar_OIB.SMB{OIB_near}, 2), ...
         'm', 'LineWidth', 2);
-    plot(radar_OIB.SMB_yr{OIB_near}, median(radar_OIB.SMB{OIB_near}, 2) + ...
-        2*std(radar_OIB.SMB{OIB_near}, [], 2), 'm--');
-    plot(radar_OIB.SMB_yr{OIB_near}, median(radar_OIB.SMB{OIB_near}, 2) - ...
-        2*std(radar_OIB.SMB{OIB_near}, [], 2), 'm--');
+%     plot(radar_OIB.SMB_yr{OIB_near}, median(radar_OIB.SMB{OIB_near}, 2) + ...
+%         2*std(radar_OIB.SMB{OIB_near}, [], 2), 'm--');
+%     plot(radar_OIB.SMB_yr{OIB_near}, median(radar_OIB.SMB{OIB_near}, 2) - ...
+%         2*std(radar_OIB.SMB{OIB_near}, [], 2), 'm--');
     h3 = plot(cores.(name).SMB_yr, median(cores.(name).SMB, 2), ...
         'b', 'LineWidth', 2);
-    plot(cores.(name).SMB_yr, median(cores.(name).SMB, 2) + ...
-        2*std(cores.(name).SMB, [], 2), 'b--');
-    plot(cores.(name).SMB_yr, median(cores.(name).SMB, 2) - ...
-        2*std(cores.(name).SMB, [], 2), 'b--');
+%     plot(cores.(name).SMB_yr, median(cores.(name).SMB, 2) + ...
+%         2*std(cores.(name).SMB, [], 2), 'b--');
+%     plot(cores.(name).SMB_yr, median(cores.(name).SMB, 2) - ...
+%         2*std(cores.(name).SMB, [], 2), 'b--');
     xlim([min([min(radar_i.SMB_yr{SEATi_near}) min(radar_OIB.SMB_yr{OIB_near}) ...
         min(cores.(name).SMB_yr)]) ...
         max([max(radar_i.SMB_yr{SEATi_near}) max(radar_OIB.SMB_yr{OIB_near}) ...
