@@ -134,6 +134,8 @@ hold off
 
 inputs = {'SEAT10_4', 'SEAT10_5', 'SEAT10_6'};
 out_dir = fullfile('/media/durbank/CUmind/proposal/Figures/');
+trends = struct(inputs{1}, [], inputs{2}, [], inputs{3}, []);
+p_vals = struct(inputs{1}, [], inputs{2}, [], inputs{3}, []);
 
 for i = 1:length(inputs)
     
@@ -386,7 +388,49 @@ for i = 1:length(inputs)
 %     legend([h1 h2], 'SEAT radar', 'Core')
 %     hold off
     
+
+    %%% t-tests bewteen results
+    yrs_endpts = [min([max(cores.(name).SMB_yr) max(radar_i.SMB_yr{SEATi_near}) ...
+        max(radar_OIB.SMB_yr{OIB_near})]) max([min(cores.(name).SMB_yr) ...
+        min(radar_i.SMB_yr{SEATi_near}) min(radar_OIB.SMB_yr{OIB_near})])];
+    
+    core_idxn = find(cores.(name).SMB_yr == yrs_endpts(1)):...
+        find(cores.(name).SMB_yr == yrs_endpts(2));
+    SEATi_idxn = find(radar_i.SMB_yr{SEATi_near} == yrs_endpts(1)):...
+        find(radar_i.SMB_yr{SEATi_near} == yrs_endpts(2));
+    OIB_idxn = find(radar_OIB.SMB_yr{OIB_near} == yrs_endpts(1)):...
+        find(radar_OIB.SMB_yr{OIB_near} == yrs_endpts(2));
+    
+    yr_idx = [core_idxn' SEATi_idxn' OIB_idxn'];
+    
+    trends.(name) = zeros(Ndraw, 3);
+    p_vals.(name) = zeros(Ndraw, 3);
+    for n = 1:Ndraw
+        [b, stats] = robustfit(cores.(name).SMB_yr(yr_idx(:,1)), ...
+            cores.(name).SMB(yr_idx(:,1),n));
+        trends.(name)(n,1) = b(2);
+        p_vals.(name)(n,1) = mean(stats.p);
+        
+        [b, stats] = robustfit(radar_i.SMB_yr{SEATi_near}(yr_idx, ...
+            radar_i.SMB{SEATi_near}(:,n));
+        trends.(name)(n,2) = b(2);
+        p_vals.(name)(n,2) = mean(stats.p);
+        
+        [b, ~, ~, ~, stats] = regress(radar_i.SMB{SEATi_near}(:,n), ...
+            [ones(length(radar_i.SMB_yr{SEATi_near}), 1) radar_i.SMB_yr{SEATi_near}]);
+        trends.(name)(n,2) = b(2);
+        p_vals.(name)(n,2) = stats(3);
+        
+        [b, ~, ~, ~, stats] = regress(radar_OIB.SMB{OIB_near}(:,n), ...
+            [ones(length(radar_OIB.SMB_yr{OIB_near}), 1) radar_OIB.SMB_yr{OIB_near}]);
+        trends.(name)(n,3) = b(2);
+        p_vals.(name)(n,3) = stats(3);
+    end
+        
+
 end
+
+
 
 %% Comparison of SEAT and OIB estimates
 
@@ -429,7 +473,7 @@ SMB_mean = cellfun(@mean, radar.SMB, 'UniformOutput', 0);
 SMB_std = cellfun(@std, radar.SMB, 'UniformOutput', 0);
 
 trend = cell(1, length(radar.SMB));
-p_val = cell(1, length(radar.SMB));
+p_vals = cell(1, length(radar.SMB));
 for i = 1:length(radar.SMB)
     
     trend_i = zeros(1, Ndraw);
@@ -442,17 +486,17 @@ for i = 1:length(radar.SMB)
         p_val_i(j) = stats(3);
     end
     trend{i} = trend_i;
-    p_val{i} = p_val_i;
+    p_vals{i} = p_val_i;
 end
 
 trend_mean = cellfun(@mean, trend);
 trend_std = cellfun(@std, trend);
 
 % Find indices of significant trends (at 95% confidence level)
-p_star = cellfun(@(x) find(x<=0.05), p_val, 'UniformOutput', 0);
+p_star = cellfun(@(x) find(x<=0.05), p_vals, 'UniformOutput', 0);
 
 % Calculate percentage of MC realizations with significant trends
-p_ratio = cellfun(@(sig, all) length(sig)/length(all), p_star, p_val);
+p_ratio = cellfun(@(sig, all) length(sig)/length(all), p_star, p_vals);
 
 % Regression of SMB trend on mean SMB (all traces)
 [trend_b, trend_int, ~, ~, trend_stats] = regress(trend_mean', ...
