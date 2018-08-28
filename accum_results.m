@@ -403,6 +403,10 @@ for i = 1:length(inputs)
     
     yr_idx = [core_idxn' SEATi_idxn' OIB_idxn'];
     
+    
+    
+    
+    
     trends.(name) = zeros(Ndraw, 3);
     p_vals.(name) = zeros(Ndraw, 3);
     for n = 1:Ndraw
@@ -411,23 +415,20 @@ for i = 1:length(inputs)
         trends.(name)(n,1) = b(2);
         p_vals.(name)(n,1) = mean(stats.p);
         
-        [b, stats] = robustfit(radar_i.SMB_yr{SEATi_near}(yr_idx, ...
-            radar_i.SMB{SEATi_near}(:,n));
+        [b, stats] = robustfit(radar_i.SMB_yr{SEATi_near}(yr_idx(:,2)), ...
+            radar_i.SMB{SEATi_near}(yr_idx(:,2),n));
         trends.(name)(n,2) = b(2);
         p_vals.(name)(n,2) = mean(stats.p);
         
-        [b, ~, ~, ~, stats] = regress(radar_i.SMB{SEATi_near}(:,n), ...
-            [ones(length(radar_i.SMB_yr{SEATi_near}), 1) radar_i.SMB_yr{SEATi_near}]);
-        trends.(name)(n,2) = b(2);
-        p_vals.(name)(n,2) = stats(3);
-        
-        [b, ~, ~, ~, stats] = regress(radar_OIB.SMB{OIB_near}(:,n), ...
-            [ones(length(radar_OIB.SMB_yr{OIB_near}), 1) radar_OIB.SMB_yr{OIB_near}]);
+        [b, stats] = robustfit(radar_OIB.SMB_yr{OIB_near}(yr_idx(:,3)), ...
+            radar_OIB.SMB{OIB_near}(yr_idx(:,3),n));
         trends.(name)(n,3) = b(2);
-        p_vals.(name)(n,3) = stats(3);
+        p_vals.(name)(n,3) = mean(stats.p);
     end
-        
+    
+    sig = sum(p_vals.(name)<=0.05)/Ndraw;
 
+    
 end
 
 
