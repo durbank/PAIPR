@@ -46,7 +46,7 @@ cores = load(core_file);
 %% Define radar files to import/process
 
 radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
-    'ProcessedSEAT2010/transectSEAT10_5_6/');
+    'ProcessedSEAT2010/transectSEAT10_4_5/');
 
 % List all files matching 'wild' within radar directory
 wild = '*.mat';

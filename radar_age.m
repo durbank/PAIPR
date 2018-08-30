@@ -173,15 +173,20 @@ end
 [reliability, RMSE, s_matrix] = REL_score(peaks, layers_idx, horz_res);
 
 % Diagnostic plot
-% ystart = 10:25:size(peaks,1);
-% xstart = ones(1, length(ystart));
-% XY = stream2(ones(size(peaks)), s_matrix, xstart, ystart, 1);
-% figure
-% imagesc(radar.data_smooth, [-2 2])
-% hold on
-% hlines = streamline(XY);
-% set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
-% hold off
+ystart = 10:25:size(peaks,1);
+xstart = ones(1, length(ystart));
+XY_raw = stream2(ones(size(peaks)), s_matrix, xstart, ystart, 1);
+XY = XY_raw;
+for k = 1:length(XY)
+    XY{k}(:,1) = XY_raw{k}(:,1)*mean(diff(radar.dist));
+    XY{k}(:,2) = XY_raw{k}(:,2)*.02;
+end
+figure
+imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
+hold on
+hlines = streamline(XY);
+set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
+hold off
 
 % Perform secondary layer search using scaled Euclidean nearest neighbor 
 % and estimated radargram stream functions
