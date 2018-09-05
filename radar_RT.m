@@ -1,5 +1,6 @@
 function [radar] = radar_RT(radar_file, cores, Ndraw)
 
+% Determine whether data is OIB or SEAT
 radar_type = isstruct(radar_file);
 
 switch radar_type
@@ -11,13 +12,6 @@ switch radar_type
         % Conversion to depth
         [radar] = OIB_depth(radar_file, cores);
 end
-
-% % Determine if there are data break points (large gaps in data that would
-% % necessitate data processing over segments of the whole data)
-% distance = [0 diff(radar.dist)];
-% dist_idx = distance >= 500;
-% data_col = 1:size(radar.data_out, 2);
-% data_endpts = [1 data_col(dist_idx)-1 length(data_col)];
 
 % Find the mean response with depth in the radar data attributes across a
 % given horizontal resolution (in meters)
@@ -36,17 +30,17 @@ radar_stat = radar.data_stack - s;
 % standardized values (z-score statistics)
 radar_Z = zeros(size(radar_stat));
 for i = 1:size(radar_stat, 2)
-    data = radar_stat(:,i);
+    data_i = radar_stat(:,i);
     % Frame length to define local variance
-    half_frame = round(0.5*length(data)/5); 
-    var0 = movvar(data, 2*half_frame, 'EndPoints', 'discard');
-    x = (half_frame:length(data)-half_frame)';
+    half_frame = round(0.5*length(data_i)/5); 
+    var0 = movvar(data_i, 2*half_frame, 'EndPoints', 'discard');
+    x = (half_frame:length(data_i)-half_frame)';
     % Linear trend in variance
     EQ = polyfit(x, var0, 1);
-    x_mod = (1:length(data))';
+    x_mod = (1:length(data_i))';
     mod = polyval(EQ, x_mod);
     % Standardize variance-corrected data
-    radar_Z(:,i) = data./sqrt(abs(mod));
+    radar_Z(:,i) = data_i./sqrt(abs(mod));
 end
 
 % Define the vertical resolution of the core data
@@ -93,65 +87,91 @@ clearvars -except file cores Ndraw radar horz_res core_res
 
 %% Iterative radon transforms
 
+% Define depth/distance intervals over which to perform radon transforms,
+% and calculate data matrix window size
 depth_interval = 4;
 dist_interval = 250;
 depth_sz = round(0.5*depth_interval/core_res);
 dist_sz = round(0.5*dist_interval/horz_res);
 
-s_matrix = nan(size(radar.data_smooth));
-ii = dist_sz+1:3:size(radar.data_smooth,2)-dist_sz;
-jj = depth_sz+1:5:size(radar.data_smooth,1)-depth_sz;
+% Define (overlapping) window center points for iterative radon transforms
+ii = dist_sz+1:4:size(radar.data_smooth,2)-dist_sz;
+jj = depth_sz+1:round(depth_sz/10):size(radar.data_smooth,1)-depth_sz;
 
+% Preallocate matrix for estimated layer slopes
+s_matrix = nan(size(radar.data_smooth));
+
+% Iteratively calculate local layer gradients (data array units) for
+% overlapping local windows within the radargram
 for i = 1:length(ii)
     for j = 1:length(jj)
-        data = radar.data_smooth(jj(j)-depth_sz:jj(j)+depth_sz,ii(i)-dist_sz:ii(i)+dist_sz);
-        theta = 0:179;
-        [R,~] = radon(data, theta);
         
-        R_max = sum(R.*(R>0));
-        [~,theta_idx] = max(R_max);
-        theta_max = theta(theta_idx);
-%         [~,idx] = max(R, [], 2);
-%         R_max(R_max<0) = 0;
-%         weights = R_max/(sum(R_max));
-%         theta_max = sum(weights.*theta);
-%         theta_max = sum(weights.*theta(idx));
+        % Define the local data window
+        data_i = radar.data_smooth(jj(j)-depth_sz:jj(j)+depth_sz,ii(i)-dist_sz:ii(i)+dist_sz);
+        
+        % Angles over which to perform radon transform
+        theta = 0:179;
+        
+        % Calculate transform
+        [R,~] = radon(data_i, theta);
+        
+        % Find the sum of all positive transformed values for each angle
+        R_sum = sum(R.*(R>0));
+        
+        % Find the maximum positive sum value, and assign it's
+        % corresponding angle as the dominant angle of layer gradients
+        [~,max_idx] = max(R_sum);
+        theta_max = theta(max_idx);
+
+        % Transform dominant angle to true layer gradient and assign to
+        % preallocated matrix
         s_matrix(jj(j),ii(i)) = -1*tand(theta_max-90);  
     end
+    
+    % Define the surface layer to have a gradient of 0
     s_matrix(1,ii(i)) = 0;
-    p = robustfit(1:length(radar.depth), s_matrix(:,ii(i)));  % Relation may be nonlinear
+    
+    % Extrapolate the layer gradients at the base of the radargram based on
+    % the robust linear regression of the slopes of overlying layers
+    p = robustfit(1:length(radar.depth), s_matrix(:,ii(i)));
     s_matrix(end,ii(i)) = length(radar.depth)*p(2);
 end
 
-
+% Extrapolate gradient values for radargram edges based on nearest non-NaN
+% values
 s_matrix(:,1) = s_matrix(:,ii(1));
 s_matrix(:,end) = s_matrix(:,ii(end));
 
-
+% Update the along-trace and depth locations of non-NaN values in slope
+% matrix
 x = [1 ii size(radar.data_smooth,2)];
 y = [1 jj size(radar.data_smooth,1)];
+
+% Interpolate layer gradients for every trace and depth point
 [X,Y] = meshgrid(radar.dist(x), radar.depth(y));
 ss = s_matrix(y,x);
 [Vx, Vy] = meshgrid(radar.dist, radar.depth);
 Vq = interp2(X, Y, ss, Vx, Vy);
+
+% Apply 2D Gaussian smoothing filter to the layer gradients (to be used in
+% layer stream field)
 grad_smooth = imgaussfilt(Vq, 5);
 
-% Diagnostic plot
-ystart = 1:25:size(grad_smooth,1);
-xstart = ones(1, length(ystart));
-XY_raw = stream2(ones(size(grad_smooth)), grad_smooth, xstart, ystart, 1);
-XY = XY_raw;
-for k = 1:length(XY)
-    XY{k}(:,1) = XY_raw{k}(:,1)*mean(diff(radar.dist));
-    XY{k}(:,2) = XY_raw{k}(:,2)*.02;
-end
-figure
-imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
-hold on
-hlines = streamline(XY);
-set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
-hold off
-
+% % Diagnostic plot
+% ystart = 1:25:size(grad_smooth,1);
+% xstart = ones(1, length(ystart));
+% XY_raw = stream2(ones(size(grad_smooth)), grad_smooth, xstart, ystart, 1);
+% XY = XY_raw;
+% for k = 1:length(XY)
+%     XY{k}(:,1) = XY_raw{k}(:,1)*mean(diff(radar.dist));
+%     XY{k}(:,2) = XY_raw{k}(:,2)*.02;
+% end
+% figure
+% imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
+% hold on
+% hlines = streamline(XY);
+% set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
+% hold off
 
 %% Find depth, width, and prominence of peaks for each radar trace
 
@@ -191,18 +211,20 @@ end
 
 %%
 
-[peak_group, layers2] = find_layers2(peaks_raw, peak_width, ...
+% Find continuous layers within radargram based on peaks and layer stream
+% field
+[peak_group, layers] = find_layers2(peaks_raw, peak_width, ...
     grad_smooth, core_res, horz_res);
 
 % Preallocate arrays for the matrix indices of members of each layer
-layers_idx2 = cell(1,length(layers2));
-peaks2 = zeros(size(peaks_raw));
+layers_idx = cell(1,length(layers));
+peaks = zeros(size(peaks_raw));
 
 % For loop to coerce layers to have one row position for each trace
-for i = 1:length(layers_idx2)
+for i = 1:length(layers_idx)
     
     % Find matrix indices of all members of ith layer
-    layer_i = layers2{i};
+    layer_i = layers{i};
     
     % Find row and col indices of members of ith layer
     [row, col] = ind2sub(size(radar.data_smooth), layer_i);
@@ -215,41 +237,41 @@ for i = 1:length(layers_idx2)
     % Interpolate row positions using a cubic smoothing spline
     row_interp = round(fnval(csaps(col, row), col_interp));
     row_interp(row_interp < 1) = 1;
-    row_interp(row_interp > size(peaks2,1)) = size(peaks2,1);
+    row_interp(row_interp > size(peaks,1)) = size(peaks,1);
     
     % Interpolate peak prominence magnitudes to all columns in range using
     % a cubic smoothing spline
     mag_interp = csaps(col, mag, 1/length(col_interp), col_interp);
     
     % Assign interpolated layer to output
-    layer_interp = sub2ind(size(peaks2), row_interp, col_interp);
-    peaks2(layer_interp) = mag_interp;
-    layers_idx2{i} = layer_interp';
+    layer_interp = sub2ind(size(peaks), row_interp, col_interp);
+    peaks(layer_interp) = mag_interp;
+    layers_idx{i} = layer_interp';
 end
 
 % Create matrix of layer group assignments
-group_num = zeros(size(peaks2));
-for i = 1:length(layers_idx2)
-    group_num(layers_idx2{i}) = i;
+group_num = zeros(size(peaks));
+for i = 1:length(layers_idx)
+    group_num(layers_idx{i}) = i;
 end
 
 %%
 
 % Calculate continuous layer distances for each layer (accounting for 
 % lateral size of stacked radar trace bins)
-layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx2);
+layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx);
 
 % Map layer prominence-distance values to the location within the radar
 % matrix of the ith layer
-layer_peaks = zeros(size(peaks2));
-for i = 1:length(layers_idx2)
-    layer_peaks(layers_idx2{i}) = peaks2(layers_idx2{i}).*layers_dist(i);
+layer_peaks = zeros(size(peaks));
+for i = 1:length(layers_idx)
+    layer_peaks(layers_idx{i}) = peaks(layers_idx{i}).*layers_dist(i);
 end
 
 
 % Output layer arrays to radar structure
-radar.peaks = peaks2;
-radar.layers = layers_idx2;
+radar.peaks = peaks;
+radar.layers = layers_idx;
 radar.groups = group_num;
 
 %% Assign layer likelihood scores and estimate age-depth scales

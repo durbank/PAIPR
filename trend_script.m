@@ -57,7 +57,7 @@ cores = load(core_file);
 
 % Path to full SEAT transect
 file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_6.mat');
+    'layers_ku_band_SEAT10_4.mat');
 
 % file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
 %     'layers_ku_band_gridSEAT10_4.mat');
@@ -70,7 +70,7 @@ file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
 % % SEAT10_5
 % file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_257.nc');
 % % SEAT10_6
-file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc');
+% file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc');
 
 %%
 
@@ -225,9 +225,10 @@ colormap(cool)
 
 % Mean trend in SMB across entire radargram
 figure
-scatter(radar.Easting, radar.Northing, 30, trend_mean, 'filled')
+scatter(radar.Easting, radar.Northing, 30, ...
+    100*trend_mean./cellfun(@mean, SMB_mean), 'filled')
 hcb = colorbar;
-ylabel(hcb, 'Trend in SMB (mm/a)')
+ylabel(hcb, 'Trend in SMB (% of mean per year)')
 colormap(cool)
 
 % Mean SMB vs mean trend
