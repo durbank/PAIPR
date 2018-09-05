@@ -93,8 +93,8 @@ clearvars -except file cores Ndraw radar horz_res core_res
 
 %% Iterative radon transforms
 
-depth_interval = 5;
-dist_interval = 150;
+depth_interval = 4;
+dist_interval = 250;
 depth_sz = round(0.5*depth_interval/core_res);
 dist_sz = round(0.5*dist_interval/horz_res);
 
@@ -108,11 +108,14 @@ for i = 1:length(ii)
         theta = 0:179;
         [R,~] = radon(data, theta);
         
-        [R_max,idx] = max(R, [], 2);
-        R_max = sum(R,2);
-        R_max(R_max<0) = 0;
-        weights = R_max/(sum(R_max));
-        theta_max = sum(weights'.*theta(idx));
+        R_max = sum(R.*(R>0));
+        [~,theta_idx] = max(R_max);
+        theta_max = theta(theta_idx);
+%         [~,idx] = max(R, [], 2);
+%         R_max(R_max<0) = 0;
+%         weights = R_max/(sum(R_max));
+%         theta_max = sum(weights.*theta);
+%         theta_max = sum(weights.*theta(idx));
         s_matrix(jj(j),ii(i)) = -1*tand(theta_max-90);  
     end
     s_matrix(1,ii(i)) = 0;
@@ -133,14 +136,8 @@ ss = s_matrix(y,x);
 Vq = interp2(X, Y, ss, Vx, Vy);
 grad_smooth = imgaussfilt(Vq, 5);
 
-
-%% Other tests with linear regression
-
-
-
-
 % Diagnostic plot
-ystart = 10:25:size(grad_smooth,1);
+ystart = 1:25:size(grad_smooth,1);
 xstart = ones(1, length(ystart));
 XY_raw = stream2(ones(size(grad_smooth)), grad_smooth, xstart, ystart, 1);
 XY = XY_raw;
@@ -156,7 +153,84 @@ set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
 hold off
 
 
+%% Find depth, width, and prominence of peaks for each radar trace
+
+% Preallocate arrays for various components
+peaks_raw = zeros(size(radar.data_smooth));
+peak_width = zeros(size(radar.data_smooth));
+Proms = cell(1, size(radar.data_smooth, 2));
+widths = cell(1,size(radar.data_smooth, 2));
+depths = cell(1, size(radar.data_smooth, 2));
+depth_idx = cell(1, size(radar.data_smooth, 2));
+
+for i = 1:size(radar.data_smooth, 2)
+    data_i = radar.data_smooth(:,i);
+    
+    % Prominence threshold for peaks
+    minProm = 0.50;
+    
+    % Min distance between peaks (in meters)
+    minDist = 0.08;
+    
+    % Find peak statistics in each trace based on criteria
+    [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...
+        'MinPeakProminence', minProm, ...
+        'MinPeakDistance', minDist/core_res, 'WidthReference', 'halfheight');
+
+    % Add peak prominence and width values to relevent matrices
+    peaks_raw(peaks_idx_i,i) = Prom_i;
+    peak_width(peaks_idx_i,i) = widths_i;
+    
+    % Add values to relevent cell arrays
+    Proms{i} = Prom_i;
+    widths{i} = widths_i;
+    depths{i} = radar.depth(peaks_idx_i);
+    depth_idx{i} = peaks_idx_i;
+end
+
 
 %%
+
+[peak_group, layers2] = find_layers2(peaks_raw, peak_width, ...
+    grad_smooth, core_res, horz_res);
+
+% Preallocate arrays for the matrix indices of members of each layer
+layers_idx2 = cell(1,length(layers2));
+peaks2 = zeros(size(peaks_raw));
+
+% For loop to coerce layers to have one row position for each trace
+for i = 1:length(layers_idx2)
+    
+    % Find matrix indices of all members of ith layer
+    layer_i = layers2{i};
+    
+    % Find row and col indices of members of ith layer
+    [row, col] = ind2sub(size(radar.data_smooth), layer_i);
+    mag = peaks_raw(layer_i);
+    
+    % Interpolate data to all column positions within the range of the
+    % layer
+    col_interp = min(col):max(col);
+    
+    % Interpolate row positions using a cubic smoothing spline
+    row_interp = round(fnval(csaps(col, row), col_interp));
+    row_interp(row_interp < 1) = 1;
+    row_interp(row_interp > size(peaks2,1)) = size(peaks2,1);
+    
+    % Interpolate peak prominence magnitudes to all columns in range using
+    % a cubic smoothing spline
+    mag_interp = csaps(col, mag, 1/length(col_interp), col_interp);
+    
+    % Assign interpolated layer to output
+    layer_interp = sub2ind(size(peaks2), row_interp, col_interp);
+    peaks2(layer_interp) = mag_interp;
+    layers_idx2{i} = layer_interp';
+end
+
+% Create matrix of layer group assignments
+group_num = zeros(size(peaks2));
+for i = 1:length(layers_idx2)
+    group_num(layers_idx2{i}) = i;
+end
 
 end
