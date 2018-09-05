@@ -57,7 +57,7 @@ cores = load(core_file);
 
 % Path to full SEAT transect
 file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_4.mat');
+    'layers_ku_band_SEAT10_5.mat');
 
 % file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
 %     'layers_ku_band_gridSEAT10_4.mat');
