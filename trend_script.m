@@ -45,22 +45,22 @@ cores = load(core_file);
 
 %% Define radar files to import/process
 
-radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
-    'ProcessedSEAT2010/transectSEAT10_4_5/');
-
-% List all files matching 'wild' within radar directory
-wild = '*.mat';
-files = dir(fullfile(radar_dir, wild));
-
-i = randi(length(files));
-file = strcat(radar_dir, files(i).name);
+% radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
+%     'ProcessedSEAT2010/transectSEAT10_4_5/');
+% 
+% % List all files matching 'wild' within radar directory
+% wild = '*.mat';
+% files = dir(fullfile(radar_dir, wild));
+% 
+% i = randi(length(files));
+% file = strcat(radar_dir, files(i).name);
 
 % Path to full SEAT transect
 file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_4.mat');
+    'layers_ku_band_SEAT10_6.mat');
 
-file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
-    'layers_ku_band_gridSEAT10_4.mat');
+% file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
+%     'layers_ku_band_gridSEAT10_4.mat');
 
 % % Path of the OIB file to process
 % % SEAT10_4
@@ -70,14 +70,15 @@ file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
 % % SEAT10_5
 % file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_257.nc');
 % % SEAT10_6
-% file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc');
+file = strcat(data_path, 'IceBridge/Snow Radar/2011/IRSNO1B_20111109_02_242.nc');
 
 %%
 
 % for i = 1:length(files)
 
 % Calculate radar ages and associated other data
-[radar] = radar_age(file, cores, Ndraw);
+% [radar] = radar_age(file, cores, Ndraw);
+[radar] = radar_RT(file, cores, Ndraw);
 
 % Calculate annual accumulation rates from data
 [radar] = calc_SWE(radar, Ndraw);
@@ -216,7 +217,7 @@ hold off
 %% Diagnostic plots for bulk radar file
 
 % Mean SMB across entire radargram (mean of all realizations for each trace)
-% figure
+figure
 scatter(radar.Easting, radar.Northing, 30, cellfun(@mean, SMB_mean), 'filled')
 hcb = colorbar;
 ylabel(hcb, 'Mean annual SMB (mm/a')
@@ -232,10 +233,10 @@ colormap(cool)
 % Mean SMB vs mean trend
 figure
 hold on
-plot(cellfun(@mean, SMB_mean), trend_mean, 'b.')
-h1 = plot(cellfun(@mean, SMB_mean), trend_Y, 'b', 'LineWidth', 2);
-plot(cellfun(@mean, SMB_mean), trend_Y + trend_D, 'b--')
-plot(cellfun(@mean, SMB_mean), trend_Y - trend_D, 'b--')
+plot(cellfun(@mean, SMB_mean), 100*trend_mean./cellfun(@mean, SMB_mean), 'b.')
+% h1 = plot(cellfun(@mean, SMB_mean), trend_Y, 'b', 'LineWidth', 2);
+% plot(cellfun(@mean, SMB_mean), trend_Y + trend_D, 'b--')
+% plot(cellfun(@mean, SMB_mean), trend_Y - trend_D, 'b--')
 xlabel('Mean annual accumulation (mm w.e.)')
-ylabel('Annual accumulation trend (mm/a)')
+ylabel('Accumulation trend (% of mean per year)')
 hold off
