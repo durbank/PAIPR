@@ -389,44 +389,51 @@ for i = 1:length(inputs)
 %     hold off
     
 
-    %%% t-tests bewteen results
-    yrs_endpts = [min([max(cores.(name).SMB_yr) max(radar_i.SMB_yr{SEATi_near}) ...
-        max(radar_OIB.SMB_yr{OIB_near})]) max([min(cores.(name).SMB_yr) ...
-        min(radar_i.SMB_yr{SEATi_near}) min(radar_OIB.SMB_yr{OIB_near})])];
-    
-    core_idxn = find(cores.(name).SMB_yr == yrs_endpts(1)):...
-        find(cores.(name).SMB_yr == yrs_endpts(2));
-    SEATi_idxn = find(radar_i.SMB_yr{SEATi_near} == yrs_endpts(1)):...
-        find(radar_i.SMB_yr{SEATi_near} == yrs_endpts(2));
-    OIB_idxn = find(radar_OIB.SMB_yr{OIB_near} == yrs_endpts(1)):...
-        find(radar_OIB.SMB_yr{OIB_near} == yrs_endpts(2));
-    
-    yr_idx = [core_idxn' SEATi_idxn' OIB_idxn'];
-    
-    
-    
-    
-    
-    trends.(name) = zeros(Ndraw, 3);
-    p_vals.(name) = zeros(Ndraw, 3);
-    for n = 1:Ndraw
-        [b, stats] = robustfit(cores.(name).SMB_yr(yr_idx(:,1)), ...
-            cores.(name).SMB(yr_idx(:,1),n));
-        trends.(name)(n,1) = b(2);
-        p_vals.(name)(n,1) = mean(stats.p);
-        
-        [b, stats] = robustfit(radar_i.SMB_yr{SEATi_near}(yr_idx(:,2)), ...
-            radar_i.SMB{SEATi_near}(yr_idx(:,2),n));
-        trends.(name)(n,2) = b(2);
-        p_vals.(name)(n,2) = mean(stats.p);
-        
-        [b, stats] = robustfit(radar_OIB.SMB_yr{OIB_near}(yr_idx(:,3)), ...
-            radar_OIB.SMB{OIB_near}(yr_idx(:,3),n));
-        trends.(name)(n,3) = b(2);
-        p_vals.(name)(n,3) = mean(stats.p);
+    %%% Welch's tests bewteen SEAT and OIB results
+    p_vals = zeros(min([length(radar_i.depth) length(radar_OIB.depth) ...
+        length(cores.(name).depth)]),1);
+    for k = 1:length(p_vals)
+%         [~, p_vals(k)] = ttest2(radar_i.ages(k,SEATi_near,:), radar_OIB.ages(k,OIB_near,:));
+        [~, p_vals(k)] = ttest2(cores.(name).ages(k,:), ...
+            squeeze(radar_OIB.ages(k,OIB_near,:)));
     end
     
-    sig = sum(p_vals.(name)<=0.05)/Ndraw;
+    
+    
+%     %%% trend tests
+%     yrs_endpts = [min([max(cores.(name).SMB_yr) max(radar_i.SMB_yr{SEATi_near}) ...
+%         max(radar_OIB.SMB_yr{OIB_near})]) max([min(cores.(name).SMB_yr) ...
+%         min(radar_i.SMB_yr{SEATi_near}) min(radar_OIB.SMB_yr{OIB_near})])];
+%     
+%     core_idxn = find(cores.(name).SMB_yr == yrs_endpts(1)):...
+%         find(cores.(name).SMB_yr == yrs_endpts(2));
+%     SEATi_idxn = find(radar_i.SMB_yr{SEATi_near} == yrs_endpts(1)):...
+%         find(radar_i.SMB_yr{SEATi_near} == yrs_endpts(2));
+%     OIB_idxn = find(radar_OIB.SMB_yr{OIB_near} == yrs_endpts(1)):...
+%         find(radar_OIB.SMB_yr{OIB_near} == yrs_endpts(2));
+%     
+%     yr_idx = [core_idxn' SEATi_idxn' OIB_idxn'];
+    
+%     trends.(name) = zeros(Ndraw, 3);
+%     p_vals.(name) = zeros(Ndraw, 3);
+%     for n = 1:Ndraw
+%         [b, stats] = robustfit(cores.(name).SMB_yr(yr_idx(:,1)), ...
+%             cores.(name).SMB(yr_idx(:,1),n));
+%         trends.(name)(n,1) = b(2);
+%         p_vals.(name)(n,1) = mean(stats.p);
+%         
+%         [b, stats] = robustfit(radar_i.SMB_yr{SEATi_near}(yr_idx(:,2)), ...
+%             radar_i.SMB{SEATi_near}(yr_idx(:,2),n));
+%         trends.(name)(n,2) = b(2);
+%         p_vals.(name)(n,2) = mean(stats.p);
+%         
+%         [b, stats] = robustfit(radar_OIB.SMB_yr{OIB_near}(yr_idx(:,3)), ...
+%             radar_OIB.SMB{OIB_near}(yr_idx(:,3),n));
+%         trends.(name)(n,3) = b(2);
+%         p_vals.(name)(n,3) = mean(stats.p);
+%     end
+%     
+%     sig = sum(p_vals.(name)<=0.05)/Ndraw;
 
     
 end
