@@ -514,7 +514,7 @@ p_ratio = cellfun(@(sig, all) length(sig)/length(all), p_star, p_vals);
 
 %%
 
-subset = 1:length(SMB_mean);
+subset = 1:25:length(SMB_mean);
 
 % Boxplots of SMB mean
 mean_box = (cell2mat(SMB_mean'))';
@@ -527,7 +527,7 @@ set(gca,'Xticklabel',[])
 title('Mean SMB')
 
 f6_name = 'SMB_box';
-% export_fig(f1, strcat(out_dir, f6_name), '-png');
+% export_fig(f6, fullfile(out_dir, f6_name), '-png');
 % close(f6)
 
 % Boxplots of trends in SMB
@@ -542,7 +542,7 @@ set(gca,'Xticklabel',[])
 title('SMB trends')
 
 f7_name = strcat(name, '_trend_box');
-% export_fig(f1, strcat(out_dir, f7_name), '-png');
+% export_fig(f7, fullfile(out_dir, f7_name), '-png');
 % close(f7)
 
 %% Compare mean accumulation to Arthern et al 2006

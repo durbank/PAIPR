@@ -8,11 +8,13 @@ end
 hold off
 
 figure
-imagesc(radar.data_smooth, [-2 2])
+imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
 hold on
-for k = 1:length(radar.layers)
-    [r,c] = ind2sub(size(radar.data_smooth), radar.layers{k});
-    plot(c, r, 'LineWidth', 3)
+for k = 1:length(layers_idx)
+    [r,c] = ind2sub(size(radar.data_smooth), layers_idx{k});
+    r_scale = r*0.02;
+    c_scale = c*mean(diff(radar.dist));
+    plot(c_scale, r_scale, 'LineWidth', 3)
 end
 hold off
 
