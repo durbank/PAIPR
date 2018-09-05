@@ -1,4 +1,4 @@
-function [radar] = radar_RT(radar_file, cores)
+function [radar] = radar_RT(radar_file, cores, Ndraw)
 
 radar_type = isstruct(radar_file);
 
@@ -232,5 +232,86 @@ group_num = zeros(size(peaks2));
 for i = 1:length(layers_idx2)
     group_num(layers_idx2{i}) = i;
 end
+
+%%
+
+% Calculate continuous layer distances for each layer (accounting for 
+% lateral size of stacked radar trace bins)
+layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx2);
+
+% Map layer prominence-distance values to the location within the radar
+% matrix of the ith layer
+layer_peaks = zeros(size(peaks2));
+for i = 1:length(layers_idx2)
+    layer_peaks(layers_idx2{i}) = peaks2(layers_idx2{i}).*layers_dist(i);
+end
+
+
+% Output layer arrays to radar structure
+radar.peaks = peaks2;
+radar.layers = layers_idx2;
+radar.groups = group_num;
+
+%% Assign layer likelihood scores and estimate age-depth scales
+
+% Define surface age and the year associated with the first pick of the 
+% algorithm
+age_top = radar.collect_date;
+yr_pick1 = ceil(radar.collect_date - 1);
+
+% Preallocate arrays for layer likelihoods and anges
+ages = zeros([size(radar.data_smooth) Ndraw]);
+radar.likelihood = zeros(size(radar.data_smooth));
+err_out = [];
+for i = 1:size(layer_peaks, 2)
+    
+    % Assign the 50% likelihood point based on median trace prominence and
+    % layer length
+    P_50 = median(Proms{i})*min([5000 0.5*radar.dist(end)]);
+%     P_50 = median(Proms{i})*mean(cellfun(@length, layers_idx));
+    
+    % Assign min/max layer likelihoods, and calculate the logistic rate
+    % coefficient
+    Po = 0.05;
+    K = 1;
+    r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
+    
+    % Get layer prom-distance values and depths for layers in ith trace
+    peaks_i = layer_peaks(:,i);
+    peaks_idx = peaks_i>0;
+    peaks_i = peaks_i(peaks_idx);
+    depths_i = radar.depth(peaks_idx);
+    
+    % Likelihood of layer representing a year based on a logistic function
+    % with rate (r) calculated above
+    likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
+    radar.likelihood(peaks_idx,i) = likelihood;
+    
+    % Assign MC simulation annual layer presence based on layer likelihood
+    % values
+    yr_idx = zeros(length(depths_i), Ndraw);
+    for j = 1:length(depths_i)
+        R = rand(Ndraw, 1) <= likelihood(j);
+        yr_idx(j,:) = R;
+    end
+    
+    for j = 1:Ndraw
+        depths_j = [0; depths_i(logical(yr_idx(:,j)))];
+        yrs_j = ([age_top yr_pick1:-1:yr_pick1-length(depths_j)+2])';
+        try
+            ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
+        catch
+            sprintf('Error in age interpolation for trace %u, trial %u. Filling with mean ages.', i, j)
+            err_out = [err_out j];
+        end
+    end
+    if ~isempty(err_out)
+        ages(:,i,err_out) = repmat(sum(squeeze(ages(:,i,:)), 2)./...
+            sum(squeeze(ages(:,i,:))~=0, 2), 1, length(err_out));
+    end
+    err_out = [];
+end
+
+radar.ages = ages;
 
 end
