@@ -5,7 +5,7 @@
 % of the last member found
 
 function [peak_group, layers] = find_layers2(peaks_raw, peak_width, ...
-    s_matrix, core_res, horz_res)
+    grad_matrix, core_res, horz_res)
 
 % Preallocate layer group matrix and cell array
 peak_group = zeros(size(peaks_raw));
@@ -72,7 +72,8 @@ while search_new == true
         
         % Get col and row subscripts of farthest right position of layer_i
         col_n = max(col_i);
-        row_n = round(mean(row_i));
+%         row_n = round(mean(row_i));
+        row_n = row_i(end);
         
         % Define local  search window as 150 m to right of last known group
         % member, and 0.50 m above and below estimated row position for the
@@ -91,9 +92,27 @@ while search_new == true
         
         % Estimate stream function values within the local search window
         % for layer_i based on the current righthand position of the layer
-        stream_n = stream2(ones(size(peaks_raw)), s_matrix, col_n, row_n, 1);
-        data_stream = fliplr(stream_n{1}...
-            (1:min([size(peak_local,2) size(stream_n{1},1)]),:));
+%         stream_n = stream2(ones(size(peaks_raw)), grad_matrix, col_n, row_n, 1);
+        stream_n = stream2(ones(size(peaks_raw)), grad_matrix, ...
+            col_i, row_i, [.025, 1000]);
+        rows_stream = zeros(length(stream_n), size(peak_local,2));
+%         cols_stream = zeros(length(stream_n), size(peak_local,2));
+        cols_stream = col_idx(1):col_idx(2);
+        for k = 1:length(stream_n)
+            for kk = 1:length(cols_stream)
+               kk_start = find(stream_n{k}(:,1)>=cols_stream(kk), 1);
+               kk_end = find(stream_n{k}(:,1)<=cols_stream(kk)+1, 1, 'last');
+               rows_stream(k,kk) = mean(stream_n{k}(kk_start:kk_end,2));
+            end
+%             k_start = find(stream_n{k}(:,1) >= col_n, 1);
+%             k_idx = [k_start k_start+size(peak_local,2)-1];
+%             cols_stream(k,:) = stream_n{k}(k_idx(1):k_idx(2),1);
+%             rows_stream(k,:) = stream_n{k}(k_idx(1):k_idx(2),2);
+        end
+        
+        data_stream = [mean(rows_stream, 1)' cols_stream'];
+%         data_stream = fliplr(stream_n{1}...
+%             (1:min([size(peak_local,2) size(stream_n{1},1)]),:));
         
         % Calculate distance between peaks in the local search window and
         % the estimated layer streamline
@@ -151,7 +170,8 @@ while search_new == true
         
         % Get col and row subscripts of farthest left position of layer_i
         col_n = min(col_i);
-        row_n = round(mean(row_i));
+%         row_n = round(mean(row_i));
+        row_n = row_i(1);
         
         % Define local  search window as 150 m to right of last known group
         % member, and 0.50 m above and below estimated row position for the
@@ -170,9 +190,39 @@ while search_new == true
         
         % Estimate stream function values within the local search window
         % for layer_i based on the current lefthand position of the layer
-        stream_n = stream2(-ones(size(peaks_raw)), -s_matrix, col_n, row_n, 1);
-        data_stream = fliplr(stream_n{1}...
-            (1:min([size(peak_local,2) size(stream_n{1},1)]),:));
+        stream_n = stream2(-ones(size(peaks_raw)), -grad_matrix, ...
+            col_i, row_i, [.025, 1000]);
+        rows_stream = zeros(length(stream_n), size(peak_local,2));
+%         cols_stream = zeros(length(stream_n), size(peak_local,2));
+        cols_stream = col_idx(1):col_idx(2);
+        for k = 1:length(stream_n)
+            for kk = 1:length(cols_stream)
+               kk_start = find(stream_n{k}(:,1)<=cols_stream(kk)+1, 1);
+               kk_end = find(stream_n{k}(:,1)>=cols_stream(kk), 1, 'last');
+               rows_stream(k,kk) = mean(stream_n{k}(kk_start:kk_end,2));
+            end
+%             k_start = find(stream_n{k}(:,1) >= col_n, 1);
+%             k_idx = [k_start k_start+size(peak_local,2)-1];
+%             cols_stream(k,:) = stream_n{k}(k_idx(1):k_idx(2),1);
+%             rows_stream(k,:) = stream_n{k}(k_idx(1):k_idx(2),2);
+        end
+        
+        data_stream = [mean(rows_stream, 1)' cols_stream'];
+        
+%         stream_n = stream2(-ones(size(peaks_raw)), -grad_matrix, col_i, row_i, 1);
+%         rows_stream = zeros(length(stream_n), size(peak_local,2));
+%         cols_stream = zeros(length(stream_n), size(peak_local,2));
+%         for k = 1:length(stream_n)
+%             k_start = find(stream_n{k}(:,1) == col_n);
+%             k_idx = [k_start k_start+size(peak_local,2)-1];
+%             cols_stream(k,:) = stream_n{k}(k_idx(1):k_idx(2),1);
+%             rows_stream(k,:) = stream_n{k}(k_idx(1):k_idx(2),2);
+%         end
+%         
+%         data_stream = [mean(rows_stream)' mean(cols_stream)'];
+% %         stream_n = stream2(-ones(size(peaks_raw)), -grad_matrix, col_n, row_n, 1);
+% %         data_stream = fliplr(stream_n{1}...
+% %             (1:min([size(peak_local,2) size(stream_n{1},1)]),:));
         
         % Calculate distance between peaks in the local search window and
         % the estimated layer streamline
