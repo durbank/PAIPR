@@ -289,8 +289,8 @@ for i = 1:size(layer_peaks, 2)
     
     % Assign the 50% likelihood point based on median trace prominence and
     % layer length
-    P_50 = median(Proms{i})*min([5000 0.5*radar.dist(end)]);
-%     P_50 = median(Proms{i})*mean(cellfun(@length, layers_idx));
+%     P_50 = median(Proms{i})*min([5000 0.5*radar.dist(end)]);
+    P_50 = median(Proms{i})*min([10000 0.5*radar.dist(end)]);
     
     % Assign min/max layer likelihoods, and calculate the logistic rate
     % coefficient
