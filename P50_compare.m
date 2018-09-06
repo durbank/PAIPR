@@ -40,28 +40,37 @@ cores = load(core_file);
 Ndraw = 100;
 
 % Load previously processed full OIB radar transect
-radar_full = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/OIB_SEAT10_4to10_6_full.mat'));
+% radar = load(fullfile(data_path, 'radar/SEAT_Traverses/results_data/OIB_SEAT10_4to10_6_full.mat'));
+radar = load(fullfile(data_path, ...
+    'radar/SEAT_Traverses/results_data/comparisons/dataset_length/OIB_100km.mat'));
 
 %% Calculate ages based on different P_50 values (modified from radar_age.m)
+
 tic
 % Define horizontal resolution (25 m)
 horz_res = 25;
 
+group_nums = unique(radar.groups(radar.groups>0));
+layers = cell(1, length(group_nums));
+for i = 1:length(group_nums)
+    layers{i} = find(radar.groups == group_nums(i));
+end
+
 % Calculate continuous layer distances for each layer (accounting for 
 % lateral size of stacked radar trace bins)
-layers_dist = cellfun(@(x) numel(x)*horz_res, radar_full.layers);
+layers_dist = cellfun(@(x) numel(x)*horz_res, layers);
 
 % Map layer prominence-distance values to the location within the radar
 % matrix of the ith layer
-layer_peaks = zeros(size(radar_full.peaks));
-for i = 1:length(radar_full.layers)
-    layer_peaks(radar_full.layers{i}) = radar_full.peaks(radar_full.layers{i}).*layers_dist(i);
+layer_peaks = zeros(size(radar.peaks));
+for i = 1:length(layers)
+    layer_peaks(layers{i}) = radar.peaks(layers{i}).*layers_dist(i);
 end
 
 % Define surface age and the year associated with the first pick of the 
 % algorithm
-age_top = radar_full.collect_date;
-yr_pick1 = ceil(radar_full.collect_date - 1);
+age_top = radar.collect_date;
+yr_pick1 = ceil(radar.collect_date - 1);
 
 
 trace_idx = 1:40:size(layer_peaks, 2);
@@ -84,25 +93,16 @@ ages = struct('age1km', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw),..
     'age23km', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw),...
     'age25km', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw));
 fldnm = fieldnames(ages);
-% P_50dist = 1000:1000:30000;
 P_50dist = 1000*[1:2:7 8:17 19:2:25];
-% ages = struct('age500', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw),...
-%     'age1km', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw),...
-%     'age10km', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw),...
-%     'age25km', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw),...
-%     'age50km', zeros(size(layer_peaks, 1), length(trace_idx), Ndraw));
-% fldnm = fieldnames(ages);
-% P_50dist = [500 1000 10000 25000 50000];
 
 for n = 1:length(fldnm)
     err_out = [];
     for i = 1:length(trace_idx)
         % Assign the 50% likelihood point based on median trace prominence and
         % layer length
-        peaks_i = radar_full.peaks(:,trace_idx(i));
+        peaks_i = radar.peaks(:,trace_idx(i));
         Prom_i = peaks_i(peaks_i>0);
-        P_50 = median(Prom_i)*min([P_50dist(n) 0.5*radar_full.dist(end)]);
-%         P_50 = min([P_50dist(n) 0.5*radar_full.dist(end)]);
+        P_50 = median(Prom_i)*min([P_50dist(n) 0.5*radar.dist(end)]);
         
         % Assign min/max layer likelihoods, and calculate the logistic rate
         % coefficient
@@ -114,7 +114,7 @@ for n = 1:length(fldnm)
         peaks_i = layer_peaks(:,trace_idx(i));
         peaks_idx = peaks_i>0;
         peaks_i = peaks_i(peaks_idx);
-        depths_i = radar_full.depth(peaks_idx);
+        depths_i = radar.depth(peaks_idx);
         
         % Likelihood of layer representing a year based on a logistic function
         % with rate (r) calculated above
@@ -132,7 +132,7 @@ for n = 1:length(fldnm)
             depths_j = [0; depths_i(logical(yr_idx(:,j)))];
             yrs_j = ([age_top yr_pick1:-1:yr_pick1-length(depths_j)+2])';
             try
-                ages.(fldnm{n})(:,i,j) = interp1(depths_j, yrs_j, radar_full.depth, 'linear', 'extrap');
+                ages.(fldnm{n})(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
             catch
                 sprintf('Error in age interpolation for trace %u, trial %u. Filling with mean ages.', i, j)
                 err_out = [err_out j];
@@ -144,14 +144,10 @@ for n = 1:length(fldnm)
         end
     end
 end
-
-% ages.age5km = radar_full.ages(:,trace_idx,:);
-
 toc
 
 %% 
-clearvars -except radar_full ages* cores Ndraw trace_idx P_50dist
-% ages = orderfields(ages, [1 2 3 12 4 5 6 7 8 9 10 11]);
+clearvars -except radar ages* cores Ndraw trace_idx P_50dist
 fldnm = fieldnames(ages);
 P_50 = P_50dist;
 h = cell2struct(cell(size(fldnm)), fldnm, 1);
@@ -199,7 +195,7 @@ sites = {'SEAT10_4' 'SEAT10_5' 'SEAT10_6'};
 for i = 1:length(sites)
     name = sites{i};
     dist_radar = pdist2([cores.(name).Easting  cores.(name).Northing], ...
-        [radar_full.Easting(trace_idx)', radar_full.Northing(trace_idx)']);
+        [radar.Easting(trace_idx)', radar.Northing(trace_idx)']);
     [~, radar_near] = min(dist_radar);
     figure
     hold on
@@ -208,18 +204,18 @@ for i = 1:length(sites)
         2*std(cores.(name).ages, [], 2), 'k--')
     plot(cores.(name).depth, mean(cores.(name).ages, 2) - ...
         2*std(cores.(name).ages, [], 2), 'k--')
-    h2 = plot(radar_full.depth, squeeze(median(ages.age8km(:,radar_near,:),3)), 'b', 'LineWidth', 2);
-    plot(radar_full.depth, squeeze(median(ages.age8km(:,radar_near,:),3)) + ...
+    h2 = plot(radar.depth, squeeze(median(ages.age8km(:,radar_near,:),3)), 'b', 'LineWidth', 2);
+    plot(radar.depth, squeeze(median(ages.age8km(:,radar_near,:),3)) + ...
         2*std(ages.age8km(:,radar_near,:), [], 3), 'b--')
-    plot(radar_full.depth, squeeze(median(ages.age8km(:,radar_near,:),3)) - ...
+    plot(radar.depth, squeeze(median(ages.age8km(:,radar_near,:),3)) - ...
         2*std(ages.age8km(:,radar_near,:), [], 3), 'b--')
-    h3 = plot(radar_full.depth, squeeze(median(ages.age5km(:,radar_near,:),3)), 'c');
-    plot(radar_full.depth, squeeze(median(ages.age5km(:,radar_near,:),3)) + ...
+    h3 = plot(radar.depth, squeeze(median(ages.age5km(:,radar_near,:),3)), 'c');
+    plot(radar.depth, squeeze(median(ages.age5km(:,radar_near,:),3)) + ...
         2*std(ages.age5km(:,radar_near,:), [], 3), 'c--')
-    plot(radar_full.depth, squeeze(median(ages.age5km(:,radar_near,:),3)) - ...
+    plot(radar.depth, squeeze(median(ages.age5km(:,radar_near,:),3)) - ...
         2*std(ages.age5km(:,radar_near,:), [], 3), 'c--')
-    h4 = plot(radar_full.depth, squeeze(median(ages.age10km(:,radar_near,:),3)), 'r');
-    h5 = plot(radar_full.depth, squeeze(median(ages.age15km(:,radar_near,:),3)), 'm');
+    h4 = plot(radar.depth, squeeze(median(ages.age10km(:,radar_near,:),3)), 'r');
+    h5 = plot(radar.depth, squeeze(median(ages.age15km(:,radar_near,:),3)), 'm');
     legend([h1 h2 h3 h4 h5], 'core', 'P50=8km', 'P50=5km', 'P50=10km', 'P50=15km')
     xlabel('Depth (m)')
     ylabel('Calendar year')
