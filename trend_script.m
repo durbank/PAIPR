@@ -57,7 +57,7 @@ cores = load(core_file);
 
 % Path to full SEAT transect
 file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_5.mat');
+    'layers_ku_band_SEAT10_6.mat');
 
 % file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
 %     'layers_ku_band_gridSEAT10_4.mat');
@@ -84,15 +84,15 @@ file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
 [radar] = calc_SWE(radar, Ndraw);
 
 
-clip = round (2500/25);
-radar0 = radar;
-radar = struct('collect_date', radar.collect_date, 'Easting', radar.Easting(clip:end-clip),...
-    'Northing', radar.Northing(clip:end-clip), 'dist', radar.dist(clip:end-clip),...
-    'depth', radar.depth, 'data_smooth', radar.data_smooth(:,clip:end-clip),...
-    'peaks', radar.peaks(:,clip:end-clip), 'groups', radar.groups(:,clip:end-clip),...
-    'likelihood', radar.likelihood(:,clip:end-clip), 'ages', radar.ages(:,clip:end-clip,:));
-radar.SMB_yr =  radar0.SMB_yr(clip:end-clip);
-radar.SMB = radar0.SMB(clip:end-clip);
+% clip = round (3000/25);
+% radar0 = radar;
+% radar = struct('collect_date', radar.collect_date, 'Easting', radar.Easting(clip:end-clip),...
+%     'Northing', radar.Northing(clip:end-clip), 'dist', radar.dist(clip:end-clip),...
+%     'depth', radar.depth, 'data_smooth', radar.data_smooth(:,clip:end-clip),...
+%     'peaks', radar.peaks(:,clip:end-clip), 'groups', radar.groups(:,clip:end-clip),...
+%     'likelihood', radar.likelihood(:,clip:end-clip), 'ages', radar.ages(:,clip:end-clip,:));
+% radar.SMB_yr =  radar0.SMB_yr(clip:end-clip);
+% radar.SMB = radar0.SMB(clip:end-clip);
 
 % output_path = fullfile(data_path, 'radar/SEAT_Traverses/results_data/gridSEAT10_4.mat');
 % save(output_path, '-struct', 'radar', '-v7.3')
@@ -209,27 +209,124 @@ xlabel('Calendar Year')
 ylabel('Annual accumulation (mm w.e.)')
 hold off
 
-% Compare linear trend in SMB for ith trace and nearest 3 cores (with
-% uncertainty)
-
-
-
 %% Diagnostic plots for bulk radar file
 
-% Mean SMB across entire radargram (mean of all realizations for each trace)
-figure
-scatter(radar.Easting, radar.Northing, 30, cellfun(@mean, SMB_mean), 'filled')
-hcb = colorbar;
-ylabel(hcb, 'Mean annual SMB (mm/a')
-colormap(cool)
+% Compare significance of differences between core ages and radar ages
+ages_idx = [1 min([length(core_near1.depth) length(radar.depth)])];
+rAGES = radar.ages(1:ages_idx(2),:,:);
+% cAGES = repmat(reshape(core_near1.ages, size(core_near1.ages,1), 1,...
+%     size(core_near1.ages,2)), [1 length(radar.dist), 1]);
 
-% Mean trend in SMB across entire radargram
-figure
-scatter(radar.Easting, radar.Northing, 30, ...
-    100*trend_mean./cellfun(@mean, SMB_mean), 'filled')
-hcb = colorbar;
-ylabel(hcb, 'Trend in SMB (% of mean per year)')
-colormap(cool)
+rAGES_mu = mean(rAGES,3);
+rAGES_SE = std(rAGES, [], 3)/sqrt(Ndraw);
+cAGES_mu = mean(core_near1.ages, 2);
+cAGES_SE = std(core_near1.ages,[],2)/sqrt(Ndraw);
+ages_CIup = (rAGES_mu-cAGES_mu) + 1.96*sqrt(rAGES_SE.^2 + cAGES_SE.^2);
+ages_CIlow = (rAGES_mu-cAGES_mu) - 1.96*sqrt(rAGES_SE.^2 + cAGES_SE.^2);
+ages_sig = ages_CIup.*ages_CIlow >=0;
+
+
+% ages_res = reshape(rAGES - cAGES, Rendpts_idx(2), size(cAGES,2)*size(cAGES,3));
+% ages_med = median(ages_res,2);
+% ages_CI = zeros(Rendpts_idx(2), 2);
+% ages_CI(:,1) = quantile(ages_res, 0.95, 2);
+% ages_CI(:,2) = quantile(ages_res, 0.05, 2);
+% figure
+% hold on
+% plot(radar.depth(1:Rendpts_idx(2)), ages_med, 'r', 'LineWidth', 2)
+% plot(radar.depth(1:Rendpts_idx(2)), ages_CI, 'b', 'LineWidth', 2)
+% rline = refline(0,0);
+% rline.LineStyle = ':';
+% rline.Color = 'k';
+% rline.LineWidth = 3;
+% xlabel('Depth (m)')
+% ylabel('Age bias')
+% legend('Median bias', '0.95 CI')
+% hold off
+% % figure('Position', [200 200 1200 500])
+% % boxplot(ages_res(1:50:end,1:75:end)', 0:0.02*50:radar.depth(Rendpts_idx(2)))
+% % hold on
+% % rline = refline(0,0);
+% % rline.LineStyle = ':';
+% % rline.Color = 'k';
+% % rline.LineWidth = 2;
+% % xlabel('Depth (m)')
+% % ylabel('Age bias')
+% % hold off
+
+
+% Compare significance of differences between core SMB and radar SMB
+yr_start = min([core_near1.SMB_yr(1) cellfun(@(x) x(1), radar.SMB_yr)]);
+yr_end = max([core_near1.SMB_yr(end) cellfun(@(x) x(end), radar.SMB_yr)]);
+yr_endpts = [yr_start yr_end];
+Ryr_idx = [find(radar.SMB_yr{i}==yr_endpts(1)) ...
+    find(radar.SMB_yr{i}==yr_endpts(2))];
+Cyr_idx = [find(core_near1.SMB_yr==yr_start) find(core_near1.SMB_yr==yr_end)];
+rSMB = cellfun(@(x) x(Ryr_idx(1):Ryr_idx(2),:), ...
+    radar.SMB, 'UniformOutput', 0);
+cSMB = core_near1.SMB(Cyr_idx(1):Cyr_idx(2),:);
+
+rSMB_mu = cell2mat(cellfun(@(x) mean(x,2), rSMB, 'UniformOutput', 0));
+rSMB_SE = cell2mat(cellfun(@(x) std(x,[],2)/sqrt(Ndraw), rSMB, 'UniformOutput', 0));
+cSMB_mu = mean(cSMB,2);
+cSMB_SE = std(cSMB,[],2)/sqrt(Ndraw);
+SMB_CIup = (rSMB_mu-cSMB_mu) + 1.96*sqrt(rSMB_SE.^2 + cSMB_SE.^2);
+SMB_CIlow = (rSMB_mu-cSMB_mu) - 1.96*sqrt(rSMB_SE.^2 + cSMB_SE.^2);
+SMB_sig = SMB_CIup.*SMB_CIlow >=0;
+
+
+% yr_start = min([core_near1.SMB_yr(1) cellfun(@(x) x(1), radar.SMB_yr)]);
+% yr_end = max([core_near1.SMB_yr(end) cellfun(@(x) x(end), radar.SMB_yr)]);
+% yr_endpts = [yr_start yr_end];
+% Rendpts_idx = [find(radar.SMB_yr{i}==yr_endpts(1)) ...
+%     find(radar.SMB_yr{i}==yr_endpts(2))];
+% Cendpts_idx = [find(core_near1.SMB_yr==yr_start) find(core_near1.SMB_yr==yr_end)];
+% rSMB = cellfun(@(x) x(Rendpts_idx(1):Rendpts_idx(2),:), ...
+%     radar.SMB, 'UniformOutput', 0);
+% SMB_res = cell2mat(cellfun(@(x) x - core_near1.SMB(Cendpts_idx(1):Cendpts_idx(2),:),...
+%     rSMB, 'UniformOutput', 0));
+% SMB_med = median(SMB_res,2);
+% SMB_CI = zeros(size(SMB_res,1), 2);
+% SMB_CI(:,1) = quantile(SMB_res, 0.95, 2);
+% SMB_CI(:,2) = quantile(SMB_res, 0.05, 2);
+% figure
+% hold on
+% plot(yr_start:-1:yr_end, SMB_med, 'r', 'LineWidth', 2)
+% plot(yr_start:-1:yr_end, SMB_CI, 'b', 'LineWidth', 2)
+% rline = refline(0,0);
+% rline.LineStyle = ':';
+% rline.Color = 'k';
+% rline.LineWidth = 3;
+% xlabel('Calendar year')
+% ylabel('SMB bias')
+% legend('Median bias', '0.95 CI')
+% hold off
+% % figure('Position', [200 200 1200 500])
+% % boxplot(SMB_res', yr_start:-1:yr_end)
+% % hold on
+% % rline = refline(0,0);
+% % rline.LineStyle = ':';
+% % rline.Color = 'k';
+% % rline.LineWidth = 2;
+% % xlabel('Calendar year')
+% % ylabel('SMB bias')
+% % hold off
+
+
+% Mean SMB across entire radargram (mean of all realizations for each trace)
+% figure
+% scatter(radar.Easting, radar.Northing, 30, cellfun(@mean, SMB_mean), 'filled')
+% hcb = colorbar;
+% ylabel(hcb, 'Mean annual SMB (mm/a')
+% colormap(cool)
+% 
+% % Mean trend in SMB across entire radargram
+% figure
+% scatter(radar.Easting, radar.Northing, 30, ...
+%     100*trend_mean./cellfun(@mean, SMB_mean), 'filled')
+% hcb = colorbar;
+% ylabel(hcb, 'Trend in SMB (% of mean per year)')
+% colormap(cool)
 
 % Mean SMB vs mean trend
 figure
