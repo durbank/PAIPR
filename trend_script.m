@@ -153,7 +153,7 @@ age_std = std(squeeze(radar.ages(:,i,:)), [], 2);
 
 % Plot full radargram
 yr_idx = logical([diff(floor(age_mean)); 0]);
-layer_idx = radar.likelihood(:,i) >= 0.10;
+layer_idx = radar.likelihood(:,i) >= 0.33;
 % depth = radar.depth(yr_idx);
 depth = radar.depth(layer_idx);
 col = i*ones(length(depth),1);
@@ -193,17 +193,30 @@ hold off
 % (along with estimated uncertainties for each)
 figure
 hold on
-h1 = plot(core_near1.SMB_yr, mean(core_near1.SMB, 2), 'b', 'LineWidth', 2);
-plot(core_near1.SMB_yr, mean(core_near1.SMB, 2) + 2*std(core_near1.SMB, [], 2), 'b--')
-plot(core_near1.SMB_yr, mean(core_near1.SMB, 2) - 2*std(core_near1.SMB, [], 2), 'b--')
+h1 = plot(core_near1.SMB_yr, core_near1.SMB(:,randi(100)), 'b--', 'LineWidth', 0.5);
+plot(core_near1.SMB_yr, core_near1.SMB(:,randi(100,1,15)), 'b--', 'LineWidth', 0.5);
+plot(core_near1.SMB_yr, median(movmean(core_near1.SMB,3),2), 'b', 'LineWidth', 2);
+h2 = plot(radar.SMB_yr{i}, radar.SMB{i}(:,randi(100)), 'r--', 'LineWidth', 0.5);
+plot(radar.SMB_yr{i}, radar.SMB{i}(:,randi(100,1,15)), 'r--', 'LineWidth', 0.5)
+plot(radar.SMB_yr{i}, median(movmean(radar.SMB{i}, 3), 2), 'r', 'LineWidth', 2)
+legend([h1 h2], 'Nearest firn core', 'Ku radar')
+xlabel('Calendar Year')
+ylabel('Annual accumulation (mm w.e.)')
+hold off
+
+figure
+hold on
+h1 = plot(core_near1.SMB_yr, median(core_near1.SMB, 2), 'b', 'LineWidth', 2);
+plot(core_near1.SMB_yr, median(core_near1.SMB, 2) + 2*std(core_near1.SMB, [], 2), 'b--')
+plot(core_near1.SMB_yr, median(core_near1.SMB, 2) - 2*std(core_near1.SMB, [], 2), 'b--')
 
 h2 = plot(core_near2.SMB_yr, mean(core_near2.SMB, 2), 'c', 'LineWidth', 2);
 plot(core_near2.SMB_yr, mean(core_near2.SMB, 2) + 2*std(core_near2.SMB, [], 2), 'c--')
 plot(core_near2.SMB_yr, mean(core_near2.SMB, 2) - 2*std(core_near2.SMB, [], 2), 'c--')
 
-h3 = plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2), 'r', 'LineWidth', 2);
-plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2) + 2*std(radar.SMB{i}, [], 2), 'r--')
-plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2) - 2*std(radar.SMB{i}, [], 2), 'r--')
+h3 = plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2), 'r', 'LineWidth', 2);
+plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2) + 2*std(radar.SMB{i}, [], 2), 'r--')
+plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2) - 2*std(radar.SMB{i}, [], 2), 'r--')
 legend([h1 h2 h3], 'Nearest firn core', '2nd nearest core', 'Ku radar')
 xlabel('Calendar Year')
 ylabel('Annual accumulation (mm w.e.)')
