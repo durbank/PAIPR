@@ -57,7 +57,7 @@ cores = load(core_file);
 
 % Path to full SEAT transect
 file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
-    'layers_ku_band_SEAT10_5.mat');
+    'layers_ku_band_SEAT10_4.mat');
 
 % file = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
 %     'layers_ku_band_gridSEAT10_4.mat');
@@ -204,8 +204,6 @@ plot(core_near2.SMB_yr, median(core_near2.SMB, 2) - std(core_near2.SMB, [], 2), 
 h3 = plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2), 'r', 'LineWidth', 2);
 plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2) + std(radar.SMB{i}, [], 2), 'r--')
 plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2) - std(radar.SMB{i}, [], 2), 'r--')
-plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2) + 2*std(radar.SMB{i}, [], 2), 'r--')
-plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2) - 2*std(radar.SMB{i}, [], 2), 'r--')
 legend([h1 h2 h3], 'Nearest firn core', '2nd nearest core', 'Ku radar')
 xlabel('Calendar Year')
 ylabel('Annual accumulation (mm w.e.)')
