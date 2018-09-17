@@ -153,7 +153,7 @@ age_std = std(squeeze(radar.ages(:,i,:)), [], 2);
 
 % Plot full radargram
 yr_idx = logical([diff(floor(age_med)); 0]);
-layer_idx = radar.likelihood(:,i) >= 0.10;
+layer_idx = radar.likelihood(:,i) >= 0.33;
 % depth = radar.depth(yr_idx);
 depth = radar.depth(layer_idx);
 col = i*ones(length(depth),1);
@@ -204,6 +204,8 @@ plot(core_near2.SMB_yr, median(core_near2.SMB, 2) - std(core_near2.SMB, [], 2), 
 h3 = plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2), 'r', 'LineWidth', 2);
 plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2) + std(radar.SMB{i}, [], 2), 'r--')
 plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2) - std(radar.SMB{i}, [], 2), 'r--')
+plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2) + 2*std(radar.SMB{i}, [], 2), 'r--')
+plot(radar.SMB_yr{i}, median(radar.SMB{i}, 2) - 2*std(radar.SMB{i}, [], 2), 'r--')
 legend([h1 h2 h3], 'Nearest firn core', '2nd nearest core', 'Ku radar')
 xlabel('Calendar Year')
 ylabel('Annual accumulation (mm w.e.)')

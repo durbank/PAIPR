@@ -155,7 +155,8 @@ Vq = interp2(X, Y, ss, Vx, Vy);
 
 % Apply 2D Gaussian smoothing filter to the layer gradients (to be used in
 % layer stream field)
-grad_smooth = imgaussfilt(Vq, 5);
+grad_smooth = Vq;
+% grad_smooth = imgaussfilt(Vq, 5);
 
 % Diagnostic plot
 ystart = 1:25:size(grad_smooth,1);
@@ -317,7 +318,12 @@ for i = 1:size(layer_peaks, 2)
         R = rand(Ndraw, 1) <= likelihood(j);
         yr_idx(j,:) = R;
     end
-    
+
+%     yr_idx = zeros(length(depths_i), Ndraw);
+%     for j = 1:length(depths_i)
+%         yr_idx(j,:) = likelihood(j) >= 0.5;
+%     end    
+
     for j = 1:Ndraw
         depths_j = [0; depths_i(logical(yr_idx(:,j)))];
         yrs_j = ([age_top yr_pick1:-1:yr_pick1-length(depths_j)+2])';
