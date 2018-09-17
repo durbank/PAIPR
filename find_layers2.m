@@ -116,7 +116,7 @@ while search_new == true
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-        threshold = 4;
+        threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
         % Get matrix index of nearest neighbors
@@ -208,7 +208,7 @@ while search_new == true
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-        threshold = 4;
+        threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
         % Get matrix index of nearest neighbors
