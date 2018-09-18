@@ -84,11 +84,20 @@ d = pathdist(lat, lon);
 % across an extended difference (greater than 500 m)
 break_idx = [1 find([0 diff(d)]>500) length(lat)];
 
+% Set the minimum length needed for radargram processing
 length_min = 30000;
+
+
 for i = 1:length(break_idx)-1
+    % Define distances along ith segment of data (definded by missing data
+    % sections
     dist_i = pathdist(lat(break_idx(i):break_idx(i+1)), ...
         lon(break_idx(i):break_idx(i+1)));
+    
+    % Find the index where minimum length is reached
     break_i = find(dist_i>length_min, 1);
+    
+    
 end
 
 
