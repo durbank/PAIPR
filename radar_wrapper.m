@@ -10,7 +10,8 @@ switch PC_true
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
-                data_path = 'E:/Research/Antarctica/Data/';
+                data_path = 'E:/WARP backup/Research/Antarctica/Data/';
+%                 data_path = 'E:/Research/Antarctica/Data/';
                 addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
                 
             case 'laptop'
@@ -71,7 +72,7 @@ file_idx = [0 cumsum(file_length)];
 
 % Replace data without valid location values (outside Arctic Circle) with
 % preceding valid location
-invld_idx = lat>=-65;
+invld_idx = lat>=-65 | lat<-90;
 lat(invld_idx) = NaN;
 lon(invld_idx) = NaN;
 lat = fillmissing(lat, 'previous');
@@ -82,22 +83,52 @@ d = pathdist(lat, lon);
 
 % Find indices where to break radargrams based on absence of data
 % across an extended difference (greater than 500 m)
-break_idx = [1 find([0 diff(d)]>500) length(lat)];
+break_idx = [0 find([0 diff(d)]>500) length(lat)];
 
 % Set the minimum length needed for radargram processing
 length_min = 30000;
-
+overlap = 5000;
 
 for i = 1:length(break_idx)-1
-    % Define distances along ith segment of data (definded by missing data
-    % sections
-    dist_i = pathdist(lat(break_idx(i):break_idx(i+1)), ...
-        lon(break_idx(i):break_idx(i+1)));
     
-    % Find the index where minimum length is reached
-    break_i = find(dist_i>length_min, 1);
+    lat_i = lat(break_idx(i)+1:break_idx(i+1));
+    lon_i = lon(break_idx(i)+1:break_idx(i+1));
+    dist_i = pathdist(lat_i, lon_i);
     
+    search = true;
+    j_start = break_idx(i)+1;
     
+    if dist_i(end) <= length_min
+        search = false;
+        j_end = length(dist_i);
+        [j_start j_end+break_idx(i)]
+%         coords{j} = [j_start j_end];
+        j = j+1;
+    end
+    
+    while search == true
+        
+        dist_j = dist_i - dist_i(j_start-break_idx(i));
+        j_end = find(dist_j >= length_min, 1);
+        
+        if dist_j(end)-dist_j(j_end) <= overlap
+            
+            search = false;
+            j_end = length(dist_j);
+        end
+        
+        if isempty(j_end)
+            
+            search = false;
+            j_start = find(dist_j>=dist_j(end)-length_min, 1) + break_idx(i);
+            j_end = length(dist_i);
+            
+        end
+        
+        [j_start j_end+break_idx(i)]
+        j_start = find(dist_j-dist_j(j_end)+overlap>=0, 1) + break_idx(i);
+        j = j+1;
+    end
 end
 
 
