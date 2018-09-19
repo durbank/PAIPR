@@ -47,20 +47,29 @@ Ndraw = 100;
 radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
     'SEAT10_4toSEAT10_6');
 
-% List all files matching 'wild' within radar directory (either '.mat' or
-% '.nc' files)
+% List all files matching 'wild' within radar directory
 wild = '*.mat';
 files = dir(fullfile(radar_dir, wild));
+
+% If directory has no '.mat' files, additionally check for '.nc' files
 if isempty(files)
     wild = '*.nc';
     files = dir(fullfile(radar_dir, wild));
 end
 
 %%
+
+% Preallocate arrays for continuous lat/lon positions for all data in
+% directory
 lat = [];
 lon = [];
+
+% Preallocate array for the radargram length (in data bins) for each 
+% data file in directory
 file_length = zeros(1, length(files));
 
+% Iteratively load lat/lon positions for each data file, and add
+% corresponding values to arrays
 for i = 1:length(files)
     lat_i = load(fullfile(files(i).folder, files(i).name), 'lat');
     lon_i = load(fullfile(files(i).folder, files(i).name), 'lon');
@@ -68,10 +77,14 @@ for i = 1:length(files)
     lat = [lat lat_i.lat];
     lon = [lon lon_i.lon];
 end
+
+% Calculate the cummulative radargram length (in data bins) for the data
+% files in directory
 file_idx = [0 cumsum(file_length)];
 
-% Replace data without valid location values (outside Arctic Circle) with
-% preceding valid location
+% Replace data without valid location values (outside Antarctic Circle) 
+% with nearest preceding valid location (these missing data will later be
+% removed in processing)
 invld_idx = lat>=-65 | lat<-90;
 lat(invld_idx) = NaN;
 lon(invld_idx) = NaN;
@@ -81,23 +94,30 @@ lon = fillmissing(lon, 'previous');
 % Calucate distance along traverse (in meters)
 d = pathdist(lat, lon);
 
-% Find indices where to break radargrams based on absence of data
-% across an extended difference (greater than 500 m)
+% Find indices to break radargrams based on absence of data across an
+% extended distance (greater than 500 m)
 break_idx = [0 find([0 diff(d)]>500) length(lat)];
 
-% Set the minimum length needed for radargram processing
+% Set the minimum length needed for radargram processing and radargram 
+% overlap interval (in meters)
 length_min = 30000;
 overlap = 5000;
 
+% For each continuous section of radargram (no significant breaks),
+% determine additional breakpoint indices based on the desired processing
+% length and degree of overlap
 for i = 1:length(break_idx)-1
     
+    % Determine lat/lon and distance along the ith section radar data
     lat_i = lat(break_idx(i)+1:break_idx(i+1));
     lon_i = lon(break_idx(i)+1:break_idx(i+1));
     dist_i = pathdist(lat_i, lon_i);
     
+    % Initialize while loop for current radar segment
     search = true;
     j_start = break_idx(i)+1;
     
+    % 
     if dist_i(end) <= length_min
         search = false;
         j_end = length(dist_i);
