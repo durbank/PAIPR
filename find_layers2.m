@@ -120,7 +120,7 @@ while search_new == true
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-        threshold = 2;
+        threshold = 3;
 %         threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
@@ -217,7 +217,7 @@ while search_new == true
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-        threshold = 2;
+        threshold = 3;
 %         threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
@@ -291,8 +291,8 @@ while search_new == true
 %             (data_local(:,2)-col(j)).^2 + (0.5*(mag_local - mag_j)).^2);
         
         % Set distance threshold
-        threshold = 2.5;
-%         threshold = 3;
+        threshold = 3;
+%         threshold = 2.5;
         
         % Assign all peaks within tolerance to the current layer group and
         % remove those peaks from the pool of available peaks to search

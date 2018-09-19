@@ -10,7 +10,8 @@ switch PC_true
 %         computer = input('Current PC: ');
         switch computer
             case 'work'
-                data_path = 'E:/Research/Antarctica/Data/';
+                data_path = 'E:/WARP backup/Research/Antarctica/Data/';
+%                 data_path = 'E:/Research/Antarctica/Data/';
                 addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
                 
             case 'laptop'
@@ -93,7 +94,7 @@ file = fullfile(data_path, 'radar/SEAT_Traverses/core-site_tests/', ...
 %     'likelihood', radar.likelihood(:,clip:end-clip), 'ages', radar.ages(:,clip:end-clip,:));
 % radar.SMB_yr =  radar0.SMB_yr(clip:end-clip);
 % radar.SMB = radar0.SMB(clip:end-clip);
-
+% 
 % output_path = fullfile(data_path, 'radar/SEAT_Traverses/results_data/gridSEAT10_4.mat');
 % save(output_path, '-struct', 'radar', '-v7.3')
 
@@ -211,19 +212,19 @@ hold off
 
 %% Diagnostic plots for bulk radar file
 
-% Compare significance of differences between core ages and radar ages
-ages_idx = [1 min([length(core_near1.depth) length(radar.depth)])];
-rAGES = radar.ages(1:ages_idx(2),:,:);
-% cAGES = repmat(reshape(core_near1.ages, size(core_near1.ages,1), 1,...
-%     size(core_near1.ages,2)), [1 length(radar.dist), 1]);
-
-rAGES_mu = mean(rAGES,3);
-rAGES_SE = std(rAGES, [], 3)/sqrt(Ndraw);
-cAGES_mu = mean(core_near1.ages, 2);
-cAGES_SE = std(core_near1.ages,[],2)/sqrt(Ndraw);
-ages_CIup = (rAGES_mu-cAGES_mu) + 1.96*sqrt(rAGES_SE.^2 + cAGES_SE.^2);
-ages_CIlow = (rAGES_mu-cAGES_mu) - 1.96*sqrt(rAGES_SE.^2 + cAGES_SE.^2);
-ages_sig = ages_CIup.*ages_CIlow >=0;
+% % Compare significance of differences between core ages and radar ages
+% ages_idx = [1 min([length(core_near1.depth) length(radar.depth)])];
+% rAGES = radar.ages(1:ages_idx(2),:,:);
+% % cAGES = repmat(reshape(core_near1.ages, size(core_near1.ages,1), 1,...
+% %     size(core_near1.ages,2)), [1 length(radar.dist), 1]);
+% 
+% rAGES_mu = mean(rAGES,3);
+% rAGES_SE = std(rAGES, [], 3)/sqrt(Ndraw);
+% cAGES_mu = mean(core_near1.ages, 2);
+% cAGES_SE = std(core_near1.ages,[],2)/sqrt(Ndraw);
+% ages_CIup = (rAGES_mu-cAGES_mu) + 1.96*sqrt(rAGES_SE.^2 + cAGES_SE.^2);
+% ages_CIlow = (rAGES_mu-cAGES_mu) - 1.96*sqrt(rAGES_SE.^2 + cAGES_SE.^2);
+% ages_sig = ages_CIup.*ages_CIlow >=0;
 
 
 % ages_res = reshape(rAGES - cAGES, Rendpts_idx(2), size(cAGES,2)*size(cAGES,3));
@@ -255,24 +256,24 @@ ages_sig = ages_CIup.*ages_CIlow >=0;
 % % hold off
 
 
-% Compare significance of differences between core SMB and radar SMB
-yr_start = min([core_near1.SMB_yr(1) cellfun(@(x) x(1), radar.SMB_yr)]);
-yr_end = max([core_near1.SMB_yr(end) cellfun(@(x) x(end), radar.SMB_yr)]);
-yr_endpts = [yr_start yr_end];
-Ryr_idx = [find(radar.SMB_yr{i}==yr_endpts(1)) ...
-    find(radar.SMB_yr{i}==yr_endpts(2))];
-Cyr_idx = [find(core_near1.SMB_yr==yr_start) find(core_near1.SMB_yr==yr_end)];
-rSMB = cellfun(@(x) x(Ryr_idx(1):Ryr_idx(2),:), ...
-    radar.SMB, 'UniformOutput', 0);
-cSMB = core_near1.SMB(Cyr_idx(1):Cyr_idx(2),:);
-
-rSMB_mu = cell2mat(cellfun(@(x) mean(x,2), rSMB, 'UniformOutput', 0));
-rSMB_SE = cell2mat(cellfun(@(x) std(x,[],2)/sqrt(Ndraw), rSMB, 'UniformOutput', 0));
-cSMB_mu = mean(cSMB,2);
-cSMB_SE = std(cSMB,[],2)/sqrt(Ndraw);
-SMB_CIup = (rSMB_mu-cSMB_mu) + 1.96*sqrt(rSMB_SE.^2 + cSMB_SE.^2);
-SMB_CIlow = (rSMB_mu-cSMB_mu) - 1.96*sqrt(rSMB_SE.^2 + cSMB_SE.^2);
-SMB_sig = SMB_CIup.*SMB_CIlow >=0;
+% % Compare significance of differences between core SMB and radar SMB
+% yr_start = min([core_near1.SMB_yr(1) cellfun(@(x) x(1), radar.SMB_yr)]);
+% yr_end = max([core_near1.SMB_yr(end) cellfun(@(x) x(end), radar.SMB_yr)]);
+% yr_endpts = [yr_start yr_end];
+% Ryr_idx = [find(radar.SMB_yr{i}==yr_endpts(1)) ...
+%     find(radar.SMB_yr{i}==yr_endpts(2))];
+% Cyr_idx = [find(core_near1.SMB_yr==yr_start) find(core_near1.SMB_yr==yr_end)];
+% rSMB = cellfun(@(x) x(Ryr_idx(1):Ryr_idx(2),:), ...
+%     radar.SMB, 'UniformOutput', 0);
+% cSMB = core_near1.SMB(Cyr_idx(1):Cyr_idx(2),:);
+% 
+% rSMB_mu = cell2mat(cellfun(@(x) mean(x,2), rSMB, 'UniformOutput', 0));
+% rSMB_SE = cell2mat(cellfun(@(x) std(x,[],2)/sqrt(Ndraw), rSMB, 'UniformOutput', 0));
+% cSMB_mu = mean(cSMB,2);
+% cSMB_SE = std(cSMB,[],2)/sqrt(Ndraw);
+% SMB_CIup = (rSMB_mu-cSMB_mu) + 1.96*sqrt(rSMB_SE.^2 + cSMB_SE.^2);
+% SMB_CIlow = (rSMB_mu-cSMB_mu) - 1.96*sqrt(rSMB_SE.^2 + cSMB_SE.^2);
+% SMB_sig = SMB_CIup.*SMB_CIlow >=0;
 
 
 % yr_start = min([core_near1.SMB_yr(1) cellfun(@(x) x(1), radar.SMB_yr)]);
