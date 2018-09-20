@@ -117,7 +117,9 @@ for i = 1:length(break_idx)-1
     search = true;
     j_start = break_idx(i)+1;
     
-    % 
+    % If the entire radar segment is smaller than the desired minimum
+    % length, add breakpoints to process a radargram over the entire
+    % segment
     if dist_i(end) <= length_min
         search = false;
         j_end = length(dist_i);
@@ -126,26 +128,47 @@ for i = 1:length(break_idx)-1
         j = j+1;
     end
     
+    % Iteratively find breakpoint indices with desired radargram length and
+    % overlap within ith continuous data segment
     while search == true
         
+        % Calculate distances relative to current starting breakpoint
         dist_j = dist_i - dist_i(j_start-break_idx(i));
+        
+        % Find ending breakpoint index (relative to distances along current
+        % data segment) 
         j_end = find(dist_j >= length_min, 1);
         
+        % Check if only minor additional data (less than the overlap
+        % distance) remains in current data segment
         if dist_j(end)-dist_j(j_end) <= overlap
             
-            search = false;
+            % If only minor data remains, add remainder to current
+            % radargram breakpoints and end search for additional
+            % breakpoints within ith data segment
             j_end = length(dist_j);
+            search = false;
         end
         
+        % Check if remaining data is shorter than minimum desired length
         if isempty(j_end)
             
-            search = false;
+            % If remainder is too short, set starting breakpoint such that
+            % desired length is achieved
             j_start = find(dist_j>=dist_j(end)-length_min, 1) + break_idx(i);
-            j_end = length(dist_i);
             
+            % Set ending breakpoint to end of current data segment, and end
+            % search for addtional breakpoints
+            j_end = length(dist_i);
+            search = false;
         end
         
+        % Export breakpoints to preallocated array (use absolute indices,
+        % not relative to current data segment)
         [j_start j_end+break_idx(i)]
+        
+        % Set starting breakpoint position for next while iteration based
+        % on the ending breakpoint and overlap distance
         j_start = find(dist_j-dist_j(j_end)+overlap>=0, 1) + break_idx(i);
         j = j+1;
     end
