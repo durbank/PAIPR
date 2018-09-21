@@ -10,8 +10,7 @@ switch PC_true
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
-                data_path = 'E:/WARP backup/Research/Antarctica/Data/';
-%                 data_path = 'E:/Research/Antarctica/Data/';
+                data_path = 'E:/Research/Antarctica/Data/';
                 addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
                 
             case 'laptop'
@@ -103,6 +102,9 @@ break_idx = [0 find([0 diff(d)]>500) length(lat)];
 length_min = 30000;
 overlap = 5000;
 
+breaks_new = cell(1, length(break_idx)-1);
+j = 1;
+
 % For each continuous section of radargram (no significant breaks),
 % determine additional breakpoint indices based on the desired processing
 % length and degree of overlap
@@ -123,8 +125,7 @@ for i = 1:length(break_idx)-1
     if dist_i(end) <= length_min
         search = false;
         j_end = length(dist_i);
-        [j_start j_end+break_idx(i)]
-%         coords{j} = [j_start j_end];
+        breaks_new{j} = [j_start j_end+break_idx(i)];
         j = j+1;
     end
     
@@ -165,13 +166,21 @@ for i = 1:length(break_idx)-1
         
         % Export breakpoints to preallocated array (use absolute indices,
         % not relative to current data segment)
-        [j_start j_end+break_idx(i)]
+        breaks_new{j} = [j_start j_end+break_idx(i)];
         
         % Set starting breakpoint position for next while iteration based
         % on the ending breakpoint and overlap distance
         j_start = find(dist_j-dist_j(j_end)+overlap>=0, 1) + break_idx(i);
         j = j+1;
     end
+end
+
+%%
+
+files_i = zeros(length(breaks_new), 2);
+for i = 1:length(breaks_new)
+    files_i(i,1) = find(file_idx+1<=breaks_new{i}(1), 1, 'last');
+    files_i(i,2) = find(file_idx>=breaks_new{i}(2), 1);
 end
 
 
