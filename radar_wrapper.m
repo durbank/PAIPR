@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'work';
+        computer = 'laptop';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -63,7 +63,7 @@ end
 lat = [];
 lon = [];
 
-% Preallocate array for the radargram length (in data bins) for each 
+% Preallocate array for the radargram length (in data bins) for each
 % data file in directory
 file_length = zeros(1, length(files));
 
@@ -81,7 +81,7 @@ end
 % files in directory
 file_idx = [0 cumsum(file_length)];
 
-% Replace data without valid location values (outside Antarctic Circle) 
+% Replace data without valid location values (outside Antarctic Circle)
 % with nearest preceding valid location (these missing data will later be
 % removed in processing)
 invld_idx = lat>=-65 | lat<-90;
@@ -97,9 +97,9 @@ d = pathdist(lat, lon);
 % extended distance (greater than 500 m)
 break_idx = [0 find([0 diff(d)]>500) length(lat)];
 
-% Set the minimum length needed for radargram processing and radargram 
+% Set the minimum length needed for radargram processing and radargram
 % overlap interval (in meters)
-length_min = 30000;
+length_min = 25000;
 overlap = 5000;
 
 breaks_new = cell(1, length(break_idx)-1);
@@ -137,7 +137,7 @@ for i = 1:length(break_idx)-1
         dist_j = dist_i - dist_i(j_start-break_idx(i));
         
         % Find ending breakpoint index (relative to distances along current
-        % data segment) 
+        % data segment)
         j_end = find(dist_j >= length_min, 1);
         
         % Check if only minor additional data (less than the overlap
@@ -176,6 +176,8 @@ for i = 1:length(break_idx)-1
 end
 
 %%
+% ISSUES WITH THIS SECTION!!! DOES NOT ACCURATELY SELECT STARTING FILE
+% AFTER BREAK FROM MISSING DATA!
 
 files_i = zeros(length(breaks_new), 2);
 for i = 1:length(breaks_new)
@@ -183,4 +185,55 @@ for i = 1:length(breaks_new)
     files_i(i,2) = find(file_idx>=breaks_new{i}(2), 1);
 end
 
+%%
 
+for i = 1:size(files_i,1)
+    
+    % Initialize for loop with first file in directory
+    data_struct = radar_clean(fullfile(files(files_i(i,1)).folder, ...
+        files(files_i(i,1)).name));
+    data2cells = struct2cell(data_struct);
+    
+    fld_names = fieldnames(data_struct);
+    fld_wanted = {'lat', 'lon', 'elev', 'data_out', 'time_trace', 'TWTT', 'dist', ...
+        'Easting', 'Northing', 'collect_date'};
+    fld_include = logical(zeros(length(fld_names),1));
+    for j = 1:length(fld_include)
+        
+        fld_include(j) = any(cellfun(@(x) strcmpi(fld_names{j}, x), fld_wanted));
+    end
+    
+    data_cells = data2cells(fld_include);
+    
+    % Concatenate adjacent radar files
+    for j = files_i(i,1)+1:files_i(i,2)
+        data_full = struct2cell(radar_clean(fullfile(files(j).folder, ...
+            files(j).name)));
+        data_j = data_full(fld_include);
+        data_cells = cellfun(@horzcat, data_cells, data_j, 'UniformOutput', 0);
+    end
+    
+    % Average values for TWTT, time_trace, and collect_date
+    date_idx = cellfun(@(x) strcmpi('collect_date', x), fld_names(fld_include));
+    data_cells{date_idx} = median(data_cells{date_idx}, 2);
+
+    time_idx = cellfun(@(x) strcmpi('time_trace', x), fld_names(fld_include));
+    data_cells{time_idx} = median(data_cells{time_idx}, 2);
+    
+    TWTT_idx = cellfun(@(x) strcmpi('TWTT', x), fld_names(fld_include));
+    try
+        data_cells{TWTT_idx} = median(data_cells{TWTT_idx}, 2);
+    catch
+        disp('Warning: missing TWTT data')
+    end
+    
+    radar_tmp = cell2struct(data_cells, fld_names(fld_include), 1);
+    radar_tmp.dist = pathdist(radar_tmp.lat, radar_tmp.lon);
+    
+    tic
+    [radar_tmp] = radar_RT(radar_tmp, cores, Ndraw);
+    [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
+    toc
+    
+    
+end
