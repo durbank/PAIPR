@@ -80,7 +80,6 @@ end
 % Calculate the cummulative radargram length (in data bins) for the data
 % files in directory
 file_end_idx = cumsum(file_length);
-% file_idx = [0 cumsum(file_length)];
 
 % Replace data without valid location values (outside Antarctic Circle)
 % with nearest preceding valid location (these missing data will later be
@@ -97,13 +96,13 @@ d = pathdist(lat, lon);
 % Find indices to break radargrams based on absence of data across an
 % extended distance (greater than 500 m)
 break_idx = [0 find(diff(d)>500) length(lat)];
-% break_idx = [0 find([0 diff(d)]>500) length(lat)];
 
 % Set the minimum length needed for radargram processing and radargram
 % overlap interval (in meters)
 length_min = 30000;
 overlap = 5000;
 
+% Preallocate and initialize variables for breakpoint calculation
 breaks_new = cell(1, length(break_idx)-1);
 j = 1;
 
@@ -179,11 +178,25 @@ end
 
 %%
 
+% Preallocate arrays for file indices and trace position indices to include
+% in each continuous radargram
 files_i = zeros(length(breaks_new), 2);
 position_i = zeros(length(breaks_new), 2);
+
+% Loop through each set of breakpoints to determine which files and traces
+% to include in each continuous radargram
 for i = 1:length(breaks_new)
+    
+    % Find the file index at start of ith continuous radargram using the
+    % previously calculated breakpoint indices
     files_i(i,1) = find(file_end_idx>=breaks_new{i}(1), 1);
+    
+    % Find the file index at the end of ith continuous radargram using the
+    % previously calculated breakpoint indices
     files_i(i,2) = find(file_end_idx>=breaks_new{i}(2), 1);
+    
+    % Find the trace indices within the first and last file corresponding
+    % to the intra-file breakpoints of the ith continuous radargram
     position_i(i,1) = breaks_new{i}(1) - ...
         (file_end_idx(files_i(i,1)) - file_end_idx(1));
     position_i(i,2) = breaks_new{i}(2) - (file_end_idx(files_i(i,2)-1));
@@ -201,42 +214,65 @@ for i = 1:size(files_i,1)
     % Initialize for loop with first file in directory
     data_struct = radar_clean(fullfile(files(files_i(i,1)).folder, ...
         files(files_i(i,1)).name));
+    
+    % Convert first imported file to cell array
     data2cells = struct2cell(data_struct);
     
+    % Get field names in data structure
     fld_names = fieldnames(data_struct);
-    fld_wanted = {'lat', 'lon', 'elev', 'data_out', 'time_trace', 'TWTT', 'dist', ...
-        'Easting', 'Northing', 'collect_date'};
+    
+    % List of desired field names to search for and include in radar
+    % processing
+    fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', 'Northing',...
+        'dist', 'data_out', 'arr_layers', 'time_trace', 'TWTT'};
+    
+    % Preallocate logical array for field names to include
     fld_include = logical(zeros(length(fld_names),1));
+    
+    % Find the indices of field names in the data structure which match the
+    % desired field names to include in processing
     for j = 1:length(fld_include)
-        
         fld_include(j) = any(cellfun(@(x) strcmpi(fld_names{j}, x), fld_wanted));
     end
-    
     data_cells = data2cells(fld_include);
     
-    % Concatenate adjacent radar files
+    % Concatenate adjacent radar files within the current radargram
     for j = files_i(i,1)+1:files_i(i,2)
+        
+        % Import and clean each radar file
         data_full = struct2cell(radar_clean(fullfile(files(j).folder, ...
             files(j).name)));
+        
+        % Select only the desired fields within current cells
         data_j = data_full(fld_include);
+        
+        % Add data from cells to the overall radargram data cells
         data_cells = cellfun(@horzcat, data_cells, data_j, 'UniformOutput', 0);
     end
     
-    % Average values for TWTT, time_trace, and collect_date
+    % Average values for collect_date for ith continuous radargram
     date_idx = cellfun(@(x) strcmpi('collect_date', x), fld_names(fld_include));
     data_cells{date_idx} = median(data_cells{date_idx}, 2);
-
+    
+    % Average values for time_trace for ith continuous radargram
     time_idx = cellfun(@(x) strcmpi('time_trace', x), fld_names(fld_include));
     data_cells{time_idx} = median(data_cells{time_idx}, 2);
     
+    % Average values for TWTT for ith continuous radargram (should only
+    % exist at this point for OIB data)
     TWTT_idx = cellfun(@(x) strcmpi('TWTT', x), fld_names(fld_include));
     try
         data_cells{TWTT_idx} = median(data_cells{TWTT_idx}, 2);
     catch
-        disp('Warning: missing TWTT data')
+        disp('Warning: missing TWTT data; data should be SEAT radar')
     end
     
+    % Convert concatenated cell arrays back to structure with desired
+    % fieldnames
     radar_tmp = cell2struct(data_cells, fld_names(fld_include), 1);
+    
+    % Recalculate continuous path distance along the concatenated ith
+    % radargram
     radar_tmp.dist = pathdist(radar_tmp.lat, radar_tmp.lon);
     
     tic
