@@ -1,17 +1,7 @@
-function [radar] = radar_RT(radar_file, cores, Ndraw)
+function [radar] = radar_RT(radar_struct, cores, Ndraw)
 
-% Determine whether data is OIB or SEAT
-radar_type = isstruct(radar_file);
-
-switch radar_type
-    case false
-        % Conversion to depth
-        [radar] = radar_depth(radar_file, cores);
-        
-    case true
-        % Conversion to depth
-        [radar] = OIB_depth(radar_file, cores);
-end
+% Convert to depth
+[radar] = radar_depth(radar_struct, cores);
 
 % Find the mean response with depth in the radar data attributes across a
 % given horizontal resolution (in meters)
@@ -87,8 +77,8 @@ clearvars -except file cores Ndraw radar horz_res core_res
 
 %% Iterative radon transforms
 
-% Define depth/distance intervals over which to perform radon transforms,
-% and calculate data matrix window size
+% Define depth/distance intervals over which to perform radon transforms
+% (in meters), and calculate data matrix window size (in data bins)
 depth_interval = 4;
 dist_interval = 250;
 depth_sz = round(0.5*depth_interval/core_res);
@@ -157,21 +147,21 @@ Vq = interp2(X, Y, ss, Vx, Vy);
 % layer stream field)
 grad_smooth = imgaussfilt(Vq, 5);
 
-% % Diagnostic plot
-% ystart = 1:25:size(grad_smooth,1);
-% xstart = ones(1, length(ystart));
-% XY_raw = stream2(ones(size(grad_smooth)), grad_smooth, xstart, ystart, 1);
-% XY = XY_raw;
-% for k = 1:length(XY)
-%     XY{k}(:,1) = XY_raw{k}(:,1)*mean(diff(radar.dist));
-%     XY{k}(:,2) = XY_raw{k}(:,2)*.02;
-% end
-% figure
-% imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
-% hold on
-% hlines = streamline(XY);
-% set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
-% hold off
+% Diagnostic plot
+ystart = 1:25:size(grad_smooth,1);
+xstart = ones(1, length(ystart));
+XY_raw = stream2(ones(size(grad_smooth)), grad_smooth, xstart, ystart, 1);
+XY = XY_raw;
+for k = 1:length(XY)
+    XY{k}(:,1) = XY_raw{k}(:,1)*mean(diff(radar.dist));
+    XY{k}(:,2) = XY_raw{k}(:,2)*.02;
+end
+figure
+imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
+hold on
+hlines = streamline(XY);
+set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
+hold off
 
 %% Find depth, width, and prominence of peaks for each radar trace
 
