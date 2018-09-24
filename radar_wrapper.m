@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'laptop';
+        computer = 'work';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -79,7 +79,8 @@ end
 
 % Calculate the cummulative radargram length (in data bins) for the data
 % files in directory
-file_idx = [0 cumsum(file_length)];
+file_end_idx = cumsum(file_length);
+% file_idx = [0 cumsum(file_length)];
 
 % Replace data without valid location values (outside Antarctic Circle)
 % with nearest preceding valid location (these missing data will later be
@@ -95,11 +96,12 @@ d = pathdist(lat, lon);
 
 % Find indices to break radargrams based on absence of data across an
 % extended distance (greater than 500 m)
-break_idx = [0 find([0 diff(d)]>500) length(lat)];
+break_idx = [0 find(diff(d)>500) length(lat)];
+% break_idx = [0 find([0 diff(d)]>500) length(lat)];
 
 % Set the minimum length needed for radargram processing and radargram
 % overlap interval (in meters)
-length_min = 25000;
+length_min = 30000;
 overlap = 5000;
 
 breaks_new = cell(1, length(break_idx)-1);
@@ -176,13 +178,20 @@ for i = 1:length(break_idx)-1
 end
 
 %%
-% ISSUES WITH THIS SECTION!!! DOES NOT ACCURATELY SELECT STARTING FILE
-% AFTER BREAK FROM MISSING DATA!
 
 files_i = zeros(length(breaks_new), 2);
+position_i = zeros(length(breaks_new), 2);
 for i = 1:length(breaks_new)
-    files_i(i,1) = find(file_idx+1<=breaks_new{i}(1), 1, 'last');
-    files_i(i,2) = find(file_idx>=breaks_new{i}(2), 1);
+    files_i(i,1) = find(file_end_idx>=breaks_new{i}(1), 1);
+    files_i(i,2) = find(file_end_idx>=breaks_new{i}(2), 1);
+    position_i(i,1) = breaks_new{i}(1) - ...
+        (file_end_idx(files_i(i,1)) - file_end_idx(1));
+    position_i(i,2) = breaks_new{i}(2) - (file_end_idx(files_i(i,2)-1));
+    
+%     check1_idx = file_end_idx(files_i(i,1)) - file_end_idx(1) + position_i(i,1)
+%     d(check1_idx)
+%     check2_idx = file_end_idx(files_i(i,2)-1) + position_i(i,2)
+%     d(check2_idx)
 end
 
 %%
