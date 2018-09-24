@@ -77,7 +77,12 @@ mdata.data_out = fillmissing(mdata.data_out, 'pchip');
 [mdata.Easting, mdata.Northing] = ll2ps(mdata.lat, mdata.lon);
 
 % Calucate path distance along traverse (in meters)
-mdata.dist = pathdist(mdata.lat, mdata.lon);
+try
+    mdata.dist = pathdist(mdata.lat, mdata.lon);
+catch
+    mdata.dist = [];
+    disp('Warning: error with calculating pathdist (Line 81 of import_radar.m)')
+end
 
 % Check to see if collection data is already present. If it is not, create
 % collect_date field
