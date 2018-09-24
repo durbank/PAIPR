@@ -112,11 +112,16 @@ while search_new == true
         % the estimated layer streamline
         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
             (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
-            0.5*(repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
+            (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
+%         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
+%             (0.5*width_i)).^2 + ...
+%             ((data_local(:,2)-(data_stream(:,2))')./(50/horz_res)).^2 + ...
+%             repmat((mag_local-mag_i)./2, 1, size(data_stream,1)).^2);
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-        threshold = 4;
+        threshold = 3;
+%         threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
         % Get matrix index of nearest neighbors
@@ -204,11 +209,16 @@ while search_new == true
         % the estimated layer streamline
         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
             (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
-            0.5*(repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
+            (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
+%         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
+%             (0.5*width_i)).^2 + ...
+%             ((data_local(:,2)-(data_stream(:,2))')./(50/horz_res)).^2 + ...
+%             repmat((mag_local-mag_i)./2, 1, size(data_stream,1)).^2);
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-        threshold = 4;
+        threshold = 3;
+%         threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
         % Get matrix index of nearest neighbors
@@ -274,11 +284,15 @@ while search_new == true
         
         % Calculate distance between jth layer member and peaks within the
         % local search window
-        dist_j = sqrt(((data_local(:,1)-row_mean(j))/(0.5*width_j)).^2 + ...
-            (data_local(:,2)-col(j)).^2 + (0.5*(mag_local - mag_j)).^2);
+        dist_j = sqrt(((data_local(:,1)-row_mean(j))./(0.5*width_j)).^2 + ...
+            ((data_local(:,2)-col(j))./(50/horz_res)).^2 + ...
+            (0.5*(mag_local-mag_j)).^2);
+%         dist_j = sqrt(((data_local(:,1)-row_mean(j))/(0.5*width_j)).^2 + ...
+%             (data_local(:,2)-col(j)).^2 + (0.5*(mag_local - mag_j)).^2);
         
         % Set distance threshold
         threshold = 3;
+%         threshold = 2.5;
         
         % Assign all peaks within tolerance to the current layer group and
         % remove those peaks from the pool of available peaks to search
@@ -311,6 +325,7 @@ while search_new == true
 end
 
 % Remove empty cells and layers shorter than 250 m
-layers = layers(cellfun(@(x) length(x) >= round(250/horz_res), layers));
+% layers = layers(cellfun(@(x) length(x) >= round(250/horz_res), layers));
+layers = layers(cellfun(@(x) length(x) >= round(500/horz_res), layers));
 
 end
