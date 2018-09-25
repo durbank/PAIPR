@@ -195,13 +195,14 @@ for i = 1:size(files_i,1)
     switch source
         case 'SEAT'
             % Initialize for loop with first file in directory
-            data_struct = import_radar(fullfile(files(files_i(i,1)).folder, ...
-                files(files_i(i,1)).name), position_i(i,1));
+            data_struct = orderfields(import_radar(fullfile(...
+                files(files_i(i,1)).folder, files(files_i(i,1)).name), ...
+                position_i(i,1)));
         case 'OIB'
             % Initialize for loop with first file in directory
             OIB_data = OIB_convert(fullfile(files(files_i(i,1)).folder, ...
                 files(files_i(i,1)).name));
-            data_struct = import_radar(OIB_data, position_i(i,1));
+            data_struct = orderfields(import_radar(OIB_data, position_i(i,1)));
     end
     
     % Convert first imported file to cell array
@@ -212,8 +213,10 @@ for i = 1:size(files_i,1)
     
     % List of desired field names to search for and include in radar
     % processing
-    fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', 'Northing',...
-        'dist', 'data_out', 'arr_layers', 'time_trace'};
+    fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', ...
+        'Northing', 'dist', 'data_out', 'time_trace'};
+%     fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', 'Northing',...
+%         'dist', 'data_out', 'arr_layers', 'time_trace'};
     
     % Preallocate logical array for field names to include
     fld_include = zeros(length(fld_names),1);
@@ -231,13 +234,13 @@ for i = 1:size(files_i,1)
         switch source
             case 'SEAT'
                 % Import and clean each radar file
-                data_full = struct2cell(import_radar(fullfile(files(j).folder, ...
-                    files(j).name)));
+                data_full = struct2cell(orderfields(import_radar(...
+                    fullfile(files(j).folder, files(j).name))));
             case 'OIB'
                 % Import and clean each radar file
                 OIB_data = OIB_convert(fullfile(files(j).folder, ...
                     files(j).name));
-                data_full = struct2cell(import_radar(OIB_data));
+                data_full = struct2cell(orderfields(import_radar(OIB_data)));
         end
         
         % Select only the desired fields within current cells
@@ -251,15 +254,15 @@ for i = 1:size(files_i,1)
     switch source
         case 'SEAT'
             % Import and clean each radar file
-            data_full = struct2cell(import_radar(fullfile(...
+            data_full = struct2cell(orderfields(import_radar(fullfile(...
                 files(files_i(i,2)).folder, files(files_i(i,2)).name), ...
-                [], position_i(i,2)));
+                [], position_i(i,2))));
         case 'OIB'
             % Import and clean each radar file
             OIB_data = OIB_convert(fullfile(files(files_i(i,2)).folder, ...
                 files(files_i(i,2)).name));
-            data_full = struct2cell(import_radar(OIB_data, ...
-                [], position_i(i,2)));
+            data_full = struct2cell(orderfields(import_radar(OIB_data, ...
+                [], position_i(i,2))));
     end
     
     % Select only the desired fields within the final cell array in the ith
