@@ -6,25 +6,6 @@ function [radar] = radar_depth(radar, cores)
 % Firn core data must be provided in the proper format (i.e. as outputted
 % by "import_cores.m"
 
-% % Determine whether the radar dataset is from OIB or from SEAT records
-% if contains(radar_file, '.nc')
-%     source = 'OIB';
-% elseif contains(radar_file, '.mat')
-%     source = 'SEAT';
-% else
-%     disp('Check radar_file source: unrecognized format')
-% end
-% 
-% % Import and format data according to whether it is OIB or SEAT
-% switch source
-%     case 'OIB'
-%         % Import, clean, and reformat radar data
-%         radar = OIB_import(radar_file);
-%     case 'SEAT'
-%         % Import, clean, and reformat radar data
-%         radar = radar_clean(radar_file);
-% end
-
 % Indices for composite core locations (every 10 km along echogram)
 comp_idx = 1:round(10000/mean(diff(radar.dist))):size(radar.data_out, 2);
 rho_coeff = zeros(3, length(comp_idx));
