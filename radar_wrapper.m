@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'work';
+        computer = 'laptop';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -51,11 +51,40 @@ radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
 %%
 
 radar_ALL = radar_format(radar_dir);
+overlap = 10000;
+horz_res = 25;
+output_dir = 'SMB_results';
 
 for i = 1:length(radar_ALL)
     
     [radar_tmp] = radar_RT(radar_ALL(i).segment, cores, Ndraw);
     [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
+    
+    clip = round(0.5*overlap/horz_res);
+    
+    fld_nm = fieldnames(radar_tmp);
+    fld_want = {'collect_date', 'Easting', 'Northing', 'dist', 'depth', ...
+        'data_smooth', 'peaks', 'groups', 'ages', 'SMB_yr', 'SMB'};
+    
+    radar = struct('collect_date', radar_tmp.collect_date, ...
+        'Easting', radar_tmp.Easting(clip:end-clip),...
+        'Northing', radar_tmp.Northing(clip:end-clip), ...
+        'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
+        'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
+        'peaks', radar_tmp.peaks(:,clip:end-clip), ...
+        'groups', radar_tmp.groups(:,clip:end-clip),...
+        'likelihood', radar_tmp.likelihood(:,clip:end-clip), ...
+        'ages', radar_tmp.ages(:,clip:end-clip,:));
+    radar.dist = radar.dist - radar.dist(1);
+    if isfield(radar_tmp, 'elev')
+        radar.elev = radar_tmp.elev(clip:end-clip);
+    end
+    radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
+    radar.SMB = radar_tmp.SMB(clip:end-clip);
+    
+    filename = sprintf('%s%d%s','radar_out',i, '.mat');
+    output = fullfile(radar_dir, output_dir, filename);
+    save(output, '-struct', 'radar', '-v7.3')
     
 end
 
