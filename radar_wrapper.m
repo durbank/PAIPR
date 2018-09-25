@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'laptop';
+        computer = 'work';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -53,9 +53,23 @@ radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
 radar_ALL = radar_format(radar_dir);
 overlap = 10000;
 horz_res = 25;
-output_dir = 'SMB_results';
 
+keep_idx = false(length(radar_ALL), 1);
 for i = 1:length(radar_ALL)
+   
+    if radar_ALL(i).segment.dist(end) >= 2*overlap
+        keep_idx(i) = true;
+    end
+end
+radar_ALL = radar_ALL(keep_idx);
+
+output_dir = 'SMB_results';
+if ~exist(fullfile(radar_dir, output_dir), 'dir')
+    mkdir(fullfile(radar_dir, output_dir));
+end
+
+
+parfor i = 1:length(radar_ALL)
     
     [radar_tmp] = radar_RT(radar_ALL(i).segment, cores, Ndraw);
     [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
@@ -84,6 +98,6 @@ for i = 1:length(radar_ALL)
     
     filename = sprintf('%s%d%s','radar_out',i, '.mat');
     output = fullfile(radar_dir, output_dir, filename);
-    save(output, '-struct', 'radar', '-v7.3')
+    [save_success] = parsave(radar, output)
     
 end

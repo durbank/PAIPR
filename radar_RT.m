@@ -148,21 +148,21 @@ Vq = interp2(X, Y, ss, Vx, Vy);
 grad_smooth = Vq;
 % grad_smooth = imgaussfilt(Vq, 5);
 
-% Diagnostic plot
-ystart = 1:25:size(grad_smooth,1);
-xstart = ones(1, length(ystart));
-XY_raw = stream2(ones(size(grad_smooth)), grad_smooth, xstart, ystart, 1);
-XY = XY_raw;
-for k = 1:length(XY)
-    XY{k}(:,1) = XY_raw{k}(:,1)*mean(diff(radar.dist));
-    XY{k}(:,2) = XY_raw{k}(:,2)*.02;
-end
-figure
-imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
-hold on
-hlines = streamline(XY);
-set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
-hold off
+% % Diagnostic plot
+% ystart = 1:25:size(grad_smooth,1);
+% xstart = ones(1, length(ystart));
+% XY_raw = stream2(ones(size(grad_smooth)), grad_smooth, xstart, ystart, 1);
+% XY = XY_raw;
+% for k = 1:length(XY)
+%     XY{k}(:,1) = XY_raw{k}(:,1)*mean(diff(radar.dist));
+%     XY{k}(:,2) = XY_raw{k}(:,2)*.02;
+% end
+% figure
+% imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
+% hold on
+% hlines = streamline(XY);
+% set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
+% hold off
 
 %% Find depth, width, and prominence of peaks for each radar trace
 
