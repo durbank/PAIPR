@@ -58,7 +58,8 @@ end
 
 % Calculate the cummulative radargram length (in data bins) for the data
 % files in directory
-file_end_idx = cumsum(file_length);
+file_end_idx = [0 cumsum(file_length)];
+% file_end_idx = cumsum(file_length);
 
 % Replace data without valid location values (outside Antarctic Circle)
 % with nearest preceding valid location (these missing data will later be
@@ -168,17 +169,21 @@ for i = 1:length(breaks_new)
     
     % Find the file index at start of ith continuous radargram using the
     % previously calculated breakpoint indices
-    files_i(i,1) = find(file_end_idx>=breaks_new{i}(1), 1);
+    files_i(i,1) = find(file_end_idx>=breaks_new{i}(1), 1) - 1;
+%     files_i(i,1) = find(file_end_idx>=breaks_new{i}(1), 1);
     
     % Find the file index at the end of ith continuous radargram using the
     % previously calculated breakpoint indices
-    files_i(i,2) = find(file_end_idx>=breaks_new{i}(2), 1);
+    files_i(i,2) = find(file_end_idx>=breaks_new{i}(2), 1) - 1;
+%     files_i(i,2) = find(file_end_idx>=breaks_new{i}(2), 1);
     
     % Find the trace indices within the first and last file corresponding
     % to the intra-file breakpoints of the ith continuous radargram
-    position_i(i,1) = breaks_new{i}(1) - ...
-        (file_end_idx(files_i(i,1)) - file_end_idx(1));
-    position_i(i,2) = breaks_new{i}(2) - (file_end_idx(files_i(i,2)-1));
+    position_i(i,1) = breaks_new{i}(1) - file_end_idx(files_i(i,1));
+    position_i(i,2) = breaks_new{i}(2) - file_end_idx(files_i(i,2));
+%     position_i(i,1) = breaks_new{i}(1) - ...
+%         (file_end_idx(files_i(i,1)) - file_end_idx(1));
+%     position_i(i,2) = breaks_new{i}(2) - (file_end_idx(files_i(i,2)-1));
     
 %     check1_idx = file_end_idx(files_i(i,1)) - file_end_idx(1) + position_i(i,1)
 %     d(check1_idx)
