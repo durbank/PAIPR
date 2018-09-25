@@ -127,7 +127,7 @@ break_idx = [0 find(diff(d)>500) length(lat)];
 % Set the minimum length needed for radargram processing and radargram
 % overlap interval (in meters)
 length_min = 30000;
-overlap = 5000;
+overlap = 10000;
 
 % Preallocate and initialize variables for breakpoint calculation
 breaks_new = cell(1, length(break_idx)-1);
