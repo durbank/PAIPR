@@ -50,7 +50,7 @@ SEAT_files = dir(fullfile(data_path, 'radar/SEAT_Traverses/',...
 
 SEAT_E = [];
 SEAT_N = [];
-SEAT_SMB = [];
+SEAT_SMB_MC = [];
 SEAT_yr = [];
 for i = 1:length(SEAT_files)
     load(fullfile(SEAT_files(i).folder, SEAT_files(i).name), 'Easting');
@@ -60,10 +60,13 @@ for i = 1:length(SEAT_files)
     
     SEAT_E = [SEAT_E Easting];
     SEAT_N = [SEAT_N Northing];
-    SEAT_SMB = [SEAT_SMB SMB];
+    SEAT_SMB_MC = [SEAT_SMB_MC SMB];
     SEAT_yr = [SEAT_yr SMB_yr];
 end
 clear Easting Northing SMB SMB_yr
+
+SEAT_SMB = cellfun(@(x) median(x, 2), SEAT_SMB_MC, 'UniformOutput', 0);
+SEAT_std = cellfun(@(x) std(x, [], 2), SEAT_SMB_MC, 'UniformOutput', 0);
 
 
 wild = '*.mat';
@@ -88,51 +91,73 @@ end
 clear Easting Northing SMB SMB_yr i wild
 
 
-near_dist = 15000;
+near_dist = 10000;
 
 
-%% Find SMB estimates within 10 km of SEAT10-4
+%% Compare SMB estimates within 10 km of site 4 (core site SEAT10-4)
+
 
 D_SEAT4 = pdist2([cores.SEAT10_4.Easting, cores.SEAT10_4.Northing],...
     [SEAT_E' SEAT_N']);
 SEAT4_idx = D_SEAT4 <= near_dist;
-SEAT4_fullSMB = cellfun(@(x) median(x, 2), SEAT_SMB(SEAT4_idx), ...
-    'UniformOutput', 0);
-SEAT4_yr = SEAT_yr(SEAT4_idx);
 
 D_OIB4 = pdist2([cores.SEAT10_4.Easting, cores.SEAT10_4.Northing],...
     [OIB_E' OIB_N']);
 OIB4_idx = D_OIB4 <= near_dist;
-OIB4_fullSMB = cellfun(@(x) median(x, 2), OIB_SMB(OIB4_idx), ...
-    'UniformOutput', 0);
-OIB4_yr = OIB_yr(OIB4_idx);
+
+yr_start = min([cores.SEAT10_4.SMB_yr(1) cellfun(@(x) x(1), ...
+    SEAT_yr(SEAT4_idx)) cellfun(@(x) x(1), OIB_yr(OIB4_idx))]);
+yr_end = max([cores.SEAT10_4.SMB_yr(end) cellfun(@(x) x(end), ...
+    SEAT_yr(SEAT4_idx)) cellfun(@(x) x(end), OIB_yr(OIB4_idx))]);
+site4_yr = (yr_start:-1:yr_end)';
+
+SEAT_start = cellfun(@(x) find(x==yr_start, 1), SEAT_yr(SEAT4_idx));
+SEAT_end = cellfun(@(x) find(x==yr_end, 1), SEAT_yr(SEAT4_idx));
+OIB_start = cellfun(@(x) find(x==yr_start, 1), OIB_yr(OIB4_idx));
+OIB_end = cellfun(@(x) find(x==yr_end, 1), OIB_yr(OIB4_idx));
+
+SMB_tmp = SEAT_SMB(SEAT4_idx);
+SEAT4_SMB = zeros(length(site4_yr), length(SEAT_start));
+for i = 1:length(SEAT_start)
+    
+    SEAT4_SMB(:,i) = SMB_tmp{i}(SEAT_start(i):SEAT_end(i));
+end
+SEAT4_SMB = movmean(SEAT4_SMB, 3);
+
+SMB_tmp = OIB_SMB(OIB4_idx);
+OIB4_SMB = zeros(length(site4_yr), length(OIB_start));
+for i = 1:length(OIB_start)
+    
+    OIB4_SMB(:,i) = SMB_tmp{i}(OIB_start(i):OIB_end(i));
+end
+OIB4_SMB = movmean(OIB4_SMB, 3);
 
 figure
 hold on
-for n = 1:length(SEAT4_yr)
-    h0 = plot(SEAT4_yr{n}, SEAT4_fullSMB{n}, 'r', 'LineWidth', 0.5);
+for n = 1:size(SEAT4_SMB, 2)
+    h0 = plot(site4_yr, SEAT4_SMB(:,n), 'r', 'LineWidth', 0.5);
     h0.Color(4) = 0.02;
 end
-for n = 1:length(OIB4_yr)
-    h1 = plot(OIB4_yr{n}, OIB4_fullSMB{n}, 'm', 'LineWidth', 0.5);
+for n = 1:size(OIB4_SMB, 2)
+    h1 = plot(site4_yr, OIB4_SMB(:,n), 'm', 'LineWidth', 0.5);
     h1.Color(4) = 0.02;
 end
-h2 = plot(cores.SEAT10_4.SMB_yr, median(cores.SEAT10_4.SMB, 2), ...
+core_start = find(cores.SEAT10_4.SMB_yr==yr_start);
+core_end = find(cores.SEAT10_4.SMB_yr==yr_end);
+core4_SMB = cores.SEAT10_4.SMB(core_start:core_end,:);
+core4_SMB = movmean(core4_SMB, 3);
+h2 = plot(cores.SEAT10_4.SMB_yr(core_start:core_end), median(core4_SMB, 2), ...
     'b', 'LineWidth', 2);
-plot(cores.SEAT10_4.SMB_yr, median(cores.SEAT10_4.SMB, 2) + ...
-    std(cores.SEAT10_4.SMB, [], 2), 'b--', 'LineWidth', 0.5);
-plot(cores.SEAT10_4.SMB_yr, median(cores.SEAT10_4.SMB, 2) - ...
-    std(cores.SEAT10_4.SMB, [], 2), 'b--', 'LineWidth', 0.5);
+plot(cores.SEAT10_4.SMB_yr(core_start:core_end), median(core4_SMB, 2) + ...
+    std(core4_SMB, [], 2), 'b--', 'LineWidth', 0.5);
+plot(cores.SEAT10_4.SMB_yr(core_start:core_end), median(core4_SMB, 2) - ...
+    std(core4_SMB, [], 2), 'b--', 'LineWidth', 0.5);
+xlim([yr_end yr_start])
 hold off
 
 
 
-% yr_start = min([cores.SEAT10_4.SMB_yr(1) cellfun(@(x) x(1), SEAT4_yr)]);
-% yr_end = max([cores.SEAT10_4.SMB_yr(end) cellfun(@(x) x(end), SEAT4_yr)]);
-% 
-% start_idx = cellfun(@(x) find(x==yr_start, 1), SEAT4_yr);
-% end_idx = cellfun(@(x) find(x==yr_end, 1), SEAT4_yr);
-% SEAT4_SMB = cellfun(@(x,y,z) x(y:z), SEAT4_fullSMB, start_idx, end_idx);
+[p] = wanova(core4_SMB, SEAT4_SMB, OIB4_SMB);
 
 
 %% Find SMB estimates within 10 km of SEAT10-5
