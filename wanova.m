@@ -69,6 +69,8 @@ function [p, F, df1, df2] = wanova (varargin)
   nu = (se+se').^2./(se.^2./(n-1) + (se').^2./(n'-1));
   
   p = tcdf(t, nu);
+  
+  p2 = p + p';
 
   
   

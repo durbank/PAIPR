@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'work';
+        computer = 'laptop';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -157,7 +157,7 @@ hold off
 
 
 
-[p] = wanova(core4_SMB, SEAT4_SMB, OIB4_SMB);
+[p] = wanova(core4_SMB(25,:), SEAT4_SMB(25,:), OIB4_SMB(25,:));
 
 
 %% Find SMB estimates within 10 km of SEAT10-5
