@@ -31,7 +31,7 @@
 %  Author: Andrew Charles Penn
 %  https://www.researchgate.net/profile/Andrew_Penn/
 
-function [p, F, df1, df2] = wanova (varargin)
+function [p, t, nu] = wanova (varargin)
 
   if length(varargin)<2
     error('Invalid number of input arguments');
@@ -54,12 +54,13 @@ function [p, F, df1, df2] = wanova (varargin)
 
   % Obtain the size, mean and variance for each sample
   n = zeros(k,1);
+  med = zeros(k,1);
   mu = zeros(k,1);
   v = zeros(k,1);
   for i=1:k
     n(i,1) = numel(varargin{i});
-    mu(i,1) = median(varargin{i});
-%     mu(i,1) = mean(varargin{i});
+    med(i,1) = median(varargin{i});
+    mu(i,1) = mean(varargin{i});
     v(i,1) = var(varargin{i});
   end
   
@@ -68,9 +69,11 @@ function [p, F, df1, df2] = wanova (varargin)
   t = (mu - mu')./sqrt(se+se');
   nu = (se+se').^2./(se.^2./(n-1) + (se').^2./(n'-1));
   
-  p = tcdf(t, nu);
+  p_half = tcdf(t, nu);
   
-  p2 = p + p';
+  p_tmp = (p_half + (1-p_half)')';
+  
+  p = squareform(squareform(p_tmp - eye(k))) + eye(k);
 
   
   
