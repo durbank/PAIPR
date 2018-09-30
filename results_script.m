@@ -91,20 +91,20 @@ clear Easting Northing SMB SMB_yr i wild
 OIB_SMB = cellfun(@(x) median(x, 2), OIB_SMB_MC, 'UniformOutput', 0);
 OIB_std = cellfun(@(x) std(x, [], 2), OIB_SMB_MC, 'UniformOutput', 0);
 
-%% Compare individual SMB distributions within 1 km of site 4 (core site SEAT10-4)
+% %% Compare individual SMB distributions within 1 km of site 4 (core site SEAT10-4)
 
-near_dist = 100;
-
-D_SEATi = pdist2([cores.SEAT10_4.Easting, cores.SEAT10_4.Northing],...
-    [SEAT_E' SEAT_N']);
-SEATi_idx = D_SEATi <= near_dist;
-
-D_OIBi = pdist2([cores.SEAT10_4.Easting, cores.SEAT10_4.Northing],...
-    [OIB_E' OIB_N']);
-OIBi_idx = D_OIBi <= near_dist;
-
-SEAT4_dist = SEAT_SMB_MC(SEATi_idx);
-SEAT4_yr = SEAT_yr(SEATi_idx);
+% near_dist = 100;
+% 
+% D_SEATi = pdist2([cores.SEAT10_4.Easting, cores.SEAT10_4.Northing],...
+%     [SEAT_E' SEAT_N']);
+% SEATi_idx = D_SEATi <= near_dist;
+% 
+% D_OIBi = pdist2([cores.SEAT10_4.Easting, cores.SEAT10_4.Northing],...
+%     [OIB_E' OIB_N']);
+% OIBi_idx = D_OIBi <= near_dist;
+% 
+% SEAT4_dist = SEAT_SMB_MC(SEATi_idx);
+% SEAT4_yr = SEAT_yr(SEATi_idx);
 
 
 %% Compare median SMB estimates within 10 km of site 4 (core site SEAT10-4)
@@ -137,9 +137,9 @@ OIB_end = cellfun(@(x) find(x==yr_end, 1), OIB_yr(OIBi_idx));
 
 SMB_tmp = SEAT_SMB(SEATi_idx);
 SEATi_SMB = zeros(length(siteI_yr), length(SEAT_start));
-for i = 1:length(SEAT_start)
+for j = 1:length(SEAT_start)
     
-    SEATi_SMB(:,i) = SMB_tmp{i}(SEAT_start(i):SEAT_end(i));
+    SEATi_SMB(:,j) = SMB_tmp{j}(SEAT_start(j):SEAT_end(j));
 end
 % SEAT4_SMB = movmean(SEAT4_SMB, 3);
 
@@ -148,9 +148,9 @@ end
 
 SMB_tmp = OIB_SMB(OIBi_idx);
 OIBi_SMB = zeros(length(siteI_yr), length(OIB_start));
-for i = 1:length(OIB_start)
+for j = 1:length(OIB_start)
     
-    OIBi_SMB(:,i) = SMB_tmp{i}(OIB_start(i):OIB_end(i));
+    OIBi_SMB(:,j) = SMB_tmp{j}(OIB_start(j):OIB_end(j));
 end
 % OIB4_SMB = movmean(OIB4_SMB, 3);
 
@@ -217,6 +217,39 @@ x = reshape(X, numel(X), 1);
 y = reshape(SEATi_SMB, numel(SEATi_SMB), 1);
 
 [trend,~,~,~,stats] = regress(y, [ones(length(x),1) x]);
+
+%% SEAT and OIB bias tests
+
+% SEATi_N = SEAT_N(SEATi_idx);
+% SEATi_E = SEAT_E(SEATi_idx);
+% OIBi_N = OIB_N(OIBi_idx);
+% OIBi_E = OIB_E(OIBi_idx);
+
+near_tmp = knnsearch([SEAT_E' SEAT_N'], [OIB_E' OIB_N']);
+
+[~, idx_S] = unique(near_tmp);
+idx_tmp = 1:length(OIB_E);
+OIB_near = idx_tmp(near_tmp(idx_S));
+SEAT_near = near_tmp(idx_S);
+
+
+
+yr_start = cellfun(@(x,y) min([x(1) y(1)]), ...
+    OIB_yr(OIB_near), SEAT_yr(SEAT_near));
+yr_end = cellfun(@(x,y) max([x(end), y(end)]), ...
+    OIB_yr(OIB_near), SEAT_yr(SEAT_near));
+
+bias_yr = cell(1, length(yr_start));
+for j = 1:length(yr_start)
+    bias_yr{j} = (yr_start(j):-1:yr_end(j))';
+end
+
+SEAT_start = cellfun(@(x,y) find(x==y(1), 1), SEAT_yr(SEAT_near), bias_yr);
+SEAT_end = cellfun(@(x,y) find(x==y(end), 1), SEAT_yr(SEAT_near), bias_yr);
+OIB_start = cellfun(@(x,y) find(x==y(1), 1), OIB_yr(OIB_near), bias_yr);
+OIB_end = cellfun(@(x,y) find(x==y(end), 1), OIB_yr(OIB_near), bias_yr);
+
+test = SEAT_SMB(SEAT_near);
 
 
 
