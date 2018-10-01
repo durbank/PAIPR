@@ -111,7 +111,7 @@ OIB_std = cellfun(@(x) std(x, [], 2), OIB_SMB_MC, 'UniformOutput', 0);
 
 cores_loop = {'SEAT10_4' 'SEAT10_5' 'SEAT10_6'};
 i = 2;
-near_dist = 5000;
+near_dist = 1000;
 
 
 core_i = cores.(cores_loop{i});
@@ -206,8 +206,25 @@ for j = 1:size(SEATi_SMB, 2)
     SEATi_p(j) = stats(3);
 end
 
+OIBi_b1 = zeros(1, size(OIBi_SMB, 2));
+OIBi_p = zeros(1, size(OIBi_SMB, 2));
+
+for j = 1:size(OIBi_SMB, 2)
+    [trend,~,~,~,stats] = regress(OIBi_SMB(:,j), [ones(length(siteI_yr),1) siteI_yr]);
+    OIBi_b1(j) = trend(2);
+    OIBi_p(j) = stats(3);
+end
+
+
+trend_tmp = regress(median(coreI_SMB,2), [ones(length(siteI_yr),1) siteI_yr]);
+core_trend = trend_tmp(2);
+
 figure
-histogram(SEATi_b1)
+hold on
+plot(median(SEATi_SMB), SEATi_b1./median(SEATi_SMB), 'r.')
+plot(median(OIBi_SMB), OIBi_b1./median(OIBi_SMB), 'm.')
+plot(median(median(coreI_SMB,2)), core_trend/median(median(coreI_SMB,2)), 'bx')
+hold off
 
 numel(SEATi_p(SEATi_p<0.05))/numel(SEATi_p)
 
@@ -249,7 +266,26 @@ SEAT_end = cellfun(@(x,y) find(x==y(end), 1), SEAT_yr(SEAT_near), bias_yr);
 OIB_start = cellfun(@(x,y) find(x==y(1), 1), OIB_yr(OIB_near), bias_yr);
 OIB_end = cellfun(@(x,y) find(x==y(end), 1), OIB_yr(OIB_near), bias_yr);
 
-test = SEAT_SMB(SEAT_near);
+SEATbias_med = cell(1,length(bias_yr));
+bias_SMB = cell(1,length(bias_yr));
+for j=1:length(bias_yr)
+    SEATbias_SMB = SEAT_SMB{SEAT_near(j)}(SEAT_start(j):SEAT_end(j));
+    SEATbias_med{j} = median(SEATbias_SMB);
+    OIBbias_SMB = OIB_SMB{OIB_near(j)}(OIB_start(j):OIB_end(j));
+%     bias_SMB{j} = (SEATbias_SMB - OIBbias_SMB)./SEATbias_SMB;
+    bias_SMB{j} = (SEATbias_SMB - OIBbias_SMB);
+end
+
+% bias_perc = cellfun(@mean, cellfun(@(x,y) x/y, bias_SMB, SEATbias_med, 'UniformOutput', 0));
+
+figure
+histogram(vertcat(bias_SMB{:}), 100)
+
+figure
+plot(OIB_E(OIB_near), cellfun(@mean, bias_SMB), '.')
+
+bias = mean(vertcat(bias_SMB{:}));
+
 
 
 
