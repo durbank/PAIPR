@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'laptop';
+        computer = 'work';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -339,13 +339,50 @@ for j=1:length(bias_yr)
     bias_SMB{j} = (SEATbias_SMB - OIBbias_SMB);
 end
 
-figure
-histogram(vertcat(bias_SMB{:}), 100)
+% figure
+% plot(OIB_E(OIB_near), cellfun(@mean, bias_SMB), '.')
 
-figure
-plot(OIB_E(OIB_near), cellfun(@mean, bias_SMB), '.')
 
-bias = mean(vertcat(bias_SMB{:}));
+% SMB bias for each individual year in each trace (absolute accumulation)
+bias_dist = vertcat(bias_SMB{:});
+bias_bar = mean(bias_dist);
+bias_std = std(bias_dist);
+bias_SEM = bias_std/sqrt(length(bias_dist));
+Ts = tinv([0.025 0.795], length(bias_dist)-1);
+CI = bias_bar + Ts*bias_SEM;
+figure
+histogram(bias_dist, 100)
+
+% Mean SMB bias for each trace (absolute accumulation)
+bias_dist = cellfun(@mean, bias_SMB);
+bias_bar = mean(bias_dist);
+bias_std = std(bias_dist);
+bias_SEM = bias_std/sqrt(length(bias_dist));
+Ts = tinv([0.025 0.795], length(bias_dist)-1);
+CI = bias_bar + Ts*bias_SEM;
+figure
+histogram(bias_dist, 100)
+
+% SMB bias for each individual year in each trace (% change of mean)
+bias_dist = cellfun(@(x,y) x/y, bias_SMB, SEATbias_med, 'UniformOutput', 0);
+bias_dist = vertcat(bias_dist{:});
+bias_bar = mean(bias_dist);
+bias_std = std(bias_dist);
+bias_SEM = bias_std/sqrt(length(bias_dist));
+Ts = tinv([0.025 0.795], length(bias_dist)-1);
+CI = bias_bar + Ts*bias_SEM;
+figure
+histogram(bias_dist, 100)
+
+% Mean SMB bias for each trace (% change of mean)
+bias_dist = cellfun(@(x,y) mean(x)/y, bias_SMB, SEATbias_med);
+bias_bar = mean(bias_dist);
+bias_std = std(bias_dist);
+bias_SEM = bias_std/sqrt(length(bias_dist));
+Ts = tinv([0.025 0.795], length(bias_dist)-1);
+CI = bias_bar + Ts*bias_SEM;
+figure
+histogram(bias_dist, 100)
 
 
 
@@ -386,9 +423,9 @@ res_decade = 10*age_bias(end,:)./(SEAT_ages(1,SEAT_near)-SEAT_ages(end,SEAT_near
 figure
 histogram(res_decade, 100)
 
-bias_med = median(res_decade);
+bias_MED = median(res_decade);
 bias_SEM = std(res_decade)/sqrt(length(res_decade));
 Ts = tinv([0.025 0.795], length(res_decade)-1);
-CI = bias_med + Ts*bias_SEM;
+CI = bias_MED + Ts*bias_SEM;
 
 
