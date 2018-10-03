@@ -389,43 +389,43 @@ histogram(bias_dist, 100)
 
 %% Age bias tests
 
-SEAT_ages = [];
-for i = 1:length(SEAT_files)
-    load(fullfile(SEAT_files(i).folder, SEAT_files(i).name), 'ages');
-    SEAT_ages = [SEAT_ages median(ages, 3)];
-end
-
-
-OIB_ages = [];
-for i = 1:length(OIB_files)
-    load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'ages');
-    OIB_ages = [OIB_ages median(ages, 3)];
-end
-depth = 0:0.02:25;
-
-
-near_tmp = knnsearch([OIB_E' OIB_N'], [SEAT_E' SEAT_N']);
-SEAT_near = 1:length(SEAT_E);
-OIB_near = near_tmp;
-
-age_bias = SEAT_ages(:,SEAT_near) - OIB_ages(:,OIB_near);
-figure
-hold on
-plot(depth, mean(age_bias, 2), 'k', 'LineWidth', 2)
-plot(depth, mean(age_bias, 2) + std(age_bias, [], 2), 'k--')
-plot(depth, mean(age_bias, 2) - std(age_bias, [], 2), 'k--')
-hold off
-
-% ERR_tmp = 10*age_bias./(SEAT_ages(1,SEAT_near)-SEAT_ages(:,SEAT_near));
-% ERR_decade = mean(ERR_tmp(100:end,:));
-res_decade = 10*age_bias(end,:)./(SEAT_ages(1,SEAT_near)-SEAT_ages(end,SEAT_near));
-
-figure
-histogram(res_decade, 100)
-
-bias_MED = median(res_decade);
-bias_SEM = std(res_decade)/sqrt(length(res_decade));
-Ts = tinv([0.025 0.795], length(res_decade)-1);
-CI = bias_MED + Ts*bias_SEM;
+% SEAT_ages = [];
+% for i = 1:length(SEAT_files)
+%     load(fullfile(SEAT_files(i).folder, SEAT_files(i).name), 'ages');
+%     SEAT_ages = [SEAT_ages median(ages, 3)];
+% end
+% 
+% 
+% OIB_ages = [];
+% for i = 1:length(OIB_files)
+%     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'ages');
+%     OIB_ages = [OIB_ages median(ages, 3)];
+% end
+% depth = 0:0.02:25;
+% 
+% 
+% near_tmp = knnsearch([OIB_E' OIB_N'], [SEAT_E' SEAT_N']);
+% SEAT_near = 1:length(SEAT_E);
+% OIB_near = near_tmp;
+% 
+% age_bias = SEAT_ages(:,SEAT_near) - OIB_ages(:,OIB_near);
+% figure
+% hold on
+% plot(depth, mean(age_bias, 2), 'k', 'LineWidth', 2)
+% plot(depth, mean(age_bias, 2) + std(age_bias, [], 2), 'k--')
+% plot(depth, mean(age_bias, 2) - std(age_bias, [], 2), 'k--')
+% hold off
+% 
+% % ERR_tmp = 10*age_bias./(SEAT_ages(1,SEAT_near)-SEAT_ages(:,SEAT_near));
+% % ERR_decade = mean(ERR_tmp(100:end,:));
+% res_decade = 10*age_bias(end,:)./(SEAT_ages(1,SEAT_near)-SEAT_ages(end,SEAT_near));
+% 
+% figure
+% histogram(res_decade, 100)
+% 
+% bias_MED = median(res_decade);
+% bias_SEM = std(res_decade)/sqrt(length(res_decade));
+% Ts = tinv([0.025 0.795], length(res_decade)-1);
+% CI = bias_MED + Ts*bias_SEM;
 
 
