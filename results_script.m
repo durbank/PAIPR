@@ -344,9 +344,10 @@ for i = 1:length(cores_loop)
     bias_std = [bias_stdS1; biasSEATi_std; bias_stdO1; biasOIBi_std];
     bias_std_perc = [bias_stdS1_perc; biasSEATi_std_perc; ...
         bias_stdO1_perc; biasOIBi_std_perc];
-    stats_i = table(bias_mu_abs, bias_mu_perc, bias_MoE, bias_MoE_perc, ...
-        bias_std, bias_std_perc, 'VariableNames', {'mu_abs', 'mu_percent',...
-        'MoE_abs', 'MoE_percent', 'StdDev_abs', 'StdDev_percent'},...
+    stats_i = table(bias_mu_abs, bias_MoE, bias_std, bias_mu_perc,...
+        bias_MoE_perc, bias_std_perc, 'VariableNames', ...
+        {'mu_abs', 'MoE_abs', 'StdDev_abs',...
+        'mu_percent', 'MoE_percent',  'StdDev_percent'},...
         'RowNames', {'SEAT-core (nearest trace)', 'SEAT-core (mean traces)', ...
         'OIB-core (nearest trace)', 'OIB-core (mean traces)'});
     
@@ -451,7 +452,7 @@ hold off
 % f3_name = 'trend_comp';
 % export_fig(f3, fullfile(out_dir, f3_name), '-png');
 % Save SMB-site data for use elsewhere
-save(fullfile(out_dir, 'site_data.mat'), '-struct', 'SMB_sites')
+% save(fullfile(out_dir, 'site_data.mat'), '-struct', 'SMB_sites')
 
 % X = repmat(siteI_yr, 1, size(SEATi_SMB,2));
 % x = repmat(siteI_yr, 1, size(SEATi_SMB,2));
@@ -538,7 +539,7 @@ bias_stats = table(bias_mu, bias_MoE, bias_std, 'VariableNames', ...
     {'Mean', 'MarginOfError', 'StdDev'}, 'RowNames', ...
     {'SEAT-OIB (absolute SMB)', 'SEAT-OIB (% bias)'});
 
-save(fullfile(out_dir, 'glob_bias_stats.m'), 'bias_stats')
+% save(fullfile(out_dir, 'glob_bias_stats.m'), 'bias_stats')
 
 
 
@@ -565,43 +566,44 @@ save(fullfile(out_dir, 'glob_bias_stats.m'), 'bias_stats')
 
 %% Age bias tests
 
-% SEAT_ages = [];
-% for i = 1:length(SEAT_files)
-%     load(fullfile(SEAT_files(i).folder, SEAT_files(i).name), 'ages');
-%     SEAT_ages = [SEAT_ages median(ages, 3)];
-% end
-% 
-% 
-% OIB_ages = [];
-% for i = 1:length(OIB_files)
-%     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'ages');
-%     OIB_ages = [OIB_ages median(ages, 3)];
-% end
-% depth = 0:0.02:25;
-% 
-% 
-% near_tmp = knnsearch([OIB_E' OIB_N'], [SEAT_E' SEAT_N']);
-% SEAT_near = 1:length(SEAT_E);
-% OIB_near = near_tmp;
-% 
-% age_bias = SEAT_ages(:,SEAT_near) - OIB_ages(:,OIB_near);
-% figure
-% hold on
-% plot(depth, mean(age_bias, 2), 'k', 'LineWidth', 2)
-% plot(depth, mean(age_bias, 2) + std(age_bias, [], 2), 'k--')
-% plot(depth, mean(age_bias, 2) - std(age_bias, [], 2), 'k--')
-% hold off
-% 
-% % ERR_tmp = 10*age_bias./(SEAT_ages(1,SEAT_near)-SEAT_ages(:,SEAT_near));
-% % ERR_decade = mean(ERR_tmp(100:end,:));
-% res_decade = 10*age_bias(end,:)./(SEAT_ages(1,SEAT_near)-SEAT_ages(end,SEAT_near));
-% 
-% figure
-% histogram(res_decade, 100)
-% 
-% bias_MED = median(res_decade);
-% bias_SEM = std(res_decade)/sqrt(length(res_decade));
-% Ts = tinv([0.025 0.795], length(res_decade)-1);
-% CI = bias_MED + Ts*bias_SEM;
+SEAT_ages = [];
+for i = 1:length(SEAT_files)
+    load(fullfile(SEAT_files(i).folder, SEAT_files(i).name), 'ages');
+    SEAT_ages = [SEAT_ages median(ages, 3)];
+end
+
+
+OIB_ages = [];
+for i = 1:length(OIB_files)
+    load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'ages');
+    OIB_ages = [OIB_ages median(ages, 3)];
+end
+depth = 0:0.02:25;
+
+
+near_tmp = knnsearch([OIB_E' OIB_N'], [SEAT_E' SEAT_N']);
+SEAT_near = 1:length(SEAT_E);
+OIB_near = near_tmp;
+
+age_bias = SEAT_ages(:,SEAT_near) - OIB_ages(:,OIB_near);
+figure
+hold on
+plot(depth, mean(age_bias, 2), 'k', 'LineWidth', 2)
+plot(depth, mean(age_bias, 2) + std(age_bias, [], 2), 'k--')
+plot(depth, mean(age_bias, 2) - std(age_bias, [], 2), 'k--')
+hold off
+
+% ERR_tmp = 10*age_bias./(SEAT_ages(1,SEAT_near)-SEAT_ages(:,SEAT_near));
+% ERR_decade = mean(ERR_tmp(100:end,:));
+res_decade = 10*age_bias(end,:)./(SEAT_ages(1,SEAT_near)-SEAT_ages(end,SEAT_near));
+
+figure
+histogram(res_decade, 100)
+
+bias_age_mu = median(res_decade);
+bias_age_std = std(res_decade);
+bias_SEM = std(bias_age_std)/sqrt(length(res_decade));
+Ts = tinv(0.975, length(res_decade)-1);
+bias_age_MoE = Ts*bias_SEM;
 
 
