@@ -24,11 +24,10 @@ radar.ages = fillmissing(radar.ages, 'linear', 2);
 % the std dev with depth of all MC age profiles for each trace (avoids  
 % integer year jumps in accumulation estimates and non-monotonically 
 % decreasing ages)
-age_std = squeeze(std(radar.ages, [], 3));
-age_noise = randn(1, 1, Ndraw).*age_std;
-ages = repmat(median(radar.ages, 3), 1, 1, Ndraw) + age_noise;
-% ages = repmat(movmedian(median(radar.ages, 3), 5, 2), 1, 1, Ndraw) + age_noise;
-% ages = radar.age;
+% age_std = squeeze(std(radar.ages, [], 3));
+% age_noise = randn(1, 1, Ndraw).*age_std;
+% ages = repmat(median(radar.ages, 3), 1, 1, Ndraw) + age_noise;
+ages = radar.ages;
 
 
 
