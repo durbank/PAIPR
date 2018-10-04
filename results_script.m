@@ -93,20 +93,55 @@ clear Easting Northing SMB SMB_yr i wild
 OIB_SMB = cellfun(@(x) mean(x, 2), OIB_SMB_MC, 'UniformOutput', 0);
 OIB_std = cellfun(@(x) std(x, [], 2), OIB_SMB_MC, 'UniformOutput', 0);
 
-% %% Compare individual SMB distributions within 1 km of site 4 (core site SEAT10-4)
 
-% near_dist = 100;
-%
-% D_SEATi = pdist2([cores.SEAT10_4.Easting, cores.SEAT10_4.Northing],...
-%     [SEAT_E' SEAT_N']);
-% SEATi_idx = D_SEATi <= near_dist;
-%
-% D_OIBi = pdist2([cores.SEAT10_4.Easting, cores.SEAT10_4.Northing],...
-%     [OIB_E' OIB_N']);
-% OIBi_idx = D_OIBi <= near_dist;
-%
-% SEAT4_dist = SEAT_SMB_MC(SEATi_idx);
-% SEAT4_yr = SEAT_yr(SEATi_idx);
+
+% SEAT_full = load(fullfile(SEAT_files(2).folder, SEAT_files(2).name));
+% SEAT_layers = cell(1, max(SEAT_full.groups(:)));
+% for k = 1:length(SEAT_layers)
+%     SEAT_layers{k} = find(SEAT_full.groups(:,141:end)==k);
+% end
+% SEAT_layers = SEAT_layers(~cellfun(@isempty, SEAT_layers));
+% 
+% f1 = figure('Position', [50 50 1800 900]);
+% imagesc(SEAT_full.Easting(141:end), SEAT_full.depth, ...
+%     SEAT_full.data_smooth(:,141:end), [-2 2])
+% hold on
+% for k = 1:length(SEAT_layers)
+%     [r,c] = ind2sub(size(SEAT_full.groups(:,141:end)), SEAT_layers{k});
+%     plot(SEAT_full.Easting(c+141-1),SEAT_full.depth(r), 'r', 'LineWidth',2)
+% end
+% xlabel('Easting coordinate')
+% ylabel('Depth (m)')
+% hold off
+% % % Save SEAT layers figure
+% % f1_name = strcat('SEAT_layers');
+% % out_dir = fullfile('F:/results/');
+% % export_fig(f1, fullfile(out_dir, f1_name), '-png');
+% 
+% 
+% OIB_full = load(fullfile(OIB_files(7).folder, OIB_files(7).name));
+% OIB_layers = cell(1, max(OIB_full.groups(:)));
+% for k = 1:length(OIB_layers)
+%     OIB_layers{k} = find(OIB_full.groups(:,150:end)==k);
+% end
+% OIB_layers = OIB_layers(~cellfun(@isempty, OIB_layers));
+% 
+% f2 = figure('Position', [50 50 1800 900]);
+% imagesc(OIB_full.Easting(150:end), OIB_full.depth, ...
+%     OIB_full.data_smooth(:,150:end), [-2 2])
+% hold on
+% for k = 1:length(OIB_layers)
+%     [r,c] = ind2sub(size(OIB_full.groups(:,150:end)), OIB_layers{k});
+%     plot(OIB_full.Easting(c+150-1), OIB_full.depth(r), ...
+%         'r', 'LineWidth',2)
+% end
+% xlabel('Easting coordinate')
+% ylabel('Depth (m)')
+% hold off
+% % % Save OIB layers figure
+% % f2_name = strcat('OIB_layers');
+% % out_dir = fullfile('F:/results/');
+% % export_fig(f2, fullfile(out_dir, f2_name), '-png');
 
 
 %% Compare median SMB estimates within 10 km of site 4 (core site SEAT10-4)
