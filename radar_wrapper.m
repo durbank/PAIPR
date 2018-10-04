@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'laptop';
+        computer = 'work';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -44,8 +44,10 @@ Ndraw = 100;
 
 % Define path to the directory containing radar data (relative to the
 % 'data' directory path)
+% radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
+%     'SEAT10_4toSEAT10_6');
 radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
-    'SEAT10_4toSEAT10_6');
+    'allSEAT10_4toSEAT10_6');
 % radar_dir = fullfile(data_path, 'IceBridge/SEAT10_4to10_6/2011_SNO');
 
 %%
@@ -57,7 +59,7 @@ horz_res = 25;
 keep_idx = false(length(radar_ALL), 1);
 for i = 1:length(radar_ALL)
    
-    if radar_ALL(i).segment.dist(end) >= 2*overlap
+    if radar_ALL(i).segment.dist(end) >= 1.5*overlap
         keep_idx(i) = true;
     end
 end
