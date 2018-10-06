@@ -149,7 +149,7 @@ OIB_std = cellfun(@(x) std(x, [], 2), OIB_SMB_MC, 'UniformOutput', 0);
 cores_loop = {'SEAT10_4' 'SEAT10_5' 'SEAT10_6'};
 near_dist = 6500;
 SMB_sites = struct();
-out_dir = fullfile('F:/results/');
+% out_dir = fullfile('F:/results/');
 
 for i = 1:length(cores_loop)
     
@@ -406,17 +406,17 @@ end
 
 % figure
 % hold on
-% plot(median(SMB_sites.SEAT10_4.SEAT_SMB), SMB_sites.SEAT10_4.SEAT_trend, 'ro')
-% plot(median(SMB_sites.SEAT10_4.OIB_SMB), SMB_sites.SEAT10_4.OIB_trend, 'mo')
-% plot(median(median(SMB_sites.SEAT10_4.core_SMB)), ...
+% plot(mean(SMB_sites.SEAT10_4.SEAT_SMB), SMB_sites.SEAT10_4.SEAT_trend, 'ro')
+% plot(mean(SMB_sites.SEAT10_4.OIB_SMB), SMB_sites.SEAT10_4.OIB_trend, 'mo')
+% plot(mean(SMB_sites.SEAT10_4.core_SMB), ...
 %     SMB_sites.SEAT10_4.core_trend, 'bo', 'MarkerSize', 10)
-% plot(median(SMB_sites.SEAT10_5.SEAT_SMB), SMB_sites.SEAT10_5.SEAT_trend, 'rx')
-% plot(median(SMB_sites.SEAT10_5.OIB_SMB), SMB_sites.SEAT10_5.OIB_trend, 'mx')
-% plot(median(median(SMB_sites.SEAT10_5.core_SMB)), ...
+% plot(mean(SMB_sites.SEAT10_5.SEAT_SMB), SMB_sites.SEAT10_5.SEAT_trend, 'rx')
+% plot(mean(SMB_sites.SEAT10_5.OIB_SMB), SMB_sites.SEAT10_5.OIB_trend, 'mx')
+% plot(mean(SMB_sites.SEAT10_5.core_SMB), ...
 %     SMB_sites.SEAT10_5.core_trend, 'bx', 'MarkerSize', 10)
-% plot(median(SMB_sites.SEAT10_6.SEAT_SMB), SMB_sites.SEAT10_6.SEAT_trend, 'r*')
-% plot(median(SMB_sites.SEAT10_6.OIB_SMB), SMB_sites.SEAT10_6.OIB_trend, 'm*')
-% plot(median(median(SMB_sites.SEAT10_6.core_SMB)), ...
+% plot(mean(SMB_sites.SEAT10_6.SEAT_SMB), SMB_sites.SEAT10_6.SEAT_trend, 'r*')
+% plot(mean(SMB_sites.SEAT10_6.OIB_SMB), SMB_sites.SEAT10_6.OIB_trend, 'm*')
+% plot(mean(SMB_sites.SEAT10_6.core_SMB), ...
 %     SMB_sites.SEAT10_6.core_trend, 'b*', 'MarkerSize', 10)
 % xlabel('Mean annual SMB (mm w.e/a)')
 % ylabel('Mean trend in annual SMB (mm/a/a)')

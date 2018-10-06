@@ -72,45 +72,42 @@ end
 hold off
 
 
-%% Comparison of trends across divide
+%% Compare std of trace distributiions with those nearby
 
-% run import functions from accum_results
+cores_loop = {'SEAT10_4' 'SEAT10_5' 'SEAT10_6'};
+near_dist = 6500;
+i = 3;
+core_i = cores.(cores_loop{i});
 
-smb_oib = cellfun(@(x) median(median(x)), radar_OIB.SMB);
-p = cellfun(@(x,y) robustfit(x, median(y,2)), radar_OIB.SMB_yr, radar_OIB.SMB, ...
-    'UniformOutput', false);
-trend_oib = cellfun(@(x) x(2), p);
-change_oib = trend_oib./smb_oib;
+D_SEATi = pdist2([core_i.Easting, core_i.Northing], [SEAT_E' SEAT_N']);
+SEATi_idx = D_SEATi <= near_dist;
+[~, SEATi_near] = min(D_SEATi(SEATi_idx));
 
-
-
-inputs = {'SEAT10_4', 'SEAT10_5', 'SEAT10_6'};
-
-change_seat = zeros(1, length(inputs));
-seat_Easting = zeros(size(change_seat));
-seat_elev = cores.elev(3:5);
-for i = 1:length(inputs)
-    name = inputs{i};
-    file = fullfile(data_path, 'radar/SEAT_Traverses/results_data', ...
-        strcat('grid', name, '.mat'));
-    radar_i = load(file);
-    smb1 = cellfun(@(x) median(median(x)), radar_i.SMB);
-    p = cellfun(@(x,y) robustfit(x, median(y,2)), radar_i.SMB_yr, radar_i.SMB, ...
-        'UniformOutput', false);
-    trend1 = cellfun(@(x) x(2), p);
-    change_seat(i) = median(trend1./smb1);
-    seat_Easting(i) = mean(radar_i.Easting);
-end
-
+SEAT_data = SEAT_SMB_MC(SEATi_idx);
+SMB_length = min(cellfun(@(x) size(x,1), SEAT_data));
+SEAT_std = cell2mat(cellfun(@(x) std(x(1:SMB_length,:),[],2), ...
+    SEAT_data, 'UniformOutput', 0));
 figure
+yr_start = SEAT_yr{1}(1);
+plot(yr_start:-1:(yr_start-SMB_length+1), SEAT_std, 'LineWidth', 0.5)
 hold on
-plot(radar_OIB.Easting, change_oib, 'm.', 'MarkerSize', 10)
-plot(seat_Easting, change_seat, 'rx', 'MarkerSize', 25)
+plot(yr_start:-1:(yr_start-SMB_length+1), SEAT_std(:,SEATi_near), ...
+    'r', 'LineWidth', 3)
 hold off
 
-figure
-hold on
-plot(seat_elev, change_seat, 'ro')
-% label(seat_elev, change_seat, inputs)
+D_OIBi = pdist2([core_i.Easting, core_i.Northing], [OIB_E' OIB_N']);
+OIBi_idx = D_OIBi <= near_dist;
+[~, OIBi_near] = min(D_OIBi(OIBi_idx));
 
+OIB_data = OIB_SMB_MC(OIBi_idx);
+SMB_length = min(cellfun(@(x) size(x,1), OIB_data));
+OIB_std = cell2mat(cellfun(@(x) std(x(1:SMB_length,:),[],2), ...
+    OIB_data, 'UniformOutput', 0));
+figure
+yr_start = OIB_yr{1}(1);
+plot(yr_start:-1:(yr_start-SMB_length+1), OIB_std, 'LineWidth', 0.5)
+hold on
+plot(yr_start:-1:(yr_start-SMB_length+1), OIB_std(:,OIBi_near), ...
+    'r', 'LineWidth', 3)
+hold off
 
