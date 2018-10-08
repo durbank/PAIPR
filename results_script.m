@@ -276,29 +276,33 @@ for i = 1:length(cores_loop)
     
 
 
-    % Bias relative to the core (nearest trace distribution)
-    bias_SEATnear = SEAT_SMB_near - coreI_SMB;
+%     % Bias relative to the core (nearest trace distribution)
+    bias_SEATnear = SEAT_SMB_near - mean(coreI_SMB,2);
     bias_meanS1 = mean(bias_SEATnear(:));
     bias_stdS1 = std(bias_SEATnear(:));
     bias_semS1 = bias_stdS1/sqrt(numel(bias_SEATnear));
     T_SEATnear = tinv(0.975, numel(bias_SEATnear)-1);
     MoE_SEATnear = T_SEATnear*bias_semS1;
     
-    bias_SEATnear = (SEAT_SMB_near - coreI_SMB)./mean(coreI_SMB);
+%     bias_SEATnear = (SEAT_SMB_near - coreI_SMB)./mean(coreI_SMB);
+%     bias_SEATnear = (SEAT_SMB_near - mean(coreI_SMB,2))./mean(coreI_SMB);
+    bias_SEATnear = (SEAT_SMB_near - mean(coreI_SMB,2))./mean(coreI_SMB,2);
     bias_meanS1_perc = mean(bias_SEATnear(:));
     bias_stdS1_perc = std(bias_SEATnear(:));
     bias_semS1 = bias_stdS1_perc/sqrt(numel(bias_SEATnear));
     T_SEATnear = tinv(0.975, numel(bias_SEATnear)-1);
     MoE_SEATnear_perc = T_SEATnear*bias_semS1;
     
-    bias_OIBnear = OIB_SMB_near - coreI_SMB;
+    bias_OIBnear = OIB_SMB_near - mean(coreI_SMB,2);
     bias_meanO1 = mean(bias_OIBnear(:));
     bias_stdO1 = std(bias_OIBnear(:));
     bias_semO1 = bias_stdO1/sqrt(numel(bias_OIBnear));
     T_OIBnear = tinv(0.975, numel(bias_OIBnear)-1);
     MoE_OIBnear = T_OIBnear*bias_semO1;
     
-    bias_OIBnear = (OIB_SMB_near - coreI_SMB)./mean(coreI_SMB);
+%     bias_OIBnear = (OIB_SMB_near - coreI_SMB)./mean(coreI_SMB);
+%     bias_OIBnear = (OIB_SMB_near - mean(coreI_SMB,2))./mean(coreI_SMB);
+    bias_OIBnear = (OIB_SMB_near - mean(coreI_SMB,2))./mean(coreI_SMB,2);
     bias_meanO1_perc = mean(bias_OIBnear(:));
     bias_stdO1_perc = std(bias_OIBnear(:));
     bias_semO1 = bias_stdO1_perc/sqrt(numel(bias_OIBnear));
@@ -313,7 +317,8 @@ for i = 1:length(cores_loop)
     T_SEATi = tinv(0.975, numel(bias_SEATi)-1);
     MoE_SEATi = T_SEATi*biasSEATi_sem;
     
-    bias_SEATi = (SEATi_SMB - mean(coreI_SMB,2))./mean(coreI_SMB(:));
+%     bias_SEATi = (SEATi_SMB - mean(coreI_SMB,2))./mean(coreI_SMB(:));
+    bias_SEATi = (SEATi_SMB - mean(coreI_SMB,2))./mean(coreI_SMB,2);
     biasSEATi_mu_perc = mean(bias_SEATi(:));
     biasSEATi_std_perc = std(bias_SEATi(:));
     biasSEATi_sem = biasSEATi_std_perc/sqrt(numel(bias_SEATi));
@@ -327,7 +332,8 @@ for i = 1:length(cores_loop)
     T_OIBi = tinv(0.975, numel(bias_OIBi)-1);
     MoE_OIBi = T_OIBi*biasOIBi_sem;
     
-    bias_OIBi = (OIBi_SMB - mean(coreI_SMB,2))./mean(coreI_SMB(:));
+%     bias_OIBi = (OIBi_SMB - mean(coreI_SMB,2))./mean(coreI_SMB(:));
+    bias_OIBi = (OIBi_SMB - mean(coreI_SMB,2))./mean(coreI_SMB,2);
     biasOIBi_mean_perc = mean(bias_OIBi(:));
     biasOIBi_std_perc = std(bias_OIBi(:));
     biasOIBi_sem = biasOIBi_std_perc/sqrt(numel(bias_OIBi));
