@@ -470,25 +470,24 @@ hold off
 
 %% SEAT and OIB SMB bias tests
 
-% SEATi_N = SEAT_N(SEATi_idx);
-% SEATi_E = SEAT_E(SEATi_idx);
-% OIBi_N = OIB_N(OIBi_idx);
-% OIBi_E = OIB_E(OIBi_idx);
-
-% near_tmp = knnsearch([SEAT_E' SEAT_N'], [OIB_E' OIB_N']);
-near_tmp = knnsearch([OIB_E' OIB_N'], [SEAT_E' SEAT_N']);
-
-% [~, idx_O] = unique(near_tmp);
-% idx_tmp = 1:length(SEAT_E);
-% SEAT_near = idx_tmp(near_tmp(idx_O));
-% OIB_near = near_tmp(idx_O);
-SEAT_near = 1:length(SEAT_E);
-OIB_near = near_tmp;
-D_near = diag(pdist2([SEAT_E(SEAT_near)' SEAT_N(SEAT_near)'], ...
-    [OIB_E(OIB_near)' OIB_N(OIB_near)']));
+near_tmp = knnsearch([SEAT_E' SEAT_N'], [OIB_E' OIB_N']);
+OIB_near = 1:length(OIB_E);
+SEAT_near = near_tmp;
+D_near = diag(pdist2([OIB_E(OIB_near)' OIB_N(OIB_near)'], ...
+    [SEAT_E(SEAT_near)' SEAT_N(SEAT_near)']));
 D_idx = D_near<=50;
-SEAT_near = SEAT_near(D_idx);
 OIB_near = OIB_near(D_idx);
+SEAT_near = SEAT_near(D_idx);
+
+% near_tmp = knnsearch([OIB_E' OIB_N'], [SEAT_E' SEAT_N']);
+% SEAT_near = 1:length(SEAT_E);
+% OIB_near = near_tmp;
+% D_near = diag(pdist2([SEAT_E(SEAT_near)' SEAT_N(SEAT_near)'], ...
+%     [OIB_E(OIB_near)' OIB_N(OIB_near)']));
+% D_idx = D_near<=50;
+% SEAT_near = SEAT_near(D_idx);
+% OIB_near = OIB_near(D_idx);
+
 
 yr_start = cellfun(@(x,y) min([x(1) y(1)]), ...
     OIB_yr(OIB_near), SEAT_yr(SEAT_near));
