@@ -276,7 +276,7 @@ for i = 1:length(cores_loop)
     
 
 
-%     % Bias relative to the core (nearest trace distribution)
+    % Bias relative to the core (nearest trace distribution)
     bias_SEATnear = SEAT_SMB_near - mean(coreI_SMB,2);
     bias_meanS1 = mean(bias_SEATnear(:));
     bias_stdS1 = std(bias_SEATnear(:));
@@ -284,10 +284,10 @@ for i = 1:length(cores_loop)
     T_SEATnear = tinv(0.975, numel(bias_SEATnear)-1);
     MoE_SEATnear = T_SEATnear*bias_semS1;
     
-%     bias_SEATnear = (SEAT_SMB_near - coreI_SMB)./mean(coreI_SMB);
 %     bias_SEATnear = (SEAT_SMB_near - mean(coreI_SMB,2))./mean(coreI_SMB);
     bias_SEATnear = (SEAT_SMB_near - mean(coreI_SMB,2))./mean(coreI_SMB,2);
-    bias_meanS1_perc = mean(bias_SEATnear(:));
+%     bias_meanS1_perc = mean(bias_SEATnear(:));
+    bias_meanS1_perc = median(bias_SEATnear(:));
     bias_stdS1_perc = std(bias_SEATnear(:));
     bias_semS1 = bias_stdS1_perc/sqrt(numel(bias_SEATnear));
     T_SEATnear = tinv(0.975, numel(bias_SEATnear)-1);
@@ -300,10 +300,10 @@ for i = 1:length(cores_loop)
     T_OIBnear = tinv(0.975, numel(bias_OIBnear)-1);
     MoE_OIBnear = T_OIBnear*bias_semO1;
     
-%     bias_OIBnear = (OIB_SMB_near - coreI_SMB)./mean(coreI_SMB);
 %     bias_OIBnear = (OIB_SMB_near - mean(coreI_SMB,2))./mean(coreI_SMB);
     bias_OIBnear = (OIB_SMB_near - mean(coreI_SMB,2))./mean(coreI_SMB,2);
-    bias_meanO1_perc = mean(bias_OIBnear(:));
+%     bias_meanO1_perc = mean(bias_OIBnear(:));
+    bias_meanO1_perc = median(bias_OIBnear(:));
     bias_stdO1_perc = std(bias_OIBnear(:));
     bias_semO1 = bias_stdO1_perc/sqrt(numel(bias_OIBnear));
     T_OIBnear = tinv(0.975, numel(bias_OIBnear)-1);
@@ -319,7 +319,8 @@ for i = 1:length(cores_loop)
     
 %     bias_SEATi = (SEATi_SMB - mean(coreI_SMB,2))./mean(coreI_SMB(:));
     bias_SEATi = (SEATi_SMB - mean(coreI_SMB,2))./mean(coreI_SMB,2);
-    biasSEATi_mu_perc = mean(bias_SEATi(:));
+%     biasSEATi_mu_perc = mean(bias_SEATi(:));
+    biasSEATi_mu_perc = median(bias_SEATi(:));
     biasSEATi_std_perc = std(bias_SEATi(:));
     biasSEATi_sem = biasSEATi_std_perc/sqrt(numel(bias_SEATi));
     T_SEATi = tinv(0.975, numel(bias_SEATi)-1);
@@ -334,7 +335,8 @@ for i = 1:length(cores_loop)
     
 %     bias_OIBi = (OIBi_SMB - mean(coreI_SMB,2))./mean(coreI_SMB(:));
     bias_OIBi = (OIBi_SMB - mean(coreI_SMB,2))./mean(coreI_SMB,2);
-    biasOIBi_mean_perc = mean(bias_OIBi(:));
+%     biasOIBi_mean_perc = mean(bias_OIBi(:));
+    biasOIBi_mean_perc = median(bias_OIBi(:));
     biasOIBi_std_perc = std(bias_OIBi(:));
     biasOIBi_sem = biasOIBi_std_perc/sqrt(numel(bias_OIBi));
     T_OIBi = tinv(0.975, numel(bias_OIBi)-1);
@@ -507,9 +509,9 @@ SEATbias_mean = cell(1,length(bias_yr));
 bias_SMB = cell(1,length(bias_yr));
 for j=1:length(bias_yr)
     SEATbias_SMB = SEAT_SMB{SEAT_near(j)}(SEAT_start(j):SEAT_end(j));
-    SEATbias_mean{j} = mean(SEATbias_SMB);
+%     SEATbias_mean{j} = mean(SEATbias_SMB);
+    SEATbias_mean{j} = SEATbias_SMB;
     OIBbias_SMB = OIB_SMB{OIB_near(j)}(OIB_start(j):OIB_end(j));
-    %     bias_SMB{j} = (SEATbias_SMB - OIBbias_SMB)./SEATbias_SMB;
     bias_SMB{j} = (SEATbias_SMB - OIBbias_SMB);
 end
 
@@ -528,9 +530,10 @@ figure
 histogram(bias_dist_abs, 100)
 
 % SMB bias for each individual year in each trace (% change of mean)
-bias_dist_perc = cellfun(@(x,y) x/y, bias_SMB, SEATbias_mean, 'UniformOutput', 0);
+bias_dist_perc = cellfun(@(x,y) x./y, bias_SMB, SEATbias_mean, 'UniformOutput', 0);
 bias_dist_perc = vertcat(bias_dist_perc{:});
-bias_perc_mu = mean(bias_dist_perc);
+% bias_perc_mu = mean(bias_dist_perc);
+bias_perc_mu = median(bias_dist_perc);
 bias_perc_std = std(bias_dist_perc);
 bias_perc_SEM = bias_perc_std/sqrt(length(bias_dist_perc));
 Ts = tinv(0.975, length(bias_dist_perc)-1);
@@ -572,44 +575,44 @@ bias_stats = table(bias_mu, bias_MoE, bias_std, 'VariableNames', ...
 
 %% Age bias tests
 
-SEAT_ages = [];
-for i = 1:length(SEAT_files)
-    load(fullfile(SEAT_files(i).folder, SEAT_files(i).name), 'ages');
-    SEAT_ages = [SEAT_ages median(ages, 3)];
-end
-
-
-OIB_ages = [];
-for i = 1:length(OIB_files)
-    load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'ages');
-    OIB_ages = [OIB_ages median(ages, 3)];
-end
-depth = 0:0.02:25;
-
-
-near_tmp = knnsearch([OIB_E' OIB_N'], [SEAT_E' SEAT_N']);
-SEAT_near = 1:length(SEAT_E);
-OIB_near = near_tmp;
-
-age_bias = SEAT_ages(:,SEAT_near) - OIB_ages(:,OIB_near);
-figure
-hold on
-plot(depth, mean(age_bias, 2), 'k', 'LineWidth', 2)
-plot(depth, mean(age_bias, 2) + std(age_bias, [], 2), 'k--')
-plot(depth, mean(age_bias, 2) - std(age_bias, [], 2), 'k--')
-hold off
-
-% ERR_tmp = 10*age_bias./(SEAT_ages(1,SEAT_near)-SEAT_ages(:,SEAT_near));
-% ERR_decade = mean(ERR_tmp(100:end,:));
-res_decade = 10*age_bias(end,:)./(SEAT_ages(1,SEAT_near)-SEAT_ages(end,SEAT_near));
-
-figure
-histogram(res_decade, 100)
-
-bias_age_mu = median(res_decade);
-bias_age_std = std(res_decade);
-bias_SEM = std(bias_age_std)/sqrt(length(res_decade));
-Ts = tinv(0.975, length(res_decade)-1);
-bias_age_MoE = Ts*bias_SEM;
+% SEAT_ages = [];
+% for i = 1:length(SEAT_files)
+%     load(fullfile(SEAT_files(i).folder, SEAT_files(i).name), 'ages');
+%     SEAT_ages = [SEAT_ages median(ages, 3)];
+% end
+% 
+% 
+% OIB_ages = [];
+% for i = 1:length(OIB_files)
+%     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'ages');
+%     OIB_ages = [OIB_ages median(ages, 3)];
+% end
+% depth = 0:0.02:25;
+% 
+% 
+% near_tmp = knnsearch([OIB_E' OIB_N'], [SEAT_E' SEAT_N']);
+% SEAT_near = 1:length(SEAT_E);
+% OIB_near = near_tmp;
+% 
+% age_bias = SEAT_ages(:,SEAT_near) - OIB_ages(:,OIB_near);
+% figure
+% hold on
+% plot(depth, mean(age_bias, 2), 'k', 'LineWidth', 2)
+% plot(depth, mean(age_bias, 2) + std(age_bias, [], 2), 'k--')
+% plot(depth, mean(age_bias, 2) - std(age_bias, [], 2), 'k--')
+% hold off
+% 
+% % ERR_tmp = 10*age_bias./(SEAT_ages(1,SEAT_near)-SEAT_ages(:,SEAT_near));
+% % ERR_decade = mean(ERR_tmp(100:end,:));
+% res_decade = 10*age_bias(end,:)./(SEAT_ages(1,SEAT_near)-SEAT_ages(end,SEAT_near));
+% 
+% figure
+% histogram(res_decade, 100)
+% 
+% bias_age_mu = median(res_decade);
+% bias_age_std = std(res_decade);
+% bias_SEM = std(bias_age_std)/sqrt(length(res_decade));
+% Ts = tinv(0.975, length(res_decade)-1);
+% bias_age_MoE = Ts*bias_SEM;
 
 
