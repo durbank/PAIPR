@@ -202,6 +202,46 @@ hold off
 %     'bx', 'MarkerSize', 15, 'LineWidth', 3)
 % hold off
 
+
+%% Compare mean accumulation to Arthern et al 2006
+%%% Can also add in White et al comparison using Favier compilation
+
+labels = strrep(cores.name, '_', '-');
+basins = shaperead(strcat(data_path, ...
+    'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
+Easting_lims = [min(cores.Easting)-10000 max(cores.Easting)+5000];
+Northing_lims = [min(cores.Northing)-5000 max(cores.Northing)+5000];
+
+
+[Arth_E, Arth_N, Arth_accum] = accumulation_data(Easting_lims, Northing_lims, 'xy');
+
+
+figure('Position', [10 10 1400 800])
+h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
+set(gca, 'Ydir', 'normal')
+hold on
+h1 = plot(cores.Easting(1), cores.Northing(1), 'k', 'LineWidth', 2);
+h2 = mapshow(basins, 'FaceAlpha', 0, 'LineWidth', 3);
+h3 = scatter(OIB_E, OIB_N, 25, mean(cell2mat(mOIB_SMB)));
+h4 = scatter(cores.Easting, cores.Northing, 50, 'b', 'filled');
+text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
+    'FontSize', 15, 'Interpreter', 'tex');
+c0 = colorbar;
+c0.Label.String = ['Mean annual SMB ' num2str(yr_start) '-' num2str(yr_end) ' (mm/a)'];
+c0.Label.FontSize = 18;
+graticuleps(-81:0.5:-77,-125:2:-105, 'c')
+xlim(Easting_lims)
+ylim(Northing_lims)
+scalebarps
+box on
+mapzoomps('ne', 'insetsize', 0.30)
+legend([h1 h3 h4], 'WAIS Divide', 'OIB', 'firn cores',...
+    'Location', 'northwest')
+set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+hold off
+
+
+
 %%
 
 % % Calculate mean accumulation rate and std at each location
