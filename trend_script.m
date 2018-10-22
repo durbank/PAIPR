@@ -75,6 +75,7 @@ OIB_files = dir(fullfile(data_path, ...
 
 oib_E = [];
 oib_N = [];
+oib_elev = [];
 oib_SMB_MC = [];
 oib_yr = [];
 for i = 1:length(OIB_files)
@@ -82,9 +83,11 @@ for i = 1:length(OIB_files)
     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'Northing');
     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'SMB');
     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'SMB_yr');
+    load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'elev');
     
     oib_E = [oib_E Easting];
     oib_N = [oib_N Northing];
+    oib_elev = [oib_elev, elev];
     oib_SMB_MC = [oib_SMB_MC SMB];
     oib_yr = [oib_yr SMB_yr];
 end
@@ -106,6 +109,7 @@ SEAT_yr = seat_yr(seat_idx);
 oib_idx = cellfun(@(x) max(x)>=yr_end && min(x)<=yr_start, oib_yr);
 OIB_E = oib_E(oib_idx);
 OIB_N = oib_N(oib_idx);
+OIB_elev = oib_elev(oib_idx);
 OIB_SMB = oib_SMB(oib_idx);
 OIB_yr = oib_yr(oib_idx);
 
@@ -164,27 +168,48 @@ plot(OIB_E, mean(cell2mat(mOIB_SMB)), 'm.')
 plot(cores_E, mean(cores_SMB), 'bx', 'MarkerSize', 10, 'LineWidth', 3)
 xlabel('Position (Easting)')
 ylabel(['Mean SMB (' num2str(yr_start) '-' num2str(yr_end) ')'])
+legend('Location', 'northeast', 'SEAT', 'OIB', 'cores')
 hold off
 
 subset = 1:20:length(mOIB_SMB);
 figure
 boxplot(fliplr(cell2mat(mOIB_SMB(subset))), 'PlotStyle', 'compact')
 ylabel(['OIB annual SMB' num2str(yr_start) '-' num2str(yr_end) ' (mm/a)'])
+a = get(get(gca, 'children'), 'children');
+set(a, 'Color', 'm')
+% hold on
+% boxplot(cell2mat(mSEAT_SMB(1:20:length(mSEAT_SMB))), 'PlotStyle', 'compact')
+set(gca, 'xtick', [])
+set(gca, 'xticklabel', [])
+xlabel('Easting')
 
-SEAT_sig = SEAT_pval<=0.05;
 OIB_sig = OIB_pval<=0.05;
 cores_sig = cores_pval<=0.05;
 figure
 hold on
-% plot(SEAT_E, SEAT_beta, 'ko')
-% plot(SEAT_E(SEAT_sig), SEAT_beta(SEAT_sig), 'ro')
-plot(OIB_E, OIB_beta, 'k.')
-plot(OIB_E(OIB_sig), OIB_beta(OIB_sig), 'm.')
-plot(cores_E, cores_beta, 'kx', 'MarkerSize', 10, 'LineWidth', 3)
-plot(cores_E(cores_sig), cores_beta(cores_sig), 'bx', 'MarkerSize', 10, ...
+plot(OIB_E, OIB_beta, 'k.', 'MarkerSize', 5)
+plot(OIB_E(OIB_sig), OIB_beta(OIB_sig), 'm.', 'MarkerSize', 5)
+plot(cores_E, cores_beta, 'kx', 'MarkerSize', 15, 'LineWidth', 3)
+plot(cores_E(cores_sig), cores_beta(cores_sig), 'bx', 'MarkerSize', 15, ...
     'LineWidth', 3)
 xlabel('Trace position (Easting)')
 ylabel(['Annual SMB trend' num2str(yr_start) '-' num2str(yr_end) ' (mm/a)'])
+legend('Location', 'southeast', 'OIB (all)', 'OIB (significant)', ...
+    'cores (all)', 'cores (sigificant)')
+hold off
+
+SEAT_sig = SEAT_pval<=0.05;
+figure
+hold on
+plot(SEAT_E, SEAT_beta, 'ko')
+plot(SEAT_E(SEAT_sig), SEAT_beta(SEAT_sig), 'ro')
+plot(cores_E, cores_beta, 'kx', 'MarkerSize', 15, 'LineWidth', 3)
+plot(cores_E(cores_sig), cores_beta(cores_sig), 'bx', 'MarkerSize', 15, ...
+    'LineWidth', 3)
+xlabel('Trace position (Easting)')
+ylabel(['Annual SMB trend' num2str(yr_start) '-' num2str(yr_end) ' (mm/a)'])
+legend('Location', 'southeast', 'SEAT (all)', 'SEAT (significant)', ...
+    'cores (all)', 'cores (sigificant)')
 hold off
 
 
@@ -235,12 +260,23 @@ ylim(Northing_lims)
 scalebarps
 box on
 mapzoomps('ne', 'insetsize', 0.30)
-legend([h1 h3 h4], 'WAIS Divide', 'OIB', 'firn cores',...
-    'Location', 'northwest')
+% legend([h1 h3 h4], 'WAIS Divide', 'OIB', 'firn cores',...
+%     'Location', 'northwest')
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
 hold off
 
 
+%% Elevation investigations
+
+elev = cryosat2_interp(OIB_E, OIB_N);
+
+figure
+hold on
+plot(OIB_E, elev, 'm')
+plot(cores_E, cores.elev(3:5), 'bo')
+
+figure
+plot(elev, OIB_beta, 'm.')
 
 %%
 
