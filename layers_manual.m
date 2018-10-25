@@ -44,34 +44,69 @@ Ndraw = 100;
 
 %%
 
-input_dir = fullfile(data_path, 'IceBridge/manual_layers/SEAT10_5/');
-radar_ALL = radar_format(input_dir);
-radar_i = radar_ALL(1).segment;
-overlap = 10000;
-horz_res = 25;
+% name = 'SEAT10_4';
+% input_dir = fullfile(data_path, 'IceBridge/manual_layers/SEAT10_4/raw_data/');
+% radar_ALL = radar_format(input_dir);
+% radar = radar_ALL(1).segment;
+% overlap = 10000;
+% horz_res = 25;
+% 
+% [radar_tmp] = radar_RT(radar, cores, Ndraw);
+% [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
+% 
+% clip = round(0.5*overlap/horz_res);
+% 
+% fld_nm = fieldnames(radar_tmp);
+% fld_want = {'collect_date', 'Easting', 'Northing', 'dist', 'depth', ...
+%     'data_smooth', 'peaks', 'groups', 'ages', 'SMB_yr', 'SMB'};
+% 
+% radar = struct('collect_date', radar_tmp.collect_date, ...
+%     'Easting', radar_tmp.Easting(clip:end-clip),...
+%     'Northing', radar_tmp.Northing(clip:end-clip), ...
+%     'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
+%     'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
+%     'peaks', radar_tmp.peaks(:,clip:end-clip), ...
+%     'groups', radar_tmp.groups(:,clip:end-clip),...
+%     'likelihood', radar_tmp.likelihood(:,clip:end-clip), ...
+%     'ages', radar_tmp.ages(:,clip:end-clip,:));
+% radar.dist = radar.dist - radar.dist(1);
+% if isfield(radar_tmp, 'elev')
+%     radar.elev = radar_tmp.elev(clip:end-clip);
+% end
+% radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
+% radar.SMB = radar_tmp.SMB(clip:end-clip);
+% 
+% fn = strcat('layers_', name, '.mat');
+% output_path = fullfile(input_dir, fn);
+% save(output_path, '-struct', 'radar', '-v7.3')
 
-[radar_tmp] = radar_RT(radar_i, cores, Ndraw);
-[radar_tmp] = calc_SWE(radar_tmp, Ndraw);
+%%
 
-clip = round(0.5*overlap/horz_res);
+name = 'SEAT10_4';
+radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
+    strcat('layers_', name, '.mat')));
 
-fld_nm = fieldnames(radar_tmp);
-fld_want = {'collect_date', 'Easting', 'Northing', 'dist', 'depth', ...
-    'data_smooth', 'peaks', 'groups', 'ages', 'SMB_yr', 'SMB'};
-
-radar_i = struct('collect_date', radar_tmp.collect_date, ...
-    'Easting', radar_tmp.Easting(clip:end-clip),...
-    'Northing', radar_tmp.Northing(clip:end-clip), ...
-    'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
-    'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
-    'peaks', radar_tmp.peaks(:,clip:end-clip), ...
-    'groups', radar_tmp.groups(:,clip:end-clip),...
-    'likelihood', radar_tmp.likelihood(:,clip:end-clip), ...
-    'ages', radar_tmp.ages(:,clip:end-clip,:));
-radar_i.dist = radar_i.dist - radar_i.dist(1);
-if isfield(radar_tmp, 'elev')
-    radar_i.elev = radar_tmp.elev(clip:end-clip);
+num_idx = min(radar.groups(radar.groups>0)):max(radar.groups(:));
+layers = cell(1, length(num_idx));
+for i = 1:length(layers)
+    [r,c] = ind2sub(size(radar.data_smooth), find(radar.groups==num_idx(i)));
+    layers{i} = [c movmean(r, 20)];
 end
-radar_i.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
-radar_i.SMB = radar_tmp.SMB(clip:end-clip);
+layers = layers(~cellfun(@isempty,layers));
+
+
+figure
+imagesc(radar.data_smooth, [-2 2])
+
+
+hi = drawpolyline();
+
+col = (max([1 round(min(hi.Position(:,1)))]):...
+    min([round(max(hi.Position(:,1))) length(radar.Easting)]))';
+row = interp1(hi.Position(:,1), hi.Position(:,2), col);
+Coords = [col row];
+
+
+
+
 
