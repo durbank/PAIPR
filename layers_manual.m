@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'work';
+        computer = 'laptop';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -14,7 +14,8 @@ switch PC_true
                 addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
                 
             case 'laptop'
-                data_path = 'C:/Users/durba/Documents/Research/Antarctica/Data/';
+                %                 data_path = 'C:/Users/durba/Documents/Research/Antarctica/Data/';
+                data_path = 'F:/Research/Antarctica/Data/';
                 addon_path = 'C:/Users/durba/Documents/MATLAB/Addons/';
         end
         
@@ -50,16 +51,16 @@ Ndraw = 100;
 % radar = radar_ALL(1).segment;
 % overlap = 10000;
 % horz_res = 25;
-% 
+%
 % [radar_tmp] = radar_RT(radar, cores, Ndraw);
 % [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
-% 
+%
 % clip = round(0.5*overlap/horz_res);
-% 
+%
 % fld_nm = fieldnames(radar_tmp);
 % fld_want = {'collect_date', 'Easting', 'Northing', 'dist', 'depth', ...
 %     'data_smooth', 'peaks', 'groups', 'ages', 'SMB_yr', 'SMB'};
-% 
+%
 % radar = struct('collect_date', radar_tmp.collect_date, ...
 %     'Easting', radar_tmp.Easting(clip:end-clip),...
 %     'Northing', radar_tmp.Northing(clip:end-clip), ...
@@ -75,36 +76,158 @@ Ndraw = 100;
 % end
 % radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
 % radar.SMB = radar_tmp.SMB(clip:end-clip);
-% 
+%
 % fn = strcat('layers_', name, '.mat');
 % output_path = fullfile(input_dir, fn);
 % save(output_path, '-struct', 'radar', '-v7.3')
 
 %%
 
+% Name of SEAT core site to generate training data/perform regression
 name = 'SEAT10_4';
+
+% Load relevant radar data (previously generated using the above section)
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
     strcat('layers_', name, '.mat')));
 
-num_idx = min(radar.groups(radar.groups>0)):max(radar.groups(:));
-layers = cell(1, length(num_idx));
-for i = 1:length(layers)
-    [r,c] = ind2sub(size(radar.data_smooth), find(radar.groups==num_idx(i)));
-    layers{i} = [c movmean(r, 20)];
-end
-layers = layers(~cellfun(@isempty,layers));
+%%
+% Figure for manually tracing visible annual layers
 
+% Preallocate cell array for position subscripts of manual layers
+man_layers = cell(1,250);
+i = 1;
+draw = true;
+while draw==true
+    
+    % Draw position of manual layers in radargram (layers should be continuous
+    % across the entire radargram)
+    f_draw = figure;
+    imagesc(radar.data_smooth, [-2 2])
+    hi = drawpolyline();
+    
+    if isvalid(hi)
+        
+        % Find the range of the manually picked layer
+        col = (1:length(radar.Easting))';
+%         col = (max([1 round(min(hi.Position(:,1)))]):...
+%             min([round(max(hi.Position(:,1))) length(radar.Easting)]))';
+        
+        % Linearly interpolate layer row positions to the full range of the
+        % manually picked layer
+        row = interp1(hi.Position(:,1), hi.Position(:,2), col, 'extrap');
+        
+        % Export layer position subscripts to preallocated cell array
+        man_layers{i} = [col row];
+        i = i+1;
+        
+        close(f_draw)
+        clear hi
+    else
+        draw = false;
+    end
+    
+    
+    
+end
+
+man_layers = man_layers(~cellfun(@isempty,man_layers));
+
+%%
+
+% Load manually traced layers for current SEAT core site
+%load(man_layers)
+
+%Preallocate cell array for auto layer position subscripts
+layers_raw = cell(1, max(radar.groups(:)));
+for i = 1:length(layers_raw)
+    
+    % Indices and position subscripts of ith group members
+    group_idx = find(radar.groups==i);
+    [r,c] = ind2sub(size(radar.data_smooth), group_idx);
+    
+    % Calculate peak power-distances for each peak in ith group, scaled by
+    % the median peak prominence of the radargram
+    %     peak_dist = length(c)*radar.peaks(group_idx);
+    peak_dist = length(c)*radar.peaks(group_idx)/...
+        median(radar.peaks(radar.peaks>0));
+    
+    % Arrange layer position subscripts (smoothed row values), peak
+    % power-distances, and preallocated column for manual layer matches as
+    % a matrix, and place in preallocated cell array
+    layers_raw{i} = [c movmean(r, 20) peak_dist false(length(c), 1)];
+end
+
+% Remove empty cells from layer array
+layers_raw = layers_raw(~cellfun(@isempty,layers_raw));
+
+% Sort layers by layer length (descending order), so that in future
+% calculations operations on performed on longest layers first
+layer_L = cellfun(@(x) size(x,1), layers_raw);
+[~,layer_idx] = sort(layer_L, 'descend');
+layers = layers_raw(layer_idx);
+
+
+
+% Allocate array of manual layers with which to search for matching auto
+% layers
+man_search = man_layers;
+
+for i = 1:length(layers)
+    
+    % Preallocate matrix for squared sum of errors for distance between
+    % manually and auto picked layers
+    SSE = zeros(1,length(man_search));
+    
+    for j = 1:length(man_search)
+        
+        % Find the col position intersection between ith auto layer and jth
+        % manual layer
+        [~, ja, jb] = intersect(man_search{j}(:,1), layers{i}(:,1));
+        Coord_j = man_search{j}(ja,:);
+        layer_j = layers{i}(jb,:);
+        
+        % Calculate the squared sum of distance errors between ith auto
+        % layer and jth manual layer
+        SSE(j) = sum((layer_j(:,2)-Coord_j(:,2)).^2)/size(layer_j,1);
+    end
+    
+    % Find the nearest remaining manual layer to the ith auto layer
+    [SSE_min, SSE_idx] = min(SSE);
+    
+    % Determine if nearest manual layer is sufficiently close to ith auto
+    % layer
+    if SSE_min <= 3
+        
+        % Remove manual layer neartest to ith auto layer from future
+        % match searches
+        man_search(SSE_idx) = [];
+        
+        % Add true label to ith auto layer members column for matched
+        % manual layer
+        layers{i}(:,4) = true;
+    end
+    
+    
+    
+end
+
+%% Logistic regression
+
+dist_tmp = cellfun(@(x) x(:,3), layers, 'UniformOutput', false);
+peak_dist = vertcat(dist_tmp{:});
+
+log_tmp = cellfun(@(x) x(:,4), layers, 'UniformOutput', false);
+is_layer = vertcat(log_tmp{:});
+
+[~, dev, stats] = mnrfit(peak_dist, categorical(is_layer));
+
+peaks_plot = (0:max(peak_dist))';
+likelihood = 1./(1 + exp(stats.beta(2)*peaks_plot+stats.beta(1)));
 
 figure
-imagesc(radar.data_smooth, [-2 2])
-
-
-hi = drawpolyline();
-
-col = (max([1 round(min(hi.Position(:,1)))]):...
-    min([round(max(hi.Position(:,1))) length(radar.Easting)]))';
-row = interp1(hi.Position(:,1), hi.Position(:,2), col);
-Coords = [col row];
+plot(peak_dist, is_layer, '.')
+hold on
+plot(peaks_plot, likelihood, 'r')
 
 
 
