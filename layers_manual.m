@@ -90,52 +90,10 @@ name = 'SEAT10_4';
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
     strcat('layers_', name, '.mat')));
 
-%%
-% Figure for manually tracing visible annual layers
-
-% Preallocate cell array for position subscripts of manual layers
-man_layers = cell(1,250);
-i = 1;
-draw = true;
-while draw==true
-    
-    % Draw position of manual layers in radargram (layers should be continuous
-    % across the entire radargram)
-    f_draw = figure;
-    imagesc(radar.data_smooth, [-2 2])
-    hi = drawpolyline();
-    
-    if isvalid(hi)
-        
-        % Find the range of the manually picked layer
-        col = (1:length(radar.Easting))';
-%         col = (max([1 round(min(hi.Position(:,1)))]):...
-%             min([round(max(hi.Position(:,1))) length(radar.Easting)]))';
-        
-        % Linearly interpolate layer row positions to the full range of the
-        % manually picked layer
-        row = interp1(hi.Position(:,1), hi.Position(:,2), col, 'extrap');
-        
-        % Export layer position subscripts to preallocated cell array
-        man_layers{i} = [col row];
-        i = i+1;
-        
-        close(f_draw)
-        clear hi
-    else
-        draw = false;
-    end
-    
-    
-    
-end
-
-man_layers = man_layers(~cellfun(@isempty,man_layers));
-
-%%
-
 % Load manually traced layers for current SEAT core site
-%load(man_layers)
+%load(name -> man_layers)
+
+%%
 
 %Preallocate cell array for auto layer position subscripts
 layers_raw = cell(1, max(radar.groups(:)));
@@ -206,8 +164,6 @@ for i = 1:length(layers)
         % manual layer
         layers{i}(:,4) = true;
     end
-    
-    
     
 end
 
