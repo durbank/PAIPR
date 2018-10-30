@@ -43,55 +43,22 @@ cores = load(core_file);
 % Define number of Monte Carlo simulations to perform
 Ndraw = 100;
 
-%%
-
-% name = 'SEAT10_4';
-% input_dir = fullfile(data_path, 'IceBridge/manual_layers/SEAT10_4/raw_data/');
-% radar_ALL = radar_format(input_dir);
-% radar = radar_ALL(1).segment;
-% overlap = 10000;
-% horz_res = 25;
-%
-% [radar_tmp] = radar_RT(radar, cores, Ndraw);
-% [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
-%
-% clip = round(0.5*overlap/horz_res);
-%
-% fld_nm = fieldnames(radar_tmp);
-% fld_want = {'collect_date', 'Easting', 'Northing', 'dist', 'depth', ...
-%     'data_smooth', 'peaks', 'groups', 'ages', 'SMB_yr', 'SMB'};
-%
-% radar = struct('collect_date', radar_tmp.collect_date, ...
-%     'Easting', radar_tmp.Easting(clip:end-clip),...
-%     'Northing', radar_tmp.Northing(clip:end-clip), ...
-%     'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
-%     'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
-%     'peaks', radar_tmp.peaks(:,clip:end-clip), ...
-%     'groups', radar_tmp.groups(:,clip:end-clip),...
-%     'likelihood', radar_tmp.likelihood(:,clip:end-clip), ...
-%     'ages', radar_tmp.ages(:,clip:end-clip,:));
-% radar.dist = radar.dist - radar.dist(1);
-% if isfield(radar_tmp, 'elev')
-%     radar.elev = radar_tmp.elev(clip:end-clip);
-% end
-% radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
-% radar.SMB = radar_tmp.SMB(clip:end-clip);
-%
-% fn = strcat('layers_', name, '.mat');
-% output_path = fullfile(input_dir, fn);
-% save(output_path, '-struct', 'radar', '-v7.3')
 
 %%
 
 % Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_4';
+name = 'SEAT10_5';
 
 % Load relevant radar data (previously generated using the above section)
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
     strcat('layers_', name, '.mat')));
 
-% Load manually traced layers for current SEAT core site
-%load(name -> man_layers)
+% Load manually traced layers for current SEAT core site (generated using
+% 'draw_manual.m')
+tmp = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
+    strcat('manual_', name, '.mat')));
+man_layers = tmp.man_all;
+
 
 %%
 
@@ -130,6 +97,12 @@ layers = layers_raw(layer_idx);
 % layers
 man_search = man_layers;
 
+% Remove manual layers that do not extend across at least 80% of the
+% radargram
+max_length = max(cellfun(@length, man_search));
+short_idx = cellfun(@(x) length(x) >= 0.80*max_length, man_search);
+man_search = man_search(short_idx);
+
 for i = 1:length(layers)
     
     % Preallocate matrix for squared sum of errors for distance between
@@ -146,7 +119,8 @@ for i = 1:length(layers)
         
         % Calculate the squared sum of distance errors between ith auto
         % layer and jth manual layer
-        SSE(j) = sum((layer_j(:,2)-Coord_j(:,2)).^2)/size(layer_j,1);
+        SSE(j) = abs(mean(layer_j(:,2) - Coord_j(:,2)));
+%         SSE(j) = sum((layer_j(:,2)-Coord_j(:,2)).^2)/size(layer_j,1);
     end
     
     % Find the nearest remaining manual layer to the ith auto layer
@@ -154,7 +128,7 @@ for i = 1:length(layers)
     
     % Determine if nearest manual layer is sufficiently close to ith auto
     % layer
-    if SSE_min <= 3
+    if SSE_min <= 5
         
         % Remove manual layer neartest to ith auto layer from future
         % match searches
