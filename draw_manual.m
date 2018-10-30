@@ -43,10 +43,48 @@ cores = load(core_file);
 % Define number of Monte Carlo simulations to perform
 Ndraw = 100;
 
+%%
+
+% name = 'SEAT10_5';
+% input_dir = fullfile(data_path, 'IceBridge/manual_layers', name);
+% radar_ALL = radar_format(fullfile(input_dir, 'raw_data/'));
+% radar = radar_ALL(1).segment;
+% overlap = 10000;
+% horz_res = 25;
+% 
+% [radar_tmp] = radar_RT(radar, cores, Ndraw);
+% [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
+% 
+% clip = round(0.5*overlap/horz_res);
+% 
+% fld_nm = fieldnames(radar_tmp);
+% fld_want = {'collect_date', 'Easting', 'Northing', 'dist', 'depth', ...
+%     'data_smooth', 'peaks', 'groups', 'ages', 'SMB_yr', 'SMB'};
+% 
+% radar = struct('collect_date', radar_tmp.collect_date, ...
+%     'Easting', radar_tmp.Easting(clip:end-clip),...
+%     'Northing', radar_tmp.Northing(clip:end-clip), ...
+%     'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
+%     'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
+%     'peaks', radar_tmp.peaks(:,clip:end-clip), ...
+%     'groups', radar_tmp.groups(:,clip:end-clip),...
+%     'likelihood', radar_tmp.likelihood(:,clip:end-clip), ...
+%     'ages', radar_tmp.ages(:,clip:end-clip,:));
+% radar.dist = radar.dist - radar.dist(1);
+% if isfield(radar_tmp, 'elev')
+%     radar.elev = radar_tmp.elev(clip:end-clip);
+% end
+% radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
+% radar.SMB = radar_tmp.SMB(clip:end-clip);
+% 
+% fn = strcat('layers_', name, '.mat');
+% output_path = fullfile(input_dir, fn);
+% save(output_path, '-struct', 'radar', '-v7.3')
+
 %% 
 
 % Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_4';
+name = 'SEAT10_5';
 
 % Load relevant radar data (previously generated using the above section)
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
@@ -70,9 +108,9 @@ while draw==true
     if isvalid(hi)
         
         % Find the range of the manually picked layer
-        col = (1:length(radar.Easting))';
-%         col = (max([1 round(min(hi.Position(:,1)))]):...
-%             min([round(max(hi.Position(:,1))) length(radar.Easting)]))';
+%         col = (1:length(radar.Easting))';
+        col = (max([1 round(min(hi.Position(:,1)))]):...
+            min([round(max(hi.Position(:,1))) length(radar.Easting)]))';
         
         % Linearly interpolate layer row positions to the full range of the
         % manually picked layer
