@@ -45,7 +45,7 @@ Ndraw = 100;
 
 %%
 
-% name = 'SEAT10_5';
+% name = 'SEAT10_6';
 % input_dir = fullfile(data_path, 'IceBridge/manual_layers', name);
 % radar_ALL = radar_format(fullfile(input_dir, 'raw_data/'));
 % radar = radar_ALL(1).segment;
@@ -84,7 +84,7 @@ Ndraw = 100;
 %% 
 
 % Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_5';
+name = 'SEAT10_6';
 
 % Load relevant radar data (previously generated using the above section)
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
@@ -108,7 +108,7 @@ while draw==true
     if isvalid(hi)
         
         % Find the range of the manually picked layer
-%         col = (1:length(radar.Easting))';
+        col = (1:length(radar.Easting))';
         col = (max([1 round(min(hi.Position(:,1)))]):...
             min([round(max(hi.Position(:,1))) length(radar.Easting)]))';
         
