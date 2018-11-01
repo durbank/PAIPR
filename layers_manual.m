@@ -47,7 +47,7 @@ Ndraw = 100;
 %%
 
 % Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_5';
+name = 'SEAT10_4';
 
 % Load relevant radar data (previously generated using the above section)
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
@@ -72,9 +72,9 @@ for i = 1:length(layers_raw)
     
     % Calculate peak power-distances for each peak in ith group, scaled by
     % the median peak prominence of the radargram
-    %     peak_dist = length(c)*radar.peaks(group_idx);
-    peak_dist = length(c)*radar.peaks(group_idx)/...
-        median(radar.peaks(radar.peaks>0));
+    peak_dist = length(c)*radar.peaks(group_idx);
+%     peak_dist = length(c)*radar.peaks(group_idx)/...
+%         median(radar.peaks(radar.peaks>0));
     
     % Arrange layer position subscripts (smoothed row values), peak
     % power-distances, and preallocated column for manual layer matches as
@@ -97,11 +97,11 @@ layers = layers_raw(layer_idx);
 % layers
 man_search = man_layers;
 
-% Remove manual layers that do not extend across at least 80% of the
-% radargram
+% Remove manual layers that do not extend across at least 20% of the
+% radargram (typically ~5 km)
 max_length = max(cellfun(@length, man_search));
-short_idx = cellfun(@(x) length(x) >= 0.80*max_length, man_search);
-man_search = man_search(short_idx);
+long_idx = cellfun(@(x) length(x) >= 0.20*max_length, man_search);
+man_search = man_search(long_idx);
 
 for i = 1:length(layers)
     
