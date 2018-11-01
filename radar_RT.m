@@ -278,17 +278,15 @@ radar.likelihood = zeros(size(radar.data_smooth));
 err_out = [];
 for i = 1:size(layer_peaks, 2)
     
-    % Assign the 50% likelihood point based on median trace prominence and
-    % layer length
-%     P_50 = median(Proms{i})*min([8750 0.5*radar.dist(end)]);
-%     P_50 = median(Proms{i})*max([8750 0.25*radar.dist(end)]);
-    P_50 = median(Proms{i})*max([10000 0.25*radar.dist(end)]);
-    
-    % Assign min/max layer likelihoods, and calculate the logistic rate
-    % coefficient
-    Po = 0.05;
-    K = 1;
-    r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
+%     % Assign the 50% likelihood point based on median trace prominence and
+%     % layer length
+%     P_50 = median(Proms{i})*max([10000 0.25*radar.dist(end)]);
+%     
+%     % Assign min/max layer likelihoods, and calculate the logistic rate
+%     % coefficient
+%     Po = 0.05;
+%     K = 1;
+%     r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
     
     % Get layer prom-distance values and depths for layers in ith trace
     peaks_i = layer_peaks(:,i);
@@ -298,7 +296,10 @@ for i = 1:size(layer_peaks, 2)
     
     % Likelihood of layer representing a year based on a logistic function
     % with rate (r) calculated above
-    likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
+    r = -0.0060;    % [-0.003 -0.009]
+    k = 3.8642;     % [3.2 4.7]
+    likelihood = 1./(1+exp(r*peaks_i + k));
+%     likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
     radar.likelihood(peaks_idx,i) = likelihood;
     
     % Assign MC simulation annual layer presence based on layer likelihood
