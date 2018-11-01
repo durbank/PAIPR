@@ -84,11 +84,15 @@ Ndraw = 100;
 %% 
 
 % Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_6';
+name = 'SEAT10_4';
 
 % Load relevant radar data (previously generated using the above section)
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
     strcat('layers_', name, '.mat')));
+
+guides = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
+    strcat('manual_', name, '.mat')));
+guides = guides.man_all;
 
 %%
 % Figure for manually tracing visible annual layers
@@ -103,12 +107,21 @@ while draw==true
     % across the entire radargram)
     f_draw = figure;
     imagesc(radar.data_smooth, [-2 2])
+    hold on
+    for j = 1:length(guides)
+        plot(guides{j}(:,1), guides{j}(:,2), 'm')
+    end
+    if i >= 2
+        for k = 1:i-1
+            plot(man_layers{k}(:,1), man_layers{k}(:,2), 'r')
+        end
+    end
     hi = drawpolyline();
     
     if isvalid(hi)
         
         % Find the range of the manually picked layer
-        col = (1:length(radar.Easting))';
+%         col = (1:length(radar.Easting))';
         col = (max([1 round(min(hi.Position(:,1)))]):...
             min([round(max(hi.Position(:,1))) length(radar.Easting)]))';
         
@@ -132,3 +145,7 @@ while draw==true
 end
 
 man_layers = man_layers(~cellfun(@isempty,man_layers));
+
+keep_idx = cellfun(@(x) round(x(:,2))<=size(radar.data_smooth,1), ...
+    man_layers, 'UniformOutput', false);
+man_layers = cellfun(@(x,y) x(y,:), man_layers, keep_idx, 'UniformOutput', false);
