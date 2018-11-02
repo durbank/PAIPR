@@ -296,8 +296,10 @@ for i = 1:size(layer_peaks, 2)
     
     % Likelihood of layer representing a year based on a logistic function
     % with rate (r) calculated above
-    r = -0.0060;    % [-0.003 -0.009]
-    k = 3.8642;     % [3.2 4.7]
+    r = -2.0206e-4; % [-2.5e-4 -1.5e-4]
+    k = 4.1834;     % [3.5 4.5]
+%     r = -0.0060;    % [-0.003 -0.009]
+%     k = 3.8642;     % [3.2 4.7]
     likelihood = 1./(1+exp(r*peaks_i + k));
 %     likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
     radar.likelihood(peaks_idx,i) = likelihood;
