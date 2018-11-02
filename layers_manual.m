@@ -43,6 +43,7 @@ cores = load(core_file);
 % Define number of Monte Carlo simulations to perform
 Ndraw = 100;
 
+horz_res = 25;
 
 %%
 
@@ -72,7 +73,9 @@ for i = 1:length(layers_raw)
     
     % Calculate peak power-distances for each peak in ith group, scaled by
     % the median peak prominence of the radargram
-    peak_dist = length(c)*radar.peaks(group_idx);
+    d = diff([c(:) r(:)]);
+%     peak_dist = horz_res*sum(sqrt(sum(d.*d,2)))*radar.peaks(group_idx);
+    peak_dist = horz_res*length(c)*radar.peaks(group_idx);
 %     peak_dist = length(c)*radar.peaks(group_idx)/...
 %         median(radar.peaks(radar.peaks>0));
     
@@ -97,10 +100,10 @@ layers = layers_raw(layer_idx);
 % layers
 man_search = man_layers;
 
-% Remove manual layers that do not extend across at least 20% of the
+% Remove manual layers that do not extend across at least 75% of the
 % radargram (typically ~5 km)
 max_length = max(cellfun(@length, man_search));
-long_idx = cellfun(@(x) length(x) >= 0.20*max_length, man_search);
+long_idx = cellfun(@(x) length(x) >= 0.50*max_length, man_search);
 man_search = man_search(long_idx);
 
 for i = 1:length(layers)
