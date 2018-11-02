@@ -55,15 +55,18 @@ Ndraw = 100;
 % [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
 % 
 % clip = round(0.5*overlap/horz_res);
-
+% 
 % fld_nm = fieldnames(radar_tmp);
 % fld_want = {'collect_date', 'Easting', 'Northing', 'dist', 'depth', ...
-%     'data_smooth', 'peaks', 'groups', 'ages', 'SMB_yr', 'SMB'};
+%     'rho_coeff', 'rho_var', 'data_smooth', 'peaks', 'groups', 'ages', ...
+%     'SMB_yr', 'SMB'};
 % 
 % radar = struct('collect_date', radar_tmp.collect_date, ...
 %     'Easting', radar_tmp.Easting(clip:end-clip),...
 %     'Northing', radar_tmp.Northing(clip:end-clip), ...
 %     'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
+%     'rho_coeff', radar_tmp.rho_coeff(:,clip:end-clip), ...
+%     'rho_var', radar_tmp.rho_var(:,clip:end-clip), ...
 %     'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
 %     'peaks', radar_tmp.peaks(:,clip:end-clip), ...
 %     'groups', radar_tmp.groups(:,clip:end-clip),...
@@ -75,7 +78,7 @@ Ndraw = 100;
 % end
 % radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
 % radar.SMB = radar_tmp.SMB(clip:end-clip);
-% 
+
 % fn = strcat('layers_', name, '.mat');
 % output_path = fullfile(input_dir, fn);
 % save(output_path, '-struct', 'radar', '-v7.3')
@@ -84,11 +87,13 @@ Ndraw = 100;
 %%
 
 % Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_6';
+name = 'SEAT10_4';
 
 % Load relevant radar data (previously generated using the above section)
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
-    strcat('layers_', name, '.mat')));
+    strcat('layers_', name, '_opt.mat')));
+% radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
+%     strcat('layers_', name, '.mat')));
 
 % Load manually traced layers for current SEAT core site (generated using
 % 'draw_manual.m')
