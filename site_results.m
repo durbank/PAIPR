@@ -5,7 +5,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'laptop';
+        computer = 'work';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -44,7 +44,7 @@ Ndraw = 100;
 
 %%
 
-% name = 'SEAT10_4';
+% name = 'SEAT10_5';
 % input_dir = fullfile(data_path, 'IceBridge/manual_layers', name);
 % radar_ALL = radar_format(fullfile(input_dir, 'raw_data/'));
 % radar = radar_ALL(1).segment;
@@ -53,7 +53,7 @@ Ndraw = 100;
 % 
 % [radar_tmp] = radar_RT(radar, cores, Ndraw);
 % [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
-% 
+% % 
 % clip = round(0.5*overlap/horz_res);
 % 
 % fld_nm = fieldnames(radar_tmp);
@@ -78,8 +78,8 @@ Ndraw = 100;
 % end
 % radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
 % radar.SMB = radar_tmp.SMB(clip:end-clip);
-
-% fn = strcat('layers_', name, '.mat');
+% % 
+% fn = strcat('layers_', name, '_opt.mat');
 % output_path = fullfile(input_dir, fn);
 % save(output_path, '-struct', 'radar', '-v7.3')
 
@@ -87,13 +87,11 @@ Ndraw = 100;
 %%
 
 % Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_4';
+name = 'SEAT10_6';
 
 % Load relevant radar data (previously generated using the above section)
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
     strcat('layers_', name, '_opt.mat')));
-% radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
-%     strcat('layers_', name, '.mat')));
 
 % Load manually traced layers for current SEAT core site (generated using
 % 'draw_manual.m')
@@ -119,14 +117,14 @@ end
 
 
 man_log = logical(man_mat);
-ages = zeros(size(radar.data_smooth));
+ages_man = zeros(size(radar.data_smooth));
 age_top = radar.collect_date;
 yr_pick1 = ceil(radar.collect_date - 1);
 
-for i = 1:size(ages,2)
+for i = 1:size(ages_man,2)
     depths_i = [0; radar.depth(man_log(:,i))];
     yrs_i = ([age_top yr_pick1:-1:yr_pick1-length(depths_i)+2])';
-    ages(:,i) = interp1(depths_i, yrs_i, radar.depth, 'linear', 'extrap');
+    ages_man(:,i) = interp1(depths_i, yrs_i, radar.depth, 'linear', 'extrap');
 end
 
 
@@ -135,9 +133,52 @@ end
 
 figure
 hold on
-plot(radar.depth, mean(ages,2), 'k')
-plot(radar.depth, mean(mean(radar.ages, 3), 2), 'm')
-plot(cores.(name).depth, mean(cores.(name).ages,2), 'b')
+plot(radar.depth, mean(ages_man,2), 'k', 'LineWidth', 2)
+plot(radar.depth, mean(ages_man,2) + std(ages_man, [], 2), 'k--')
+plot(radar.depth, mean(ages_man,2) - std(ages_man, [], 2), 'k--')
+plot(radar.depth, mean(mean(radar.ages, 3), 2), 'm', 'LineWidth', 2)
+plot(radar.depth, mean(mean(radar.ages, 3), 2) + ...
+    std(mean(radar.ages, 3), [], 2), 'm--')
+plot(radar.depth, mean(mean(radar.ages, 3), 2) - ...
+    std(mean(radar.ages, 3), [], 2), 'm--')
+plot(cores.(name).depth, mean(cores.(name).ages,2), 'b', 'LineWidth', 2)
+plot(cores.(name).depth, mean(cores.(name).ages,2) + ...
+    std(cores.(name).ages, [], 2), 'b--')
+plot(cores.(name).depth, mean(cores.(name).ages,2) - ...
+    std(cores.(name).ages, [], 2), 'b--')
 
 
+
+%%
+
+for n = 1:20
     
+    figure
+    hold on
+    i = randi(size(radar.ages,2));
+    plot(radar.depth, ages_man(:,i), 'k', 'LineWidth', 2)
+    plot(radar.depth, mean(radar.ages(:,i,:), 3), 'm', 'LineWidth', 2)
+    plot(radar.depth, mean(radar.ages(:,i,:), 3) + ...
+        std(squeeze(radar.ages(:,i,:)), [], 2), 'm--')
+    plot(radar.depth, mean(radar.ages(:,i,:), 3) - ...
+        std(squeeze(radar.ages(:,i,:)), [], 2), 'm--')
+    plot(cores.(name).depth, mean(cores.(name).ages,2), 'b', 'LineWidth', 2)
+    plot(cores.(name).depth, mean(cores.(name).ages,2) + ...
+        std(cores.(name).ages, [], 2), 'b--')
+    plot(cores.(name).depth, mean(cores.(name).ages,2) - ...
+        std(cores.(name).ages, [], 2), 'b--')
+    hold off
+    
+    figure
+    hold on
+    plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2), 'm', 'LineWidth', 2)
+    plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2)+std(radar.SMB{i},[],2), 'm--')
+    plot(radar.SMB_yr{i}, mean(radar.SMB{i}, 2)-std(radar.SMB{i},[],2), 'm--')
+    plot(cores.(name).SMB_yr, mean(cores.(name).SMB, 2), 'b', 'LineWidth', 2)
+    plot(cores.(name).SMB_yr, mean(cores.(name).SMB, 2) + ...
+        std(cores.(name).SMB, [], 2), 'b--')
+    plot(cores.(name).SMB_yr, mean(cores.(name).SMB, 2) - ...
+        std(cores.(name).SMB, [], 2), 'b--')
+    hold off
+    
+end
