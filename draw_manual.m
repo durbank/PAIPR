@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'laptop';
+        computer = 'work';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -84,7 +84,7 @@ Ndraw = 100;
 %% 
 
 % Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_4';
+name = 'SEAT10_6';
 
 % Load relevant radar data (previously generated using the above section)
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...

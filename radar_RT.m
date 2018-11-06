@@ -38,7 +38,8 @@ core_res = 0.02;
 
 % Define the cutoff depth for radar traces and find index of crossover
 % depth
-cutoff = 25;
+% cutoff = 25;
+cutoff = 28;
 depth_bott = floor(min([min(radar.depth(end,:)) cutoff]));
 
 % Trim radar traces to cutoff depth and interpolate data to vertical scale
@@ -296,10 +297,9 @@ for i = 1:size(layer_peaks, 2)
     
     % Likelihood of layer representing a year based on a logistic function
     % with rate (r) calculated above
-    r = -2.0206e-4; % [-2.5e-4 -1.5e-4]
-    k = 4.1834;     % [3.5 4.5]
-%     r = -0.0060;    % [-0.003 -0.009]
-%     k = 3.8642;     % [3.2 4.7]
+    r = -2.4333e-4; % [-3.18e-4 -1.55e-4]
+    k = 4.4323;     % [3.25 4.8]
+    
     likelihood = 1./(1+exp(r*peaks_i + k));
 %     likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
     radar.likelihood(peaks_idx,i) = likelihood;
@@ -336,4 +336,18 @@ end
 
 radar.ages = ages;
 
+
+% Clip depth-related variables to final cutoff depth
+cutoff = 25;
+cut_idx = round(cutoff/core_res) + 1;
+radar = struct('collect_date', radar.collect_date, 'Easting', radar.Easting,...
+    'Northing', radar.Northing, 'dist', radar.dist, ...
+    'depth', radar.depth(1:cut_idx), 'rho_coeff', radar.rho_coeff, ...
+    'rho_var', radar.rho_var, 'data_smooth', radar.data_smooth(1:cut_idx,:),...
+    'peaks', radar.peaks(1:cut_idx,:), 'groups', radar.groups(1:cut_idx,:),...
+    'likelihood', radar.likelihood(1:cut_idx,:), ...
+    'ages', radar.ages(1:cut_idx,:,:));
+if isfield(radar, 'elev')
+    radar.elev = radar.elev;
+end
 end

@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'laptop';
+        computer = 'work';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -48,11 +48,11 @@ horz_res = 25;
 %%
 
 % Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_4';
+name = 'SEAT10_6';
 
 % Load relevant radar data (previously generated using the above section)
 radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
-    strcat('layers_', name, '.mat')));
+    strcat('layers_', name, '_opt.mat')));
 
 % Load manually traced layers for current SEAT core site (generated using
 % 'draw_manual.m')
@@ -100,8 +100,8 @@ layers = layers_raw(layer_idx);
 % layers
 man_search = man_layers;
 
-% Remove manual layers that do not extend across at least 75% of the
-% radargram (typically ~5 km)
+% Remove manual layers that do not extend across at least 50% of the
+% radargram (typically ~10 km)
 max_length = max(cellfun(@length, man_search));
 long_idx = cellfun(@(x) length(x) >= 0.50*max_length, man_search);
 man_search = man_search(long_idx);
@@ -163,6 +163,6 @@ hold on
 plot(peaks_plot, likelihood, 'r')
 
 
-
+sprintf('%f | %f', stats.beta)
 
 
