@@ -44,9 +44,9 @@ Ndraw = 100;
 
 % Define path to the directory containing radar data (relative to the
 % 'data' directory path)
-% radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
-%     'allSEAT10_4toSEAT10_6');
-radar_dir = fullfile(data_path, 'IceBridge/SEAT10_4to10_6/2011_SNO');
+radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/SEAT2010Kuband/', ...
+    'SEAT10_4toSEAT10_6');
+% radar_dir = fullfile(data_path, 'IceBridge/SEAT10_4to10_6/2011_SNO');
 
 %%
 
