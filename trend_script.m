@@ -45,10 +45,10 @@ Ndraw = 100;
 %%
 
 wild = '*.mat';
-% SEAT_files = dir(fullfile(data_path, 'radar/SEAT_Traverses/',...
-%     'SEAT2010Kuband/SEAT10_4toSEAT10_6/SMB_results/', wild));
 SEAT_files = dir(fullfile(data_path, 'radar/SEAT_Traverses/',...
-    'SEAT2010Kuband/allSEAT10_4toSEAT10_6/SMB_results/', wild));
+    'SEAT2010Kuband/SEAT10_4toSEAT10_6/SMB_results/', wild));
+% SEAT_files = dir(fullfile(data_path, 'radar/SEAT_Traverses/',...
+%     'SEAT2010Kuband/allSEAT10_4toSEAT10_6/SMB_results/', wild));
 
 seat_E = [];
 seat_N = [];
@@ -83,11 +83,14 @@ for i = 1:length(OIB_files)
     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'Northing');
     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'SMB');
     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'SMB_yr');
-    load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'elev');
-    
+    try
+        load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'elev');
+        oib_elev = [oib_elev, elev];
+    catch
+        disp('Missing elevation data')
+    end
     oib_E = [oib_E Easting];
     oib_N = [oib_N Northing];
-    oib_elev = [oib_elev, elev];
     oib_SMB_MC = [oib_SMB_MC SMB];
     oib_yr = [oib_yr SMB_yr];
 end
@@ -109,7 +112,11 @@ SEAT_yr = seat_yr(seat_idx);
 oib_idx = cellfun(@(x) max(x)>=yr_end && min(x)<=yr_start, oib_yr);
 OIB_E = oib_E(oib_idx);
 OIB_N = oib_N(oib_idx);
-OIB_elev = oib_elev(oib_idx);
+try
+    OIB_elev = oib_elev(oib_idx);
+catch
+    disp('Elevation data missing')
+end
 OIB_SMB = oib_SMB(oib_idx);
 OIB_yr = oib_yr(oib_idx);
 
@@ -168,7 +175,7 @@ plot(OIB_E, mean(cell2mat(mOIB_SMB)), 'm.')
 plot(cores_E, mean(cores_SMB), 'bx', 'MarkerSize', 10, 'LineWidth', 3)
 xlabel('Position (Easting)')
 ylabel(['Mean SMB (' num2str(yr_start) '-' num2str(yr_end) ')'])
-legend('Location', 'northeast', 'SEAT', 'OIB', 'cores')
+legend('SEAT', 'OIB', 'cores', 'Location', 'northeast')
 hold off
 
 subset = 1:20:length(mOIB_SMB);
@@ -194,8 +201,8 @@ plot(cores_E(cores_sig), cores_beta(cores_sig), 'bx', 'MarkerSize', 15, ...
     'LineWidth', 3)
 xlabel('Trace position (Easting)')
 ylabel(['Annual SMB trend' num2str(yr_start) '-' num2str(yr_end) ' (mm/a)'])
-legend('Location', 'southeast', 'OIB (all)', 'OIB (significant)', ...
-    'cores (all)', 'cores (sigificant)')
+legend('OIB (all)', 'OIB (significant)', 'cores (all)', ...
+    'cores (sigificant)', 'Location', 'southeast')
 hold off
 
 SEAT_sig = SEAT_pval<=0.05;
@@ -208,16 +215,16 @@ plot(cores_E(cores_sig), cores_beta(cores_sig), 'bx', 'MarkerSize', 15, ...
     'LineWidth', 3)
 xlabel('Trace position (Easting)')
 ylabel(['Annual SMB trend' num2str(yr_start) '-' num2str(yr_end) ' (mm/a)'])
-legend('Location', 'southeast', 'SEAT (all)', 'SEAT (significant)', ...
-    'cores (all)', 'cores (sigificant)')
+legend('SEAT (all)', 'SEAT (significant)', 'cores (all)', ...
+    'cores (sigificant)', 'Location', 'southeast')
 hold off
 
 
 % figure
 % hold on
-% % plot(SEAT_E, SEAT_beta./mean(cell2mat(mSEAT_SMB)), 'ko')
-% % plot(SEAT_E(SEAT_sig), SEAT_beta(SEAT_sig)./...
-% %     mean(cell2mat(mSEAT_SMB(SEAT_sig))), 'ro')
+% plot(SEAT_E, SEAT_beta./mean(cell2mat(mSEAT_SMB)), 'ko')
+% plot(SEAT_E(SEAT_sig), SEAT_beta(SEAT_sig)./...
+%     mean(cell2mat(mSEAT_SMB(SEAT_sig))), 'ro')
 % plot(OIB_E, OIB_beta./mean(cell2mat(mOIB_SMB)), 'k.')
 % plot(OIB_E(OIB_sig), OIB_beta(OIB_sig)./...
 %     mean(cell2mat(mOIB_SMB(OIB_sig))), 'm.')
@@ -231,7 +238,7 @@ hold off
 %% Compare mean accumulation to Arthern et al 2006
 %%% Can also add in White et al comparison using Favier compilation
 
-labels = strrep(cores.name, '_', '-');
+labels = strrep(my_cores, '_', '-');
 basins = shaperead(strcat(data_path, ...
     'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
 Easting_lims = [min(cores.Easting)-10000 max(cores.Easting)+5000];
@@ -246,10 +253,11 @@ h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
 set(gca, 'Ydir', 'normal')
 hold on
 h1 = plot(cores.Easting(1), cores.Northing(1), 'k', 'LineWidth', 2);
-h2 = mapshow(basins, 'FaceAlpha', 0, 'LineWidth', 3);
-h3 = scatter(OIB_E, OIB_N, 25, mean(cell2mat(mOIB_SMB)));
-h4 = scatter(cores.Easting, cores.Northing, 50, 'b', 'filled');
-text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
+h2 = mapshow(basins, 'FaceAlpha', 0);
+h3 = scatter(OIB_E, OIB_N, 25, mean(cell2mat(mOIB_SMB)), 'filled');
+% h4 = scatter(SEAT_E, SEAT_N, 25, mean(cell2mat(mSEAT_SMB)), 'filled');
+h5 = scatter(cores_E, cores_N, 100, mean(cores_SMB)', 'filled');
+text(cores_E, cores_N, strcat('\leftarrow', labels), ...
     'FontSize', 15, 'Interpreter', 'tex');
 c0 = colorbar;
 c0.Label.String = ['Mean annual SMB ' num2str(yr_start) '-' num2str(yr_end) ' (mm/a)'];
