@@ -2,7 +2,7 @@
 % analysis
 
 % Varargin defines the starting and ending trace indices to include in the
-% data import. These should numeric scalars, with values between 1 and
+% data import. These should be numeric scalars, with values between 1 and
 % the total length of the radargram file to import. If both starting and
 % ending indices are prescribed, varargin{2} should be greater than
 % varargin{1}
