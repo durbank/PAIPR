@@ -81,7 +81,8 @@ try
     mdata.dist = pathdist(mdata.lat, mdata.lon);
 catch
     mdata.dist = [];
-    disp('Warning: error with calculating pathdist (Line 81 of import_radar.m)')
+    disp(strcat("Warning: Error on pathdist (Line 81 of import_radar.m);", ...
+        sprintf(" %i elements in array", length(mdata.lat))));
 end
 
 % Check to see if collection data is already present. If it is not, create
