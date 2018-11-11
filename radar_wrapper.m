@@ -6,15 +6,15 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'work';
-        %         computer = input('Current PC: ');
+%         computer = 'work';
+        computer = input('Current PC: ');
         switch computer
             case 'work'
                 data_path = 'E:/Research/Antarctica/Data/';
                 addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
                 
             case 'laptop'
-                data_path = 'C:/Users/durba/Documents/Research/Antarctica/Data/';
+                data_path = 'F:/Research/Antarctica/Data/';
                 addon_path = 'C:/Users/durba/Documents/MATLAB/Addons/';
         end
         
