@@ -44,22 +44,33 @@ wild = '*.mat';
 SEAT10_files = dir(fullfile(data_path, 'radar/SEAT_Traverses/',...
     'SEAT2010Kuband/RawSEAT2010/SMB_results/', wild));
 
-seat_E = [];
-seat_N = [];
-seat_SMB_MC = [];
-seat_yr = [];
+seat_E = zeros(1, length(SEAT10_files)*2*(50*1000/25));
+seat_N = seat_E;
+seat_SMB_MC = cell(1, length(SEAT10_files)*2*(50*1000/25));
+seat_yr = seat_SMB_MC;
 for i = 1:length(SEAT10_files)
     load(fullfile(SEAT10_files(i).folder, SEAT10_files(i).name), 'Easting');
     load(fullfile(SEAT10_files(i).folder, SEAT10_files(i).name), 'Northing');
     load(fullfile(SEAT10_files(i).folder, SEAT10_files(i).name), 'SMB');
     load(fullfile(SEAT10_files(i).folder, SEAT10_files(i).name), 'SMB_yr');
     
-    seat_E = [seat_E Easting];
-    seat_N = [seat_N Northing];
-    seat_SMB_MC = [seat_SMB_MC SMB];
-    seat_yr = [seat_yr SMB_yr];
+    next_idx = sum(~cellfun(@isempty, seat_SMB_MC)) + 1;
+    seat_E(next_idx:next_idx+length(Easting)-1) = Easting;
+    seat_N(next_idx:next_idx+length(Northing)-1) = Northing;
+    seat_SMB_MC(next_idx:next_idx+length(SMB)-1) = SMB;
+    seat_yr(next_idx:next_idx+length(SMB_yr)-1) = SMB_yr;
+    
+%     seat_E = [seat_E Easting];
+%     seat_N = [seat_N Northing];
+%     seat_SMB_MC = [seat_SMB_MC SMB];
+%     seat_yr = [seat_yr SMB_yr];
 end
 
+keep_idx = find(~cellfun(@isempty, seat_SMB_MC));
+seat_E = seat_E(keep_idx);
+seat_N = seat_N(keep_idx);
+seat_SMB_MC = seat_SMB_MC(keep_idx);
+seat_yr = seat_yr(keep_idx);
 
 
 
@@ -72,6 +83,48 @@ seat_std = cellfun(@(x) std(x, [], 2), seat_SMB_MC, 'UniformOutput', 0);
 
 
 % Load previously processed 2011 OIB snow radar accumulation results
+OIB_files = dir(fullfile(data_path, 'IceBridge/SNO_radar/',...
+    '2011/SMB_results/', wild));
+
+oib_E = zeros(1, length(OIB_files)*2*(50*1000/25));
+oib_N = oib_E;
+oib_SMB_MC = cell(1, length(OIB_files)*2*(50*1000/25));
+oib_yr = oib_SMB_MC;
+
+for i = 1:length(OIB_files)
+    load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'Easting');
+    load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'Northing');
+    load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'SMB');
+    load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'SMB_yr');
+
+    next_idx = sum(~cellfun(@isempty, oib_SMB_MC)) + 1;
+    oib_E(next_idx:next_idx+length(Easting)-1) = Easting;
+    oib_N(next_idx:next_idx+length(Northing)-1) = Northing;
+    oib_SMB_MC(next_idx:next_idx+length(SMB)-1) = SMB;
+    oib_yr(next_idx:next_idx+length(SMB_yr)-1) = SMB_yr;
+end
+
+keep_idx = find(~cellfun(@isempty, oib_SMB_MC));
+oib_E = oib_E(keep_idx);
+oib_N = oib_N(keep_idx);
+oib_SMB_MC = oib_SMB_MC(keep_idx);
+oib_yr = oib_yr(keep_idx);
+
+oib_SMB = cellfun(@(x) mean(x, 2), oib_SMB_MC, 'UniformOutput', 0);
+oib_std = cellfun(@(x) std(x, [], 2), oib_SMB_MC, 'UniformOutput', 0);
+
+try
+    oib_elev = false(1, length(OIB_files)*2*(50*1000/25));
+    for i=1:length(OIB_files)
+        load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'elev');
+        next_idx = sum(logical(oib_elev)) + 1;
+        oib_elev(next_idx:next_idx+length(elev)-1) = elev;
+    end
+    keep_idx = find(logical(oib_elev));
+    oib_elev = oib_elev(keep_idx);
+catch
+    disp('Flag: Missing elevation data')
+end
 
 
 
@@ -81,24 +134,44 @@ yr_start = 1979;
 yr_end = 2009;
 year = (yr_end:-1:yr_start)';
 
+
+%%
 seat_idx = cellfun(@(x) max(x)>=yr_end && min(x)<=yr_start, seat_yr);
 SEAT_E = seat_E(seat_idx);
 SEAT_N = seat_N(seat_idx);
 SEAT_SMB = seat_SMB(seat_idx);
+SEAT_std = seat_std(seat_idx);
 SEAT_yr = seat_yr(seat_idx);
 
 SEAT_start = cellfun(@(x) find(x==yr_start, 1), SEAT_yr, 'UniformOutput', 0);
 SEAT_end = cellfun(@(x) find(x==yr_end, 1), SEAT_yr, 'UniformOutput', 0);
-mSEAT_SMB = cellfun(@(x,y,z) x(y:z), SEAT_SMB, SEAT_end, SEAT_start, ...
+% mSEAT_SMB = cellfun(@(x,y,z) x(y:z), SEAT_SMB, SEAT_end, SEAT_start, ...
+%     'UniformOutput', 0);
+mSEAT_SMB = cellfun(@(x,y,z) movmean(x(y:z),3), SEAT_SMB, SEAT_end, SEAT_start, ...
     'UniformOutput', 0);
-
 
 [coeff, stats] = cellfun(@(x) robustfit(year, x), mSEAT_SMB, 'UniformOutput', 0);
 SEAT_beta = cellfun(@(x) x(2), coeff);
 SEAT_pval = cellfun(@(x) x.p(2), stats);
 
+%%
+oib_idx = cellfun(@(x) max(x)>=yr_end && min(x)<=yr_start, oib_yr);
+OIB_E = oib_E(oib_idx);
+OIB_N = oib_N(oib_idx);
+OIB_SMB = oib_SMB(oib_idx);
+OIB_std = oib_std(oib_idx);
+OIB_yr = oib_yr(oib_idx);
 
+OIB_start = cellfun(@(x) find(x==yr_start, 1), OIB_yr, 'UniformOutput', 0);
+OIB_end = cellfun(@(x) find(x==yr_end, 1), OIB_yr, 'UniformOutput', 0);
+% mOIB_SMB = cellfun(@(x,y,z) x(y:z), OIB_SMB, OIB_end, OIB_start, ...
+%     'UniformOutput', 0);
+mOIB_SMB = cellfun(@(x,y,z) movmean(x(y:z),3), OIB_SMB, OIB_end, OIB_start, ...
+    'UniformOutput', 0);
 
+[coeff, stats] = cellfun(@(x) robustfit(year, movmean(x,3)), mOIB_SMB, 'UniformOutput', 0);
+OIB_beta = cellfun(@(x) x(2), coeff);
+OIB_pval = cellfun(@(x) x.p(2), stats);
 
 %%
 
@@ -124,8 +197,10 @@ end
 labels = strrep(cores.name, '_', '-');
 basins = shaperead(strcat(data_path, ...
     'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
-Easting_lims = [min(cores.Easting)-10000 max(cores.Easting)+5000];
-Northing_lims = [min(cores.Northing)-5000 max(cores.Northing)+5000];
+Easting_lims = [min([min(cores.Easting) min(SEAT_E) min(OIB_E)]) - 5000 ...
+    max([max(cores.Easting) max(SEAT_E) max(OIB_E)]) + 5000];
+Northing_lims = [min([min(cores.Northing) min(SEAT_N) min(OIB_N)]) - 5000 ...
+    max([max(cores.Northing) max(SEAT_N) max(OIB_N)]) + 5000];
 
 [Arth_E, Arth_N, Arth_accum] = accumulation_data(Easting_lims, Northing_lims, 'xy');
 
@@ -134,12 +209,12 @@ figure('Position', [10 10 1400 800])
 h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
 set(gca, 'Ydir', 'normal')
 hold on
-% h1 = plot(cores.Easting(1), cores.Northing(1), 'k', 'LineWidth', 2);
-h2 = mapshow(basins, 'FaceAlpha', 0);
-h3 = scatter(SEAT_E, SEAT_N, 25, mean(cell2mat(mSEAT_SMB)), 'filled');
+h1 = mapshow(basins, 'FaceAlpha', 0);
+h2 = scatter(SEAT_E, SEAT_N, 25, mean(cell2mat(mSEAT_SMB)), 'filled');
+% h3 = scatter(OIB_E, OIB_N, 25, mean(cell2mat(mOIB_SMB)), 'filled');
 h4 = scatter(cores.Easting, cores.Northing, 100, nanmean(cores_SMB)', 'filled');
 text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
-    'FontSize', 15, 'Interpreter', 'tex');
+    'FontSize', 13, 'Interpreter', 'tex');
 c0 = colorbar;
 c0.Label.String = ['Mean annual SMB ' num2str(yr_start) '-' ...
     num2str(yr_end) ' (mm/a)'];
@@ -153,16 +228,70 @@ mapzoomps('ne', 'insetsize', 0.30)
 % legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
 %     'SEAT radar mean SMB', 'Location', 'northwest')
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+title('SEAT mean annual SMB')
 hold off
 
+
+figure('Position', [10 10 1400 800])
+title('SEAT radar SMB trends')
+hold on
+h1 = mapshow(basins, 'FaceAlpha', 0);
+h2 = scatter(SEAT_E, SEAT_N, 25, SEAT_beta, 'filled');
+% h3 = scatter(OIB_E, OIB_N, 25, OIB_beta, 'filled');
+h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
+text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
+    'FontSize', 15, 'Interpreter', 'tex');
+c0 = colorbar;
+c0.Label.String = ['Linear trend in annual SMB ' num2str(yr_start) '-' ...
+    num2str(yr_end) ' (mm/a)'];
+c0.Label.FontSize = 18;
+graticuleps(-81:0.5:-77,-125:2:-105, 'c')
+xlim(Easting_lims)
+ylim(Northing_lims)
+caxis([-7 0])
+scalebarps
+box on
+mapzoomps('ne', 'insetsize', 0.30)
+% legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
+%     'SEAT radar mean SMB', 'Location', 'northwest')
+set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+hold off
 
 %%
 
 figure('Position', [10 10 1400 800])
+h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
+set(gca, 'Ydir', 'normal')
 hold on
-% h1 = plot(cores.Easting(1), cores.Northing(1), 'k', 'LineWidth', 2);
-h2 = mapshow(basins, 'FaceAlpha', 0);
-h3 = scatter(SEAT_E, SEAT_N, 25, SEAT_beta, 'filled');
+h1 = mapshow(basins, 'FaceAlpha', 0);
+% h2 = scatter(SEAT_E, SEAT_N, 25, mean(cell2mat(mSEAT_SMB)), 'filled');
+h3 = scatter(OIB_E, OIB_N, 25, mean(cell2mat(mOIB_SMB)), 'filled');
+h4 = scatter(cores.Easting, cores.Northing, 100, nanmean(cores_SMB)', 'filled');
+text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
+    'FontSize', 13, 'Interpreter', 'tex');
+c0 = colorbar;
+c0.Label.String = ['Mean annual SMB ' num2str(yr_start) '-' ...
+    num2str(yr_end) ' (mm/a)'];
+c0.Label.FontSize = 18;
+graticuleps(-81:0.5:-77,-125:2:-105, 'c')
+xlim(Easting_lims)
+ylim(Northing_lims)
+scalebarps
+box on
+mapzoomps('ne', 'insetsize', 0.30)
+% legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
+%     'SEAT radar mean SMB', 'Location', 'northwest')
+set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+title('OIB mean annual SMB')
+hold off
+
+
+figure('Position', [10 10 1400 800])
+title('OIB radar SMB trends')
+hold on
+h1 = mapshow(basins, 'FaceAlpha', 0);
+% h2 = scatter(SEAT_E, SEAT_N, 25, SEAT_beta, 'filled');
+h3 = scatter(OIB_E, OIB_N, 25, OIB_beta, 'filled');
 h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
 text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
     'FontSize', 15, 'Interpreter', 'tex');
@@ -187,14 +316,39 @@ hold off
 
 
 
+%%
 
+SEAT_set = SEAT_E >= -1.05E6 & SEAT_E <= -1.03E6 & SEAT_N <= -4.638E5;
+OIB_set = OIB_E >= -1.05E6 & OIB_E <= -1.03E6 & OIB_N <= -4.638E5;
+SMB_S = SEAT_SMB(SEAT_set);
+SMB_O = fliplr(OIB_SMB(OIB_set));
+std_S = SEAT_std(SEAT_set);
+std_O = fliplr(OIB_std(OIB_set));
+yr_S = SEAT_yr(SEAT_set);
+yr_O = fliplr(OIB_yr(OIB_set));
 
+% figure
+% hold on
+% scatter(SEAT_E(SEAT_set), SEAT_N(SEAT_set), 25, ...
+%     SEAT_beta(SEAT_set), 'filled')
+% scatter(OIB_E(OIB_set), OIB_N(OIB_set), 25, OIB_beta(OIB_set), 'filled')
+% hold off
+
+i = randi(length(SMB_O));
+figure
+hold on
+plot(yr_S{i}, movmean(SMB_S{i},5), 'r', 'LineWidth', 2)
+plot(yr_S{i}, movmean(SMB_S{i},5) + movmean(std_S{i},5), 'r--')
+plot(yr_S{i}, movmean(SMB_S{i},5) - movmean(std_S{i},5), 'r--')
+plot(yr_O{i}, movmean(SMB_O{i},5), 'm', 'LineWidth', 2)
+plot(yr_O{i}, movmean(SMB_O{i},5) + movmean(std_O{i},5), 'm--')
+plot(yr_O{i}, movmean(SMB_O{i},5) - movmean(std_O{i},5), 'm--')
+hold off
 
 
 
 
 %%
-
 
 % %% Core site comparisons
 % 
