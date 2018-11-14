@@ -151,8 +151,10 @@ mSEAT_SMB = cellfun(@(x,y,z) movmean(x(y:z),3), SEAT_SMB, SEAT_end, SEAT_start, 
     'UniformOutput', 0);
 
 [coeff, stats] = cellfun(@(x) robustfit(year, x), mSEAT_SMB, 'UniformOutput', 0);
-SEAT_beta = cellfun(@(x) x(2), coeff);
-SEAT_pval = cellfun(@(x) x.p(2), stats);
+SEAT_stats = struct();
+SEAT_stats.b = cellfun(@(x) x(2), coeff);
+SEAT_stats.se = cellfun(@(x) x.se(2), stats); 
+SEAT_stats.p = cellfun(@(x) x.p(2), stats);
 
 %%
 oib_idx = cellfun(@(x) max(x)>=yr_end && min(x)<=yr_start, oib_yr);
@@ -170,13 +172,16 @@ mOIB_SMB = cellfun(@(x,y,z) movmean(x(y:z),3), OIB_SMB, OIB_end, OIB_start, ...
     'UniformOutput', 0);
 
 [coeff, stats] = cellfun(@(x) robustfit(year, movmean(x,3)), mOIB_SMB, 'UniformOutput', 0);
-OIB_beta = cellfun(@(x) x(2), coeff);
-OIB_pval = cellfun(@(x) x.p(2), stats);
+OIB_stats = struct();
+OIB_stats.b = cellfun(@(x) x(2), coeff);
+OIB_stats.se = cellfun(@(x) x.se(2), stats); 
+OIB_stats.p = cellfun(@(x) x.p(2), stats);
 
 %%
 
 cores_SMB = nan(length(year), length(cores.name));
 cores_beta = zeros(1, length(cores.name));
+cores_se = zeros(1, length(cores.name));
 cores_pval = zeros(1, length(cores.name));
 for k = 1:length(cores.name)
     core_k = cores.(cores.name{k});
@@ -188,6 +193,7 @@ for k = 1:length(cores.name)
     
     [coeff, stats] = robustfit(year(1:length(SMB_k)), SMB_k);
     cores_beta(k) = coeff(2);
+    cores_se(k) = stats.se(2);
     cores_pval(k) = stats.p(2);
 end
 
@@ -236,7 +242,7 @@ figure('Position', [10 10 1400 800])
 title('SEAT radar SMB trends')
 hold on
 h1 = mapshow(basins, 'FaceAlpha', 0);
-h2 = scatter(SEAT_E, SEAT_N, 25, SEAT_beta, 'filled');
+h2 = scatter(SEAT_E, SEAT_N, 25, SEAT_stats.b, 'filled');
 % h3 = scatter(OIB_E, OIB_N, 25, OIB_beta, 'filled');
 h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
 text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
@@ -291,7 +297,7 @@ title('OIB radar SMB trends')
 hold on
 h1 = mapshow(basins, 'FaceAlpha', 0);
 % h2 = scatter(SEAT_E, SEAT_N, 25, SEAT_beta, 'filled');
-h3 = scatter(OIB_E, OIB_N, 25, OIB_beta, 'filled');
+h3 = scatter(OIB_E, OIB_N, 25, OIB_stats.b, 'filled');
 h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
 text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
     'FontSize', 15, 'Interpreter', 'tex');
