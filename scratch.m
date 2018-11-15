@@ -48,42 +48,67 @@ mSMB2 = cell2mat(cellfun(@(x) mean(x(1:32,:),2), radar2.SMB, ...
 
 beta = zeros(1,length(mSMB));
 for i=1:length(mSMB)
-coeff = robustfit(yrs, mSMB(:,i));
-beta(i) = coeff(2);
+    coeff = robustfit(yrs, mSMB(:,i));
+    beta(i) = coeff(2);
 end
 
 beta2 = zeros(1,length(mSMB2));
 for i=1:length(mSMB2)
-coeff = robustfit(yrs, mSMB2(:,i));
-beta2(i) = coeff(2);
+    coeff = robustfit(yrs, mSMB2(:,i));
+    beta2(i) = coeff(2);
 end
 
 E = [radar2.Easting radar.Easting];
 data = [radar2.data_smooth radar.data_smooth];
-SMB = [mSMB2 mSMB];
-b = [beta2 beta];
+% SMB = [mSMB2 mSMB];
+% b = [beta2 beta];
+
+
+
+layers = cell(1, max(radar.groups(:)));
+for i=1:length(layers)
+    [r,c] = find(radar.groups==i);
+    layers{i} = [r c];
+end
+layers = layers(~cellfun(@isempty, layers));
+
+layers2 = cell(1, max(radar2.groups(:)));
+for i=1:length(layers2)
+    [r,c] = find(radar2.groups==i);
+    layers2{i} = [r c];
+end
+layers2 = layers2(~cellfun(@isempty, layers2));
 
 figure
 imagesc(E, radar.depth, data, [-2 2])
+hold on
+cellfun(@(x) plot(radar.Easting(x(:,2)), radar.depth(x(:,1)), ...
+    'r', 'LineWidth', 1.5), layers);
+cellfun(@(x) plot(radar2.Easting(x(:,2)), radar2.depth(x(:,1)), ...
+    'm', 'LineWidth', 1.5), layers2);
 
 figure
 yyaxis left
-plot(E, mean(SMB), 'b')
+hold on
+plot(radar.Easting, mean(mSMB), 'b')
+plot(radar2.Easting, mean(mSMB2), 'c')
 yyaxis right
-plot(E, b, 'r')
-
-figure
-imagesc(radar2.Easting, radar2.depth, radar2.data_smooth, [-2 2])
-
-figure
-yyaxis left
-plot(radar2.Easting, mean(mSMB2), 'b')
-yyaxis right
-plot(radar2.Easting, beta2, 'r')
+plot(radar.Easting, beta, 'r')
+plot(radar2.Easting, beta2, 'm')
+xlim([min(E) max(E)])
+hold off
 
 figure
 hold on
-plot(radar.Easting, beta)
-plot(radar2.Easting, beta2)
+num_plot = 100;
+for n = 1:num_plot
+    h0 = plot(yrs, mSMB(:,length(mSMB)-n), 'r', 'LineWidth', 0.5);
+    h0.Color(4) = 0.05;
+end
+for n = 1:num_plot
+    h0 = plot(yrs, mSMB2(:,length(mSMB2)-n), 'm', 'LineWidth', 0.5);
+    h0.Color(4) = 0.05;
+end
 hold off
+
 
