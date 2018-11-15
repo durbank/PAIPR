@@ -44,27 +44,50 @@ wild = '*.mat';
 SEAT10_files = dir(fullfile(data_path, 'radar/SEAT_Traverses/',...
     'SEAT2010Kuband/RawSEAT2010/SMB_results/', wild));
 
-seat_E = zeros(1, length(SEAT10_files)*2*(50*1000/25));
-seat_N = seat_E;
-seat_SMB_MC = cell(1, length(SEAT10_files)*2*(50*1000/25));
-seat_yr = seat_SMB_MC;
+seat10_E = zeros(1, length(SEAT10_files)*2*(50*1000/25));
+seat10_N = seat10_E;
+seat10_SMB_MC = cell(1, length(SEAT10_files)*2*(50*1000/25));
+seat10_yr = seat10_SMB_MC;
 for i = 1:length(SEAT10_files)
     load(fullfile(SEAT10_files(i).folder, SEAT10_files(i).name), 'Easting');
     load(fullfile(SEAT10_files(i).folder, SEAT10_files(i).name), 'Northing');
     load(fullfile(SEAT10_files(i).folder, SEAT10_files(i).name), 'SMB');
     load(fullfile(SEAT10_files(i).folder, SEAT10_files(i).name), 'SMB_yr');
     
-    next_idx = sum(~cellfun(@isempty, seat_SMB_MC)) + 1;
-    seat_E(next_idx:next_idx+length(Easting)-1) = Easting;
-    seat_N(next_idx:next_idx+length(Northing)-1) = Northing;
-    seat_SMB_MC(next_idx:next_idx+length(SMB)-1) = SMB;
-    seat_yr(next_idx:next_idx+length(SMB_yr)-1) = SMB_yr;
+    next_idx = sum(~cellfun(@isempty, seat10_SMB_MC)) + 1;
+    seat10_E(next_idx:next_idx+length(Easting)-1) = Easting;
+    seat10_N(next_idx:next_idx+length(Northing)-1) = Northing;
+    seat10_SMB_MC(next_idx:next_idx+length(SMB)-1) = SMB;
+    seat10_yr(next_idx:next_idx+length(SMB_yr)-1) = SMB_yr;
     
-%     seat_E = [seat_E Easting];
-%     seat_N = [seat_N Northing];
-%     seat_SMB_MC = [seat_SMB_MC SMB];
-%     seat_yr = [seat_yr SMB_yr];
 end
+
+SEAT11_files = dir(fullfile(data_path, 'radar/SEAT_Traverses/',...
+    'SEAT2011Kuband/RawSEAT2011/SMB_results/', wild));
+
+seat11_E = zeros(1, length(SEAT11_files)*2*(50*1000/25));
+seat11_N = seat11_E;
+seat11_SMB_MC = cell(1, length(SEAT11_files)*2*(50*1000/25));
+seat11_yr = seat10_SMB_MC;
+for i = 1:length(SEAT11_files)
+    load(fullfile(SEAT11_files(i).folder, SEAT11_files(i).name), 'Easting');
+    load(fullfile(SEAT11_files(i).folder, SEAT11_files(i).name), 'Northing');
+    load(fullfile(SEAT11_files(i).folder, SEAT11_files(i).name), 'SMB');
+    load(fullfile(SEAT11_files(i).folder, SEAT11_files(i).name), 'SMB_yr');
+    
+    next_idx = sum(~cellfun(@isempty, seat11_SMB_MC)) + 1;
+    seat11_E(next_idx:next_idx+length(Easting)-1) = Easting;
+    seat11_N(next_idx:next_idx+length(Northing)-1) = Northing;
+    seat11_SMB_MC(next_idx:next_idx+length(SMB)-1) = SMB;
+    seat11_yr(next_idx:next_idx+length(SMB_yr)-1) = SMB_yr;
+    
+end
+
+seat_E = [seat10_E seat11_E];
+seat_N = [seat10_N seat11_N];
+seat_SMB_MC = [seat10_SMB_MC seat11_SMB_MC];
+seat_yr = [seat10_yr seat11_yr];
+
 
 keep_idx = find(~cellfun(@isempty, seat_SMB_MC));
 seat_E = seat_E(keep_idx);
@@ -72,15 +95,8 @@ seat_N = seat_N(keep_idx);
 seat_SMB_MC = seat_SMB_MC(keep_idx);
 seat_yr = seat_yr(keep_idx);
 
-
-
-
-
 seat_SMB = cellfun(@(x) mean(x, 2), seat_SMB_MC, 'UniformOutput', 0);
 seat_std = cellfun(@(x) std(x, [], 2), seat_SMB_MC, 'UniformOutput', 0);
-
-
-
 
 % Load previously processed 2011 OIB snow radar accumulation results
 OIB_files = dir(fullfile(data_path, 'IceBridge/SNO_radar/',...
@@ -130,7 +146,7 @@ end
 
 %%
 
-yr_start = 1979;
+yr_start = 1990;
 yr_end = 2009;
 year = (yr_end:-1:yr_start)';
 
@@ -243,7 +259,7 @@ title('SEAT radar SMB trends')
 hold on
 h1 = mapshow(basins, 'FaceAlpha', 0);
 h2 = scatter(SEAT_E, SEAT_N, 25, SEAT_stats.b, 'filled');
-% h3 = scatter(OIB_E, OIB_N, 25, OIB_beta, 'filled');
+% h3 = scatter(OIB_E, OIB_N, 25, OIB_stats.b, 'filled');
 h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
 text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
     'FontSize', 15, 'Interpreter', 'tex');
