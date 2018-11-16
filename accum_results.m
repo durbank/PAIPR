@@ -146,7 +146,7 @@ end
 
 %%
 
-yr_start = 1990;
+yr_start = 1979;
 yr_end = 2009;
 year = (yr_end:-1:yr_start)';
 
@@ -166,11 +166,17 @@ SEAT_end = cellfun(@(x) find(x==yr_end, 1), SEAT_yr, 'UniformOutput', 0);
 mSEAT_SMB = cellfun(@(x,y,z) movmean(x(y:z),3), SEAT_SMB, SEAT_end, SEAT_start, ...
     'UniformOutput', 0);
 
-[coeff, stats] = cellfun(@(x) robustfit(year, x), mSEAT_SMB, 'UniformOutput', 0);
+% [coeff, stats] = cellfun(@(x) robustfit(year, x), mSEAT_SMB, 'UniformOutput', 0);
+% SEAT_stats = struct();
+% SEAT_stats.b = cellfun(@(x) x(2), coeff);
+% SEAT_stats.se = cellfun(@(x) x.se(2), stats); 
+% SEAT_stats.p = cellfun(@(x) x.p(2), stats);
+
+[coeff, stats] = cellfun(@(x) polyfit(year, x, 1), mSEAT_SMB, 'UniformOutput', 0);
 SEAT_stats = struct();
-SEAT_stats.b = cellfun(@(x) x(2), coeff);
-SEAT_stats.se = cellfun(@(x) x.se(2), stats); 
-SEAT_stats.p = cellfun(@(x) x.p(2), stats);
+SEAT_stats.b = cellfun(@(x) x(1), coeff);
+% SEAT_stats.se = cellfun(@(x) x.se(2), stats); 
+% SEAT_stats.p = cellfun(@(x) x.p(2), stats);
 
 %%
 oib_idx = cellfun(@(x) max(x)>=yr_end && min(x)<=yr_start, oib_yr);
@@ -187,11 +193,17 @@ OIB_end = cellfun(@(x) find(x==yr_end, 1), OIB_yr, 'UniformOutput', 0);
 mOIB_SMB = cellfun(@(x,y,z) movmean(x(y:z),3), OIB_SMB, OIB_end, OIB_start, ...
     'UniformOutput', 0);
 
-[coeff, stats] = cellfun(@(x) robustfit(year, movmean(x,3)), mOIB_SMB, 'UniformOutput', 0);
+% [coeff, stats] = cellfun(@(x) robustfit(year, movmean(x,3)), mOIB_SMB, 'UniformOutput', 0);
+% OIB_stats = struct();
+% OIB_stats.b = cellfun(@(x) x(2), coeff);
+% OIB_stats.se = cellfun(@(x) x.se(2), stats); 
+% OIB_stats.p = cellfun(@(x) x.p(2), stats);
+
+[coeff, stats] = cellfun(@(x) polyfit(year, x, 1), mOIB_SMB, 'UniformOutput', 0);
 OIB_stats = struct();
-OIB_stats.b = cellfun(@(x) x(2), coeff);
-OIB_stats.se = cellfun(@(x) x.se(2), stats); 
-OIB_stats.p = cellfun(@(x) x.p(2), stats);
+OIB_stats.b = cellfun(@(x) x(1), coeff);
+% OIB_stats.se = cellfun(@(x) x.se(2), stats); 
+% OIB_stats.p = cellfun(@(x) x.p(2), stats);
 
 %%
 
@@ -207,10 +219,15 @@ for k = 1:length(cores.name)
     SMB_k = SMB_mean(core_start:core_end);
     cores_SMB(1:length(SMB_k),k) = SMB_k;
     
-    [coeff, stats] = robustfit(year(1:length(SMB_k)), SMB_k);
-    cores_beta(k) = coeff(2);
-    cores_se(k) = stats.se(2);
-    cores_pval(k) = stats.p(2);
+%     [coeff, stats] = robustfit(year(1:length(SMB_k)), SMB_k);
+%     cores_beta(k) = coeff(2);
+%     cores_se(k) = stats.se(2);
+%     cores_pval(k) = stats.p(2);
+
+[coeff, stats] = polyfit(year(1:length(SMB_k)), SMB_k, 1);
+    cores_beta(k) = coeff(1);
+%     cores_se(k) = stats.se(2);
+%     cores_pval(k) = stats.p(2);
 end
 
 
@@ -366,6 +383,9 @@ plot(yr_O{i}, movmean(SMB_O{i},5), 'm', 'LineWidth', 2)
 plot(yr_O{i}, movmean(SMB_O{i},5) + movmean(std_O{i},5), 'm--')
 plot(yr_O{i}, movmean(SMB_O{i},5) - movmean(std_O{i},5), 'm--')
 hold off
+
+%%
+
 
 
 
