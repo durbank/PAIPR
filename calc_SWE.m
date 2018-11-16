@@ -31,8 +31,9 @@ ages = radar.ages;
 
 
 
-% Define first year with complete accumulation data and earliest year with
-% observations within the data set
+% Define calendar age of the top of the first year with complete 
+% accumulation data and earliest whole year with observations within the 
+% data set
 yr_top = floor(max(max(ages(1,:,:))));
 yr_end = ceil(min(min(ages(end,:,:))));
 
