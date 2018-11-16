@@ -37,8 +37,8 @@ wild = '*.mat';
 OIB_files = dir(fullfile(data_path, 'IceBridge/SNO_radar/',...
     '2011/SMB_results/', wild));
 
-radar = load(fullfile(OIB_files(19).folder, OIB_files(19).name));
-radar2 = load(fullfile(OIB_files(18).folder, OIB_files(18).name));
+radar = load(fullfile(OIB_files(18).folder, OIB_files(18).name));
+radar2 = load(fullfile(OIB_files(19).folder, OIB_files(19).name));
 
 yrs = (2010:-1:2010-32+1)';
 mSMB = cell2mat(cellfun(@(x) mean(x(1:32,:),2), radar.SMB, ...
@@ -47,21 +47,25 @@ mSMB2 = cell2mat(cellfun(@(x) mean(x(1:32,:),2), radar2.SMB, ...
     'UniformOutput', false));
 
 beta = zeros(1,length(mSMB));
+rbeta = zeros(1,length(mSMB));
 for i=1:length(mSMB)
+    coeff = polyfit(yrs, mSMB(:,i), 1);
+    beta(i) = coeff(1);
     coeff = robustfit(yrs, mSMB(:,i));
-    beta(i) = coeff(2);
+    rbeta(i) = coeff(2);
 end
 
 beta2 = zeros(1,length(mSMB2));
+rbeta2 = zeros(1,length(mSMB2));
 for i=1:length(mSMB2)
+    coeff = polyfit(yrs, mSMB2(:,i), 1);
+    beta2(i) = coeff(1);
     coeff = robustfit(yrs, mSMB2(:,i));
-    beta2(i) = coeff(2);
+    rbeta2(i) = coeff(2);
 end
 
-E = [radar2.Easting radar.Easting];
-data = [radar2.data_smooth radar.data_smooth];
-% SMB = [mSMB2 mSMB];
-% b = [beta2 beta];
+E = [radar.Easting radar2.Easting];
+data = [radar.data_smooth radar2.data_smooth];
 
 
 
@@ -93,8 +97,8 @@ hold on
 plot(radar.Easting, mean(mSMB), 'b')
 plot(radar2.Easting, mean(mSMB2), 'c')
 yyaxis right
-plot(radar.Easting, beta, 'r')
-plot(radar2.Easting, beta2, 'm')
+plot(radar.Easting, rbeta, 'r')
+plot(radar2.Easting, rbeta2, 'm')
 xlim([min(E) max(E)])
 hold off
 
@@ -104,11 +108,54 @@ num_plot = 100;
 for n = 1:num_plot
     h0 = plot(yrs, mSMB(:,length(mSMB)-n), 'r', 'LineWidth', 0.5);
     h0.Color(4) = 0.05;
-end
-for n = 1:num_plot
     h0 = plot(yrs, mSMB2(:,length(mSMB2)-n), 'm', 'LineWidth', 0.5);
     h0.Color(4) = 0.05;
 end
 hold off
 
+
+%%
+
+% Add gif addon to path
+addon_folder = fullfile(addon_path, 'gif_v1.0/');
+addpath(genpath(addon_folder))
+
+fig = figure('Position', [10 500 1400 400]);
+hold on
+scatter(radar.Easting, radar.Northing, 10, mSMB(end,:), 'filled')
+scatter(radar2.Easting, radar2.Northing, 10, mSMB2(end,:), 'filled')
+scatter(radar.Easting(1), radar.Northing(1), 75, 'kx')
+scatter(radar.Easting(end), radar.Northing(end), 75, 'rx')
+scatter(radar2.Easting(1), radar2.Northing(1), 75, 'mx')
+xlim([min([min(radar.Easting) min(radar2.Easting)]) ...
+    max([max(radar.Easting) max(radar2.Easting)])]);
+ylim([min([min(radar.Northing) min(radar2.Northing)]) ...
+    max([max(radar.Northing) max(radar2.Northing)])]);
+colorbar
+caxis([150 500])
+title(sprintf('%i', yrs(end)))
+hold off
+
+
+gif('test.gif', 'DelayTime', 1, 'LoopCount', 5,'frame', gcf)
+
+for i = length(yrs)-1:-1:1
+    fig.NextPlot = 'replace';
+    scatter(radar.Easting, radar.Northing, 10, mSMB(i,:), 'filled')
+    hold on
+    scatter(radar2.Easting, radar2.Northing, 10, mSMB2(i,:), 'filled')
+    scatter(radar.Easting(1), radar.Northing(1), 75, 'kx')
+    scatter(radar.Easting(end), radar.Northing(end), 75, 'rx')
+    scatter(radar2.Easting(1), radar2.Northing(1), 75, 'mx')
+    xlim([min([min(radar.Easting) min(radar2.Easting)]) ...
+        max([max(radar.Easting) max(radar2.Easting)])]);
+    ylim([min([min(radar.Northing) min(radar2.Northing)]) ...
+        max([max(radar.Northing) max(radar2.Northing)])]);
+    colorbar
+    caxis([150 500])
+    title(sprintf('%i', yrs(i)))
+    hold off
+    
+    gif
+end
 
