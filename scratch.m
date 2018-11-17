@@ -124,9 +124,9 @@ fig = figure('Position', [10 500 1400 400]);
 hold on
 scatter(radar.Easting, radar.Northing, 10, mSMB(end,:), 'filled')
 scatter(radar2.Easting, radar2.Northing, 10, mSMB2(end,:), 'filled')
-scatter(radar.Easting(1), radar.Northing(1), 75, 'kx')
-scatter(radar.Easting(end), radar.Northing(end), 75, 'rx')
-scatter(radar2.Easting(1), radar2.Northing(1), 75, 'mx')
+scatter(radar.Easting(1), radar.Northing(1), 75, 'rx')
+scatter(radar.Easting(end), radar.Northing(end), 75, 'kx')
+scatter(radar2.Easting(end), radar2.Northing(end), 75, 'mx')
 xlim([min([min(radar.Easting) min(radar2.Easting)]) ...
     max([max(radar.Easting) max(radar2.Easting)])]);
 ylim([min([min(radar.Northing) min(radar2.Northing)]) ...
@@ -144,9 +144,9 @@ for i = length(yrs)-1:-1:1
     scatter(radar.Easting, radar.Northing, 10, mSMB(i,:), 'filled')
     hold on
     scatter(radar2.Easting, radar2.Northing, 10, mSMB2(i,:), 'filled')
-    scatter(radar.Easting(1), radar.Northing(1), 75, 'kx')
-    scatter(radar.Easting(end), radar.Northing(end), 75, 'rx')
-    scatter(radar2.Easting(1), radar2.Northing(1), 75, 'mx')
+    scatter(radar.Easting(1), radar.Northing(1), 75, 'rx')
+    scatter(radar.Easting(end), radar.Northing(end), 75, 'kx')
+    scatter(radar2.Easting(end), radar2.Northing(end), 75, 'mx')
     xlim([min([min(radar.Easting) min(radar2.Easting)]) ...
         max([max(radar.Easting) max(radar2.Easting)])]);
     ylim([min([min(radar.Northing) min(radar2.Northing)]) ...
