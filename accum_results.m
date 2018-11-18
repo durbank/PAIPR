@@ -143,6 +143,75 @@ catch
 end
 
 
+%% Generated looped gif of annual SMB
+
+% Add gif addon to path
+addon_folder = fullfile(addon_path, 'gif_v1.0/');
+addpath(genpath(addon_folder))
+
+
+seat_lengths = cellfun(@length, seat_yr);
+[length_max, max_idx] = max(seat_lengths);
+yr_seat = seat_yr{max_idx}(1):-1:seat_yr{max_idx}(end);
+seat_k = seat_lengths >= length_max;
+SMB_ks = cellfun(@(x) x(length_max), seat_SMB(seat_k));
+
+
+yr_bias = oib_yr{1}(1) - yr_seat(1);
+oib_lengths = cellfun(@length, oib_yr);
+oib_k = oib_lengths >= length_max + yr_bias;
+SMB_ko = cellfun(@(x) x(length_max+yr_bias), oib_SMB(oib_k));
+
+
+basins = shaperead(strcat(data_path, ...
+    'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
+Easting_lims = [min([min(cores.Easting) min(seat_E) min(oib_E)]) - 5000 ...
+    max([max(cores.Easting) max(seat_E) max(oib_E)]) + 5000];
+Northing_lims = [min([min(cores.Northing) min(seat_N) min(oib_N)]) - 5000 ...
+    max([max(cores.Northing) max(seat_N) max(oib_N)]) + 5000];
+
+
+map_gif = figure('Position', [10 10 1400 800]);
+hold on
+h1 = mapshow(basins, 'FaceAlpha', 0);
+h2 = scatter(seat_E(seat_k), seat_N(seat_k), 25, SMB_ks, 'filled');
+h3 = scatter(oib_E(oib_k), oib_N(oib_k), 25, SMB_ko, 'filled');
+% h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
+% text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
+%     'FontSize', 15, 'Interpreter', 'tex');
+c0 = colorbar;
+c0.Label.String = sprintf('Annual SMB (mm/a) - %i', yr_seat(end));
+c0.Label.FontSize = 18;
+graticuleps(-81:0.5:-77,-125:2:-105, 'c')
+xlim(Easting_lims)
+ylim(Northing_lims)
+caxis([100 450])
+scalebarps
+box on
+mapzoomps('ne', 'insetsize', 0.30)
+set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+
+gif('test.gif', 'DelayTime', 0.50, 'LoopCount', 7,'frame', gcf)
+
+
+for k=length_max-1:-1:1
+    
+    seat_k = seat_lengths >= k;
+    SMB_ks = cellfun(@(x) x(k), seat_SMB(seat_k));
+    oib_k = oib_lengths >= k + yr_bias;
+    SMB_ko = cellfun(@(x) x(k+yr_bias), oib_SMB(oib_k));
+    
+    map_gif.NextPlot = 'add';
+    h2 = scatter(seat_E(seat_k), seat_N(seat_k), 25, SMB_ks, 'filled');
+    map_gif.NextPlot = 'add';
+    h3 = scatter(oib_E(oib_k), oib_N(oib_k), 25, SMB_ko, 'filled');
+
+    c0.Label.String = sprintf('Annual SMB (mm/a) - %i', yr_seat(k));
+
+    gif
+end
+
+
 
 %%
 
@@ -349,9 +418,6 @@ mapzoomps('ne', 'insetsize', 0.30)
 %     'SEAT radar mean SMB', 'Location', 'northwest')
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
 hold off
-
-
-
 
 
 

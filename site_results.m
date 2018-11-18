@@ -87,7 +87,7 @@ Ndraw = 100;
 %%
 
 % Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_6';
+name = 'SEAT10_4';
 
 % Load relevant radar data (previously generated using the above section)
 radar_OIB = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
