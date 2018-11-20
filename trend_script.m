@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'laptop';
+        computer = 'work';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
