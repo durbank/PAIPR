@@ -143,79 +143,79 @@ catch
 end
 
 
-%% Generated looped gif of annual SMB
+%% Generate looped gif of annual SMB
 
-% Add gif addon to path
-addon_folder = fullfile(addon_path, 'gif_v1.0/');
-addpath(genpath(addon_folder))
-
-
-seat_lengths = cellfun(@length, seat_yr);
-[length_max, max_idx] = max(seat_lengths);
-yr_seat = seat_yr{max_idx}(1):-1:seat_yr{max_idx}(end);
-seat_k = seat_lengths >= length_max;
-SMB_ks = cellfun(@(x) x(length_max), seat_SMB(seat_k));
-
-
-yr_bias = oib_yr{1}(1) - yr_seat(1);
-oib_lengths = cellfun(@length, oib_yr);
-oib_k = oib_lengths >= length_max + yr_bias;
-SMB_ko = cellfun(@(x) x(length_max+yr_bias), oib_SMB(oib_k));
-
-
-basins = shaperead(strcat(data_path, ...
-    'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
-Easting_lims = [min([min(cores.Easting) min(seat_E) min(oib_E)]) - 5000 ...
-    max([max(cores.Easting) max(seat_E) max(oib_E)]) + 5000];
-Northing_lims = [min([min(cores.Northing) min(seat_N) min(oib_N)]) - 5000 ...
-    max([max(cores.Northing) max(seat_N) max(oib_N)]) + 5000];
-
-
-map_gif = figure('Position', [10 10 1400 800]);
-hold on
-h1 = mapshow(basins, 'FaceAlpha', 0);
-h2 = scatter(seat_E(seat_k), seat_N(seat_k), 25, SMB_ks, 'filled');
-h3 = scatter(oib_E(oib_k), oib_N(oib_k), 25, SMB_ko, 'filled');
-% h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
-% text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
-%     'FontSize', 15, 'Interpreter', 'tex');
-c0 = colorbar;
-c0.Label.String = sprintf('Annual SMB (mm/a) - %i', yr_seat(end));
-c0.Label.FontSize = 18;
-graticuleps(-81:0.5:-77,-125:2:-105, 'c')
-xlim(Easting_lims)
-ylim(Northing_lims)
-caxis([100 450])
-scalebarps
-box on
-mapzoomps('ne', 'insetsize', 0.30)
-set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
-
-gif('test.gif', 'DelayTime', 0.50, 'LoopCount', 7,'frame', gcf)
-
-
-for k=length_max-1:-1:1
-    
-    seat_k = seat_lengths >= k;
-    SMB_ks = cellfun(@(x) x(k), seat_SMB(seat_k));
-    oib_k = oib_lengths >= k + yr_bias;
-    SMB_ko = cellfun(@(x) x(k+yr_bias), oib_SMB(oib_k));
-    
-    map_gif.NextPlot = 'add';
-    h2 = scatter(seat_E(seat_k), seat_N(seat_k), 25, SMB_ks, 'filled');
-    map_gif.NextPlot = 'add';
-    h3 = scatter(oib_E(oib_k), oib_N(oib_k), 25, SMB_ko, 'filled');
-
-    c0.Label.String = sprintf('Annual SMB (mm/a) - %i', yr_seat(k));
-
-    gif
-end
+% % Add gif addon to path
+% addon_folder = fullfile(addon_path, 'gif_v1.0/');
+% addpath(genpath(addon_folder))
+% 
+% 
+% seat_lengths = cellfun(@length, seat_yr);
+% [length_max, max_idx] = max(seat_lengths);
+% yr_seat = seat_yr{max_idx}(1):-1:seat_yr{max_idx}(end);
+% seat_k = seat_lengths >= length_max;
+% SMB_ks = cellfun(@(x) x(length_max), seat_SMB(seat_k));
+% 
+% 
+% yr_bias = oib_yr{1}(1) - yr_seat(1);
+% oib_lengths = cellfun(@length, oib_yr);
+% oib_k = oib_lengths >= length_max + yr_bias;
+% SMB_ko = cellfun(@(x) x(length_max+yr_bias), oib_SMB(oib_k));
+% 
+% 
+% basins = shaperead(strcat(data_path, ...
+%     'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
+% Easting_lims = [min([min(cores.Easting) min(seat_E) min(oib_E)]) - 5000 ...
+%     max([max(cores.Easting) max(seat_E) max(oib_E)]) + 5000];
+% Northing_lims = [min([min(cores.Northing) min(seat_N) min(oib_N)]) - 5000 ...
+%     max([max(cores.Northing) max(seat_N) max(oib_N)]) + 5000];
+% 
+% 
+% map_gif = figure('Position', [10 10 1400 800]);
+% hold on
+% h1 = mapshow(basins, 'FaceAlpha', 0);
+% h2 = scatter(seat_E(seat_k), seat_N(seat_k), 25, SMB_ks, 'filled');
+% h3 = scatter(oib_E(oib_k), oib_N(oib_k), 25, SMB_ko, 'filled');
+% % h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
+% % text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
+% %     'FontSize', 15, 'Interpreter', 'tex');
+% c0 = colorbar;
+% c0.Label.String = sprintf('Annual SMB (mm/a) - %i', yr_seat(end));
+% c0.Label.FontSize = 18;
+% graticuleps(-81:0.5:-77,-125:2:-105, 'c')
+% xlim(Easting_lims)
+% ylim(Northing_lims)
+% caxis([100 450])
+% scalebarps
+% box on
+% mapzoomps('ne', 'insetsize', 0.30)
+% set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+% 
+% gif('test.gif', 'DelayTime', 0.50, 'LoopCount', 7,'frame', gcf)
+% 
+% 
+% for k=length_max-1:-1:1
+%     
+%     seat_k = seat_lengths >= k;
+%     SMB_ks = cellfun(@(x) x(k), seat_SMB(seat_k));
+%     oib_k = oib_lengths >= k + yr_bias;
+%     SMB_ko = cellfun(@(x) x(k+yr_bias), oib_SMB(oib_k));
+%     
+%     map_gif.NextPlot = 'add';
+%     h2 = scatter(seat_E(seat_k), seat_N(seat_k), 25, SMB_ks, 'filled');
+%     map_gif.NextPlot = 'add';
+%     h3 = scatter(oib_E(oib_k), oib_N(oib_k), 25, SMB_ko, 'filled');
+% 
+%     c0.Label.String = sprintf('Annual SMB (mm/a) - %i', yr_seat(k));
+% 
+%     gif
+% end
 
 
 
 %%
 
-yr_start = 1979;
+yr_start = 1977;
 yr_end = 2009;
 year = (yr_end:-1:yr_start)';
 
@@ -230,22 +230,21 @@ SEAT_yr = seat_yr(seat_idx);
 
 SEAT_start = cellfun(@(x) find(x==yr_start, 1), SEAT_yr, 'UniformOutput', 0);
 SEAT_end = cellfun(@(x) find(x==yr_end, 1), SEAT_yr, 'UniformOutput', 0);
-% mSEAT_SMB = cellfun(@(x,y,z) x(y:z), SEAT_SMB, SEAT_end, SEAT_start, ...
-%     'UniformOutput', 0);
-mSEAT_SMB = cellfun(@(x,y,z) movmean(x(y:z),3), SEAT_SMB, SEAT_end, SEAT_start, ...
+mSEAT_SMB = cellfun(@(x,y,z) x(y:z), SEAT_SMB, SEAT_end, SEAT_start, ...
     'UniformOutput', 0);
+% mSEAT_SMB = cellfun(@(x,y,z) movmean(x(y:z),3), SEAT_SMB, SEAT_end, SEAT_start, ...
+%     'UniformOutput', 0);
 
-% [coeff, stats] = cellfun(@(x) robustfit(year, x), mSEAT_SMB, 'UniformOutput', 0);
-% SEAT_stats = struct();
-% SEAT_stats.b = cellfun(@(x) x(2), coeff);
-% SEAT_stats.se = cellfun(@(x) x.se(2), stats); 
-% SEAT_stats.p = cellfun(@(x) x.p(2), stats);
-
-[coeff, stats] = cellfun(@(x) polyfit(year, x, 1), mSEAT_SMB, 'UniformOutput', 0);
+[coeff, stats] = cellfun(@(x) robustfit(year, x), mSEAT_SMB, 'UniformOutput', 0);
 SEAT_stats = struct();
-SEAT_stats.b = cellfun(@(x) x(1), coeff);
-% SEAT_stats.se = cellfun(@(x) x.se(2), stats); 
-% SEAT_stats.p = cellfun(@(x) x.p(2), stats);
+SEAT_stats.b = cellfun(@(x) x(2), coeff);
+SEAT_stats.se = cellfun(@(x) x.se(2), stats); 
+SEAT_stats.p = cellfun(@(x) x.p(2), stats);
+
+% [coeff, stats] = cellfun(@(x) polyfit(year, x, 1), mSEAT_SMB, 'UniformOutput', 0);
+% SEAT_stats = struct();
+% SEAT_stats.b = cellfun(@(x) x(1), coeff);
+
 
 %%
 oib_idx = cellfun(@(x) max(x)>=yr_end && min(x)<=yr_start, oib_yr);
@@ -257,22 +256,21 @@ OIB_yr = oib_yr(oib_idx);
 
 OIB_start = cellfun(@(x) find(x==yr_start, 1), OIB_yr, 'UniformOutput', 0);
 OIB_end = cellfun(@(x) find(x==yr_end, 1), OIB_yr, 'UniformOutput', 0);
-% mOIB_SMB = cellfun(@(x,y,z) x(y:z), OIB_SMB, OIB_end, OIB_start, ...
-%     'UniformOutput', 0);
-mOIB_SMB = cellfun(@(x,y,z) movmean(x(y:z),3), OIB_SMB, OIB_end, OIB_start, ...
+mOIB_SMB = cellfun(@(x,y,z) x(y:z), OIB_SMB, OIB_end, OIB_start, ...
     'UniformOutput', 0);
+% mOIB_SMB = cellfun(@(x,y,z) movmean(x(y:z),3), OIB_SMB, OIB_end, OIB_start, ...
+%     'UniformOutput', 0);
 
-% [coeff, stats] = cellfun(@(x) robustfit(year, movmean(x,3)), mOIB_SMB, 'UniformOutput', 0);
-% OIB_stats = struct();
-% OIB_stats.b = cellfun(@(x) x(2), coeff);
-% OIB_stats.se = cellfun(@(x) x.se(2), stats); 
-% OIB_stats.p = cellfun(@(x) x.p(2), stats);
-
-[coeff, stats] = cellfun(@(x) polyfit(year, x, 1), mOIB_SMB, 'UniformOutput', 0);
+[coeff, stats] = cellfun(@(x) robustfit(year, movmean(x,3)), mOIB_SMB, 'UniformOutput', 0);
 OIB_stats = struct();
-OIB_stats.b = cellfun(@(x) x(1), coeff);
-% OIB_stats.se = cellfun(@(x) x.se(2), stats); 
-% OIB_stats.p = cellfun(@(x) x.p(2), stats);
+OIB_stats.b = cellfun(@(x) x(2), coeff);
+OIB_stats.se = cellfun(@(x) x.se(2), stats); 
+OIB_stats.p = cellfun(@(x) x.p(2), stats);
+
+% [coeff, stats] = cellfun(@(x) polyfit(year, x, 1), mOIB_SMB, 'UniformOutput', 0);
+% OIB_stats = struct();
+% OIB_stats.b = cellfun(@(x) x(1), coeff);
+
 
 %%
 
@@ -288,15 +286,14 @@ for k = 1:length(cores.name)
     SMB_k = SMB_mean(core_start:core_end);
     cores_SMB(1:length(SMB_k),k) = SMB_k;
     
-%     [coeff, stats] = robustfit(year(1:length(SMB_k)), SMB_k);
-%     cores_beta(k) = coeff(2);
-%     cores_se(k) = stats.se(2);
-%     cores_pval(k) = stats.p(2);
+    [coeff, stats] = robustfit(year(1:length(SMB_k)), SMB_k);
+    cores_beta(k) = coeff(2);
+    cores_se(k) = stats.se(2);
+    cores_pval(k) = stats.p(2);
 
-[coeff, stats] = polyfit(year(1:length(SMB_k)), SMB_k, 1);
-    cores_beta(k) = coeff(1);
-%     cores_se(k) = stats.se(2);
-%     cores_pval(k) = stats.p(2);
+% [coeff, stats] = polyfit(year(1:length(SMB_k)), SMB_k, 1);
+%     cores_beta(k) = coeff(1);
+
 end
 
 
@@ -318,11 +315,12 @@ h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
 set(gca, 'Ydir', 'normal')
 hold on
 h1 = mapshow(basins, 'FaceAlpha', 0);
-h2 = scatter(SEAT_E, SEAT_N, 25, mean(cell2mat(mSEAT_SMB)), 'filled');
-% h3 = scatter(OIB_E, OIB_N, 25, mean(cell2mat(mOIB_SMB)), 'filled');
-h4 = scatter(cores.Easting, cores.Northing, 100, nanmean(cores_SMB)', 'filled');
-text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
-    'FontSize', 13, 'Interpreter', 'tex');
+h2 = scatter(SEAT_E, SEAT_N, 50, mean(cell2mat(mSEAT_SMB)), 'filled');
+h3 = scatter(OIB_E, OIB_N, 50, mean(cell2mat(mOIB_SMB)), 'filled');
+h4 = scatter(cores.Easting, cores.Northing, 125, nanmean(cores_SMB)', ...
+    'filled', 'MarkerEdgeColor', 'k');
+text(cores.Easting, cores.Northing, strcat(labels, '\rightarrow'), ...
+    'FontSize', 13, 'Interpreter', 'tex', 'HorizontalAlignment', 'right');
 c0 = colorbar;
 c0.Label.String = ['Mean annual SMB ' num2str(yr_start) '-' ...
     num2str(yr_end) ' (mm/a)'];
@@ -336,19 +334,35 @@ mapzoomps('ne', 'insetsize', 0.30)
 % legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
 %     'SEAT radar mean SMB', 'Location', 'northwest')
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
-title('SEAT mean annual SMB')
+% title('SEAT mean annual SMB')
 hold off
 
 
+% Add addon to generate custom color scale to path
+addon_folder = fullfile(addon_path, 'b2r');
+addpath(genpath(addon_folder))
+
+% Generate custom colorbar scale
+
 figure('Position', [10 10 1400 800])
-title('SEAT radar SMB trends')
+% title('SEAT radar SMB trends')
 hold on
 h1 = mapshow(basins, 'FaceAlpha', 0);
-h2 = scatter(SEAT_E, SEAT_N, 25, SEAT_stats.b, 'filled');
-% h3 = scatter(OIB_E, OIB_N, 25, OIB_stats.b, 'filled');
-h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
-text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
-    'FontSize', 15, 'Interpreter', 'tex');
+h2 = scatter(SEAT_E(SEAT_stats.p<=0.05), SEAT_N(SEAT_stats.p<=0.05), 50, ...
+    SEAT_stats.b(SEAT_stats.p<=0.05), 'filled');
+% h3 = scatter(SEAT_E(SEAT_stats.p<=0.05), SEAT_N(SEAT_stats.p<=0.05), 3, ...
+%     'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
+%     'MarkerEdgeAlpha', 0.25);
+h4 = scatter(OIB_E(OIB_stats.p<=0.05), OIB_N(OIB_stats.p<=0.05), 50, ...
+    OIB_stats.b(OIB_stats.p<=0.05), 'filled');
+% h5 = scatter(OIB_E(OIB_stats.p<=0.05), OIB_N(OIB_stats.p<=0.05), 3, ...
+%     'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
+%     'MarkerEdgeAlpha', 0.25);
+h6 = scatter(cores.Easting, cores.Northing, 125, cores_beta, 'filled', ...
+    'MarkerEdgeColor', 'k');
+text(cores.Easting, cores.Northing, strcat(labels, '\rightarrow'), ...
+    'FontSize', 13, 'Interpreter', 'tex', 'HorizontalAlignment', 'right');
+colormap(b2r(-6, 3))
 c0 = colorbar;
 c0.Label.String = ['Linear trend in annual SMB ' num2str(yr_start) '-' ...
     num2str(yr_end) ' (mm/a)'];
@@ -356,68 +370,65 @@ c0.Label.FontSize = 18;
 graticuleps(-81:0.5:-77,-125:2:-105, 'c')
 xlim(Easting_lims)
 ylim(Northing_lims)
-caxis([-7 0])
 scalebarps
 box on
 mapzoomps('ne', 'insetsize', 0.30)
-% legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
-%     'SEAT radar mean SMB', 'Location', 'northwest')
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
 hold off
 
 %%
 
-figure('Position', [10 10 1400 800])
-h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
-set(gca, 'Ydir', 'normal')
-hold on
-h1 = mapshow(basins, 'FaceAlpha', 0);
-% h2 = scatter(SEAT_E, SEAT_N, 25, mean(cell2mat(mSEAT_SMB)), 'filled');
-h3 = scatter(OIB_E, OIB_N, 25, mean(cell2mat(mOIB_SMB)), 'filled');
-h4 = scatter(cores.Easting, cores.Northing, 100, nanmean(cores_SMB)', 'filled');
-text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
-    'FontSize', 13, 'Interpreter', 'tex');
-c0 = colorbar;
-c0.Label.String = ['Mean annual SMB ' num2str(yr_start) '-' ...
-    num2str(yr_end) ' (mm/a)'];
-c0.Label.FontSize = 18;
-graticuleps(-81:0.5:-77,-125:2:-105, 'c')
-xlim(Easting_lims)
-ylim(Northing_lims)
-scalebarps
-box on
-mapzoomps('ne', 'insetsize', 0.30)
-% legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
-%     'SEAT radar mean SMB', 'Location', 'northwest')
-set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
-title('OIB mean annual SMB')
-hold off
-
-
-figure('Position', [10 10 1400 800])
-title('OIB radar SMB trends')
-hold on
-h1 = mapshow(basins, 'FaceAlpha', 0);
-% h2 = scatter(SEAT_E, SEAT_N, 25, SEAT_beta, 'filled');
-h3 = scatter(OIB_E, OIB_N, 25, OIB_stats.b, 'filled');
-h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
-text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
-    'FontSize', 15, 'Interpreter', 'tex');
-c0 = colorbar;
-c0.Label.String = ['Linear trend in annual SMB ' num2str(yr_start) '-' ...
-    num2str(yr_end) ' (mm/a)'];
-c0.Label.FontSize = 18;
-graticuleps(-81:0.5:-77,-125:2:-105, 'c')
-xlim(Easting_lims)
-ylim(Northing_lims)
-caxis([-7 0])
-scalebarps
-box on
-mapzoomps('ne', 'insetsize', 0.30)
-% legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
-%     'SEAT radar mean SMB', 'Location', 'northwest')
-set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
-hold off
+% figure('Position', [10 10 1400 800])
+% h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
+% set(gca, 'Ydir', 'normal')
+% hold on
+% h1 = mapshow(basins, 'FaceAlpha', 0);
+% % h2 = scatter(SEAT_E, SEAT_N, 25, mean(cell2mat(mSEAT_SMB)), 'filled');
+% h3 = scatter(OIB_E, OIB_N, 25, mean(cell2mat(mOIB_SMB)), 'filled');
+% h4 = scatter(cores.Easting, cores.Northing, 100, nanmean(cores_SMB)', 'filled');
+% text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
+%     'FontSize', 13, 'Interpreter', 'tex');
+% c0 = colorbar;
+% c0.Label.String = ['Mean annual SMB ' num2str(yr_start) '-' ...
+%     num2str(yr_end) ' (mm/a)'];
+% c0.Label.FontSize = 18;
+% graticuleps(-81:0.5:-77,-125:2:-105, 'c')
+% xlim(Easting_lims)
+% ylim(Northing_lims)
+% scalebarps
+% box on
+% mapzoomps('ne', 'insetsize', 0.30)
+% % legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
+% %     'SEAT radar mean SMB', 'Location', 'northwest')
+% set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+% title('OIB mean annual SMB')
+% hold off
+% 
+% 
+% figure('Position', [10 10 1400 800])
+% title('OIB radar SMB trends')
+% hold on
+% h1 = mapshow(basins, 'FaceAlpha', 0);
+% % h2 = scatter(SEAT_E, SEAT_N, 25, SEAT_beta, 'filled');
+% h3 = scatter(OIB_E, OIB_N, 25, OIB_stats.b, 'filled');
+% h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
+% text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
+%     'FontSize', 15, 'Interpreter', 'tex');
+% c0 = colorbar;
+% c0.Label.String = ['Linear trend in annual SMB ' num2str(yr_start) '-' ...
+%     num2str(yr_end) ' (mm/a)'];
+% c0.Label.FontSize = 18;
+% graticuleps(-81:0.5:-77,-125:2:-105, 'c')
+% xlim(Easting_lims)
+% ylim(Northing_lims)
+% caxis([-7 0])
+% scalebarps
+% box on
+% mapzoomps('ne', 'insetsize', 0.30)
+% % legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
+% %     'SEAT radar mean SMB', 'Location', 'northwest')
+% set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+% hold off
 
 
 
