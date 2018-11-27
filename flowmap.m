@@ -59,7 +59,7 @@ horz_res = 25;
 [radar] = radar_stack(radar, horz_res);
 
 T = 710;
-figure
+figure('Position', [50 50 1500 800])
 imagesc(radar.dist, radar.depth(:,T), radar.data_stack)
 hold on
 plot([radar.dist(T) radar.dist(T)], [min(radar.depth(:,T)) max(radar.depth(:,T))], ...
@@ -80,7 +80,7 @@ for i = 1:size(s, 2)
     s(:,i) = csaps(radar.depth(:,i), radar.data_stack(:,i), 0.95, radar.depth(:,i));
 end
 
-figure
+figure('Position', [50 50 450 800])
 plot(radar.data_stack(:,T), radar.depth(:,T), 'k')
 set(gca, 'Ydir', 'reverse')
 hold on
@@ -138,38 +138,48 @@ radar.depth = (0:core_res:depth_bott)';
 % order Savitzky-Golay filter with a window of 9 frames (~20 m)
 radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
-figure
+figure('Position', [50 50 450 800])
 hold on
-plot(zscore(radar_stat(:,T)), depth_raw, 'b--')
+plot(zscore(radar_stat(:,T)), depth_raw, 'c--')
 set(gca, 'Ydir', 'reverse')
-h2 = plot(radar.data_smooth(:,T), radar.depth, 'c');
+h2 = plot(radar.data_smooth(:,T), radar.depth, 'b');
 h2.Color(4) = 0.80;
 xlabel('Z-statistic')
+ylabel('Depth (m)')
+xlim([-3 4])
+ylim([0 25])
+hold off
+
+
+h_sz = round((250/25)/2);
+data = radar.data_smooth(601:800,T-h_sz:T+h_sz);
+data_depth = radar.depth(601:800);
+data_dist = 0:25:25*(size(data,2)-1);
+row_n = 122;
+col_n = 6;
+
+
+
+
+figure('Position', [50 50 1500 800])
+imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
+hold on
+plot([radar.dist(T-h_sz) radar.dist(T-h_sz)], [radar.depth(601) radar.depth(800)],...
+    'r', 'LineWidth', 2)
+plot([radar.dist(T+h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(800)],...
+    'r', 'LineWidth', 2)
+plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(601)],...
+    'r', 'LineWidth', 2)
+plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(800) radar.depth(800)],...
+    'r', 'LineWidth', 2)
+scatter(radar.dist(T-h_sz+col_n-1), radar.depth(601+row_n), 50, 'r*')
+xlabel('Distance (m)')
 ylabel('Depth (m)')
 ylim([0 25])
 hold off
 
-% Clear unnecessary variables
-% clearvars -except file cores Ndraw radar horz_res core_res
 
-h_sz = round((250/25)/2);
-figure
-imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
-hold on
-plot([radar.dist(T-h_sz) radar.dist(T-h_sz)], [radar.depth(601) radar.depth(800)], 'r')
-plot([radar.dist(T+h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(800)], 'r')
-plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(601)], 'r')
-plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(800) radar.depth(800)], 'r')
-scatter(radar.dist(T), radar.depth(700), 40, 'rx', 'LineWidth', 2.5)
-ylim([0 25])
-hold off
-
-
-
-
-data = radar.data_smooth(601:800,T-h_sz:T+h_sz);
-data_depth = radar.depth(601:800);
-data_dist = 0:25:25*(size(data,2)-1);
+%%
 
 % Angles over which to perform radon transform
 theta = 0:179;
@@ -200,13 +210,14 @@ for k = 1:length(XY)
 end
 
 
-figure
+figure('Position', [50 50 450 800])
 imagesc(data_dist, data_depth, data)
 hold on
 hlines = streamline(XY);
 set(hlines, 'Color', 'r', 'LineStyle', '--')
-scatter(data_dist(round(length(data_dist)/2)), data_depth(round(length(data_depth)/2)),...
-    50, 'rx', 'LineWidth', 2.5)
+scatter(data_dist(col_n), data_depth(row_n), 50, 'r*')
+xlabel('Distance (m)')
+ylabel('Depth (m)')
 hold off
 
 
@@ -295,11 +306,22 @@ for k = 1:length(XY)
     XY{k}(:,2) = XY_raw{k}(:,2)*.02;
 end
 
-figure
+figure('Position', [50 50 1500 800])
 imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
 hold on
 hlines = streamline(XY);
 set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
+plot([radar.dist(T-h_sz) radar.dist(T-h_sz)], [radar.depth(601) radar.depth(800)], ...
+    'm', 'LineWidth', 2)
+plot([radar.dist(T+h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(800)],...
+    'm', 'LineWidth', 2)
+plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(601)],...
+    'm', 'LineWidth', 2)
+plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(800) radar.depth(800)],...
+    'm', 'LineWidth', 2)
+scatter(radar.dist(T-h_sz+col_n-1), radar.depth(601+row_n), 50, 'm*')
+xlabel('Distance (m)')
+ylabel('Depth (m)')
 ylim([0 25])
 hold off
 
@@ -344,13 +366,15 @@ for i = 1:size(radar.data_smooth, 2)
 end
 
 
-figure
-imagesc(radar.dist, radar.depth, peaks_raw, [0 3.5])
-hold on
-hlines = streamline(XY);
-set(hlines, 'Color', 'r', 'LineStyle', '--')
-ylim([0 25])
-hold off
+% figure('Position', [50 50 1500 800])
+% imagesc(radar.dist, radar.depth, peaks_raw, [0 3.5])
+% hold on
+% hlines = streamline(XY);
+% set(hlines, 'Color', 'r', 'LineStyle', '--')
+% xlabel('Distance (m)')
+% ylabel('Depth (m)')
+% ylim([0 25])
+% hold off
 
 
 
@@ -363,13 +387,242 @@ hold off
 data_peaks = peaks_raw(601:800,T-h_sz:T+h_sz);
 data_width = peak_width(601:800,T-h_sz:T+h_sz);
 
+row_n = 122;
+col_n = 6;
+n_idx = sub2ind(size(data_peaks), row_n, col_n);
+mag_i = data_peaks(n_idx);
+width_i = data_width(n_idx);
+
+peak_local = data_peaks;
+peak_local(n_idx) = 0;
+local_idx = find(peak_local);
+mag_local = peak_local(local_idx);
+[row_local, col_local] = ind2sub(size(peak_local), local_idx);
+data_local = [row_local col_local];
+% data_local = [(row_idx(1)+row_local-1) (col_idx(1)+col_local-1)];
+
+stream_n1 = stream2(ones(size(data_peaks)), layer_grad, ...
+    col_n, row_n, [0.10, 1000]);
+stream_n2 = stream2(-ones(size(data_peaks)), -layer_grad, ...
+    col_n, row_n, [0.10, 1000]);
+cols_stream = vertcat(flipud(stream_n2{1}(:,1)), stream_n1{1}(:,1));
+rows_stream = vertcat(flipud(stream_n2{1}(:,2)), stream_n1{1}(:,2));
+[~,u_idx] = unique(cols_stream);
+vq = interp1(cols_stream(u_idx), rows_stream(u_idx), 1:size(data_peaks, 2), ...
+    'linear', 'extrap');
+data_stream = [vq' (1:size(data_peaks,2))'];
+
+
+dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
+            (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
+            (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
+threshold = 3;
+dist_idx = min(dist_n, [], 2) <= threshold;
+
+
+figure('Position', [50 50 450 800])
+imagesc(data_dist, data_depth, data_peaks)
+hold on
+plot(cols_stream, rows_stream, 'r--')
+scatter(data_dist(col_n), data_depth(row_n), 50, 'm*')
+scatter(data_dist(col_local(dist_idx)), data_depth(row_local(dist_idx)),...
+    25, 'filled', 'm')
+scatter(data_dist(col_local(~dist_idx)), data_depth(row_local(~dist_idx)), 25, 'bx')
+xlabel('Distance (m)')
+ylabel('Depth (m)')
+hold off
 
 
 
 
+%%
+
+% Find continuous layers within radargram based on peaks and layer stream
+% field
+[peak_group, layers] = find_layers2(peaks_raw, peak_width, ...
+    grad_smooth, core_res, horz_res);
+
+% Preallocate arrays for the matrix indices of members of each layer
+layers_idx = cell(1,length(layers));
+peaks = zeros(size(peaks_raw));
+
+% For loop to coerce layers to have one row position for each trace
+for i = 1:length(layers_idx)
+    
+    % Find matrix indices of all members of ith layer
+    layer_i = layers{i};
+    
+    % Find row and col indices of members of ith layer
+    [row, col] = ind2sub(size(radar.data_smooth), layer_i);
+    mag = peaks_raw(layer_i);
+    
+    % Interpolate data to all column positions within the range of the
+    % layer
+    col_interp = min(col):max(col);
+    
+    % Interpolate row positions using a cubic smoothing spline
+    row_interp = round(fnval(csaps(col, row), col_interp));
+    row_interp(row_interp < 1) = 1;
+    row_interp(row_interp > size(peaks,1)) = size(peaks,1);
+    
+    % Interpolate peak prominence magnitudes to all columns in range using
+    % a cubic smoothing spline
+    mag_interp = csaps(col, mag, 1/length(col_interp), col_interp);
+    
+    % Assign interpolated layer to output
+    layer_interp = sub2ind(size(peaks), row_interp, col_interp);
+    peaks(layer_interp) = mag_interp;
+    layers_idx{i} = layer_interp';
+end
+
+% Create matrix of layer group assignments
+group_num = zeros(size(peaks));
+for i = 1:length(layers_idx)
+    group_num(layers_idx{i}) = i;
+end
+
+
+% Calculate continuous layer distances for each layer (accounting for 
+% lateral size of stacked radar trace bins)
+layers_dist = cellfun(@(x) numel(x)*horz_res, layers_idx);
+
+% Map layer prominence-distance values to the location within the radar
+% matrix of the ith layer
+layer_peaks = zeros(size(peaks));
+for i = 1:length(layers_idx)
+    layer_peaks(layers_idx{i}) = peaks(layers_idx{i}).*layers_dist(i);
+end
+
+
+% Output layer arrays to radar structure
+radar.peaks = peaks;
+radar.layers = layers_idx;
+radar.groups = group_num;
 
 
 
+figure('Position', [50 50 1500 800])
+imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
+hold on
+for i = 1:length(radar.layers)
+    [row,col] = ind2sub(size(radar.data_smooth), radar.layers{i});
+    plot(radar.dist(col), radar.depth(row), 'LineWidth', 2)
+end
+ylim([0 25])
+xlabel('Distance (m)')
+ylabel('Depth (m)')
+hold off
 
 
+%% Assign layer likelihood scores and estimate age-depth scales
+
+% Define surface age and the year associated with the first pick of the 
+% algorithm
+age_top = radar.collect_date;
+yr_pick1 = ceil(radar.collect_date - 1);
+
+% Preallocate arrays for layer likelihoods and anges
+ages = zeros([size(radar.data_smooth) Ndraw]);
+radar.likelihood = zeros(size(radar.data_smooth));
+err_out = [];
+for i = 1:size(layer_peaks, 2)
+    
+%     % Assign the 50% likelihood point based on median trace prominence and
+%     % layer length
+%     P_50 = median(Proms{i})*max([10000 0.25*radar.dist(end)]);
+%     
+%     % Assign min/max layer likelihoods, and calculate the logistic rate
+%     % coefficient
+%     Po = 0.05;
+%     K = 1;
+%     r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
+    
+    % Get layer prom-distance values and depths for layers in ith trace
+    peaks_i = layer_peaks(:,i);
+    peaks_idx = peaks_i>0;
+    peaks_i = peaks_i(peaks_idx);
+    depths_i = radar.depth(peaks_idx);
+    
+    % Likelihood of layer representing a year based on a logistic function
+    % with rate (r) calculated above
+    r = -2.4333e-4; % [-3.18e-4 -1.55e-4]
+    k = 4.4323;     % [3.25 4.8]
+    
+    likelihood = 1./(1+exp(r*peaks_i + k));
+%     likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
+    radar.likelihood(peaks_idx,i) = likelihood;
+    
+    % Assign MC simulation annual layer presence based on layer likelihood
+    % values
+    yr_idx = zeros(length(depths_i), Ndraw);
+    for j = 1:length(depths_i)
+        R = rand(Ndraw, 1) <= likelihood(j);
+        yr_idx(j,:) = R;
+    end
+
+%     yr_idx = zeros(length(depths_i), Ndraw);
+%     for j = 1:length(depths_i)
+%         yr_idx(j,:) = likelihood(j) >= 0.5;
+%     end    
+
+    for j = 1:Ndraw
+        depths_j = [0; depths_i(logical(yr_idx(:,j)))];
+        yrs_j = ([age_top yr_pick1:-1:yr_pick1-length(depths_j)+2])';
+        try
+            ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
+        catch
+            sprintf('Error in age interpolation for trace %u, trial %u. Filling with mean ages.', i, j)
+            err_out = [err_out j];
+        end
+    end
+    if ~isempty(err_out)
+        ages(:,i,err_out) = repmat(sum(squeeze(ages(:,i,:)), 2)./...
+            sum(squeeze(ages(:,i,:))~=0, 2), 1, length(err_out));
+    end
+    err_out = [];
+end
+
+radar.ages = ages;
+
+
+%%
+
+data_intdist = layer_peaks(601:800,T-h_sz:T+h_sz);
+dist_peaks = data_intdist(data_intdist>0);
+likelihood = 1./(1+exp(r*dist_peaks + k));
+
+figure('Position', [50 50 450 800])
+imagesc(data_dist, data_depth, data_intdist)
+xlabel('Distance (m)')
+ylabel('Depth (m)')
+xlabel('Distance (m)')
+ylabel('Depth (m)')
+c = colorbar;
+c.Label.String = 'Integrated prominence-distance';
+c.Label.FontSize = 12;
+
+
+
+x = 0:max(dist_peaks);
+y = 1./(1+exp(r*x + k));
+
+figure('Position', [50 50 650 800])
+hold on
+plot(x,y, 'Color', [0.90 0.40 0.15], 'LineStyle', '--')
+scatter(dist_peaks, likelihood, 10, 'filled', 'b')
+xlabel('Integrated prominence-distance')
+ylabel('Likelihood of annual layer')
+hold off
+
+
+figure('Position', [50 50 1500 800])
+imagesc(radar.dist, radar.depth, mean(radar.ages,3))
+colormap('hsv')
+c = colorbar;
+c.Label.String = 'Calendar year';
+c.Label.FontSize = 12;
+caxis([1970 2010])
+ylim([0 25])
+xlabel('Distance (m)')
+ylabel('Depth (m)')
 
