@@ -423,7 +423,7 @@ dist_idx = min(dist_n, [], 2) <= threshold;
 figure('Position', [50 50 450 800])
 imagesc(data_dist, data_depth, data_peaks)
 hold on
-plot(cols_stream, rows_stream, 'r--')
+plot(horz_res*(cols_stream-1), data_depth(1)+(rows_stream-1)*core_res, 'r--')
 scatter(data_dist(col_n), data_depth(row_n), 50, 'm*')
 scatter(data_dist(col_local(dist_idx)), data_depth(row_local(dist_idx)),...
     25, 'filled', 'm')
@@ -617,6 +617,9 @@ hold off
 
 figure('Position', [50 50 1500 800])
 imagesc(radar.dist, radar.depth, mean(radar.ages,3))
+hold on
+plot([radar.dist(T) radar.dist(T)], [radar.depth(1) radar.depth(end)], ...
+    'b', 'LineWidth', 2)
 colormap('hsv')
 c = colorbar;
 c.Label.String = 'Calendar year';
@@ -625,4 +628,23 @@ caxis([1970 2010])
 ylim([0 25])
 xlabel('Distance (m)')
 ylabel('Depth (m)')
+hold off
+
+figure('Position', [50 50 450 800])
+hold on
+% for n = 1:100
+%     h0 = plot(radar.ages(:,T,n), radar.depth, 'b', 'LineWidth', 0.5);
+%     h0.Color(4) = 0.10;
+% end
+plot(mean(squeeze(radar.ages(:,T,:)),2), radar.depth, 'b', 'LineWidth', 2)
+plot(mean(squeeze(radar.ages(:,T,:)),2) + 2*std(squeeze(radar.ages(:,T,:)),[],2), ...
+    radar.depth, 'b--')
+plot(mean(squeeze(radar.ages(:,T,:)),2) - 2*std(squeeze(radar.ages(:,T,:)),[],2), ...
+    radar.depth, 'b--')
+set(gca, 'Ydir', 'reverse')
+xlim([1970 2012])
+ylim([0 25])
+xlabel('Distance (m)')
+ylabel('Depth (m)')
+
 
