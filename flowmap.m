@@ -663,7 +663,7 @@ y = 1./(1+exp(r*x + k));
 fig10 = figure;
 hold on
 plot(x,y, 'k--')
-scatter(dist_peaks, likelihood, 10, 'filled', 'Color', [0.90 0.40 0.15])
+scatter(dist_peaks, likelihood, 10, [0.90 0.40 0.15], 'filled')
 xlabel('Integrated prominence-distance')
 ylabel('Likelihood of annual layer')
 set(gcf, 'Units', 'Inches', 'Position', [0, 0, 6, 7], ...
