@@ -402,23 +402,19 @@ map_trend = figure('Position', [10 10 1400 800]);
 hold on
 h1 = mapshow(basins, 'FaceAlpha', 0);
 h2 = scatter(SEAT_E, SEAT_N, 50, SEAT_stats.b, 'filled');
-% h2 = scatter(SEAT_E(SEAT_stats.p<=0.05), SEAT_N(SEAT_stats.p<=0.05), 50, ...
-%     SEAT_stats.b(SEAT_stats.p<=0.05), 'filled');
-h3 = scatter(SEAT_E(SEAT_stats.p<=0.05), SEAT_N(SEAT_stats.p<=0.05), 3, ...
-    'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
-    'MarkerEdgeAlpha', 0.25);
+% h3 = scatter(SEAT_E(SEAT_stats.p<=0.05), SEAT_N(SEAT_stats.p<=0.05), 3, ...
+%     'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
+%     'MarkerEdgeAlpha', 0.25);
 h4 = scatter(OIB_E, OIB_N, 50, OIB_stats.b, 'filled');
-% h4 = scatter(OIB_E(OIB_stats.p<=0.05), OIB_N(OIB_stats.p<=0.05), 50, ...
-%     OIB_stats.b(OIB_stats.p<=0.05), 'filled');
-h5 = scatter(OIB_E(OIB_stats.p<=0.05), OIB_N(OIB_stats.p<=0.05), 3, ...
-    'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
-    'MarkerEdgeAlpha', 0.25);
+% h5 = scatter(OIB_E(OIB_stats.p<=0.05), OIB_N(OIB_stats.p<=0.05), 3, ...
+%     'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
+%     'MarkerEdgeAlpha', 0.25);
 h6 = scatter(cores.Easting(core_idx), cores.Northing(core_idx), 125, ...
     cores_beta, 'filled', 'MarkerEdgeColor', 'k');
 text(cores.Easting(core_idx), cores.Northing(core_idx), ...
     strcat(labels, '\rightarrow'), 'FontSize', 13, ...
     'Interpreter', 'tex', 'HorizontalAlignment', 'right');
-colormap(b2r(-4, 2))
+colormap(b2r(-6, 2))
 c0 = colorbar;
 c0.Label.String = ['Linear trend in annual SMB ' num2str(yr_start) '-' ...
     num2str(yr_end) ' (mm/a)'];
@@ -441,7 +437,7 @@ hold off
 % Select OIB members of L1 cross-section (out of place data causes a gap
 % that is addressed here) and flip data so that directions match those in
 % the maps
-OIB_L1idx = fliplr([5500:5500+3322-1 5500+4125-1:17000]);
+OIB_L1idx = fliplr([5500:5500+3322-1 5500+4125-1:17036]);
 
 % Find nearest SEAT radar to each OIB location in L1
 SEAT_d = pdist2([OIB_E(OIB_L1idx)' OIB_N(OIB_L1idx)'], [seat_E' seat_N']);
@@ -457,33 +453,85 @@ L1_seatD = L1_dist(L1idx_log);
 
 % OIB trends along L1 which are significant at 95%
 p_tmp = OIB_stats.p(OIB_L1idx);
-oib_b = movmean(OIB_stats.b(OIB_L1idx),50);
+oib_b = movmean(OIB_stats.b(OIB_L1idx),20);
 OIB_Pidx = p_tmp<=0.05;
 
 % SEAT trends along L1 which are significant at 95%
 p_tmp = SEAT_stats.p(SEAT_L1idx);
-seat_b = movmean(SEAT_stats.b(SEAT_L1idx),50);
+seat_b = movmean(SEAT_stats.b(SEAT_L1idx),20);
 SEAT_Pidx = p_tmp<=0.05;
 
 
 figure
 hold on
 % h1 = plot(L1_dist(1), OIB_stats.b(OIB_L1idx(1)), 'm');
-h1 = plot(L1_dist, movmean(OIB_stats.b(OIB_L1idx), 50), 'm.');
-plot(L1_dist, movmean(OIB_stats.b(OIB_L1idx),50) + ...
-    1.96*movmean(OIB_stats.se(OIB_L1idx), 50), 'm--')
-plot(L1_dist, movmean(OIB_stats.b(OIB_L1idx),50) - ...
-    1.96*movmean(OIB_stats.se(OIB_L1idx), 50), 'm--')
+h1 = plot(L1_dist, oib_b, 'm', 'LineWidth', 2);
+plot(L1_dist, oib_b + ...
+    1.96*movmean(OIB_stats.se(OIB_L1idx), 20), 'm--')
+plot(L1_dist, movmean(OIB_stats.b(OIB_L1idx),20) - ...
+    1.96*movmean(OIB_stats.se(OIB_L1idx), 20), 'm--')
 % h2 = plot(L1_dist(L1idx_log(1)), SEAT_stats.b(SEAT_L1idx(1)), 'r');
-h2 = plot(L1_dist(L1idx_log), movmean(SEAT_stats.b(SEAT_L1idx),50), 'r.');
-plot(L1_dist(L1idx_log), movmean(SEAT_stats.b(SEAT_L1idx),50) + ...
+h2 = plot(L1_dist(L1idx_log), movmean(SEAT_stats.b(SEAT_L1idx),20), ...
+    'r', 'LineWidth', 2);
+plot(L1_dist(L1idx_log), movmean(SEAT_stats.b(SEAT_L1idx),20) + ...
     1.96*movmean(SEAT_stats.se(SEAT_L1idx), 50), 'r--')
-plot(L1_dist(L1idx_log), movmean(SEAT_stats.b(SEAT_L1idx),50) - ...
+plot(L1_dist(L1idx_log), movmean(SEAT_stats.b(SEAT_L1idx),20) - ...
     1.96*movmean(SEAT_stats.se(SEAT_L1idx), 50), 'r--')
 
-% h3 = plot(L1_dist(~OIB_Pidx(1)), oib_b(~OIB_Pidx(1)), 'k');
-h3 = plot(L1_dist(~OIB_Pidx), oib_b(~OIB_Pidx), 'k.');
-plot(L1_seatD(~SEAT_Pidx), seat_b(~SEAT_Pidx), 'k.')
+h3 = scatter(L1_dist(~OIB_Pidx), oib_b(~OIB_Pidx), 10, 'kx');
+% alpha(h3, 0.50)
+h4 = scatter(L1_seatD(~SEAT_Pidx), seat_b(~SEAT_Pidx), 10, 'kx');
+% alpha(h4, 0.50)
+xlabel('Distance along cross section (m)')
+ylabel('Linear trend in SMB 1978-2008 (mm/a)')
+legend([h1 h2 h3], 'OIB radar', 'SEAT radar', 'Insignificant trend')
+hold off
+
+%%
+
+% Select OIB members of L2 cross-section (out of place data causes gaps
+% that are addressed here)
+OIB_L2idx = [1:802 8822:9623 17037:18396 21570:length(OIB_E) 803:3000];
+
+% Find nearest SEAT radar to each OIB location in L2
+SEAT_d = pdist2([OIB_E(OIB_L2idx)' OIB_N(OIB_L2idx)'], [seat_E' seat_N']);
+[SEAT_dist, tmp_idx] = min(SEAT_d,[],2);
+
+% Include only unique SEAT traces (no repeat trace comparisons for
+% different OIB traces)
+[SEAT_L2idx, L2idx_log] = unique(tmp_idx, 'stable'); % Want to change this to 'last' eventually
+% See https://www.mathworks.com/matlabcentral/answers/56553-why-can-t-i-use-unique-with-stable-and-last
+% for info on how to do this
+
+% Distance along L2 cross-section
+L2_dist = [0 cumsum(hypot(diff(OIB_E(OIB_L2idx)), diff(OIB_N(OIB_L2idx))))];
+L2_seatD = L2_dist(L2idx_log);
+
+% OIB trends along L1 which are significant at 95%
+p_tmp = OIB_stats.p(OIB_L2idx);
+oib_b = movmean(OIB_stats.b(OIB_L2idx),20);
+OIB_Pidx = p_tmp<=0.05;
+
+% SEAT trends along L1 which are significant at 95%
+p_tmp = SEAT_stats.p(SEAT_L2idx);
+seat_b = movmean(SEAT_stats.b(SEAT_L2idx),20);
+SEAT_Pidx = p_tmp<=0.05;
+
+figure
+hold on
+% h1 = plot(L2_dist(1), OIB_stats.b(OIB_L2idx(1)), 'm');
+h1 = plot(L2_dist, oib_b, 'm', 'LineWidth', 2);
+plot(L2_dist, oib_b + 1.96*movmean(OIB_stats.se(OIB_L2idx), 20), 'm--')
+plot(L2_dist, oib_b - 1.96*movmean(OIB_stats.se(OIB_L2idx), 20), 'm--')
+% h2 = plot(L1_dist(L1idx_log(1)), SEAT_stats.b(SEAT_L1idx(1)), 'r');
+h2 = plot(L2_dist(L2idx_log), seat_b, 'r', 'LineWidth', 2);
+plot(L2_dist(L2idx_log), seat_b + 1.96*movmean(SEAT_stats.se(SEAT_L2idx), 20), 'r--')
+plot(L2_dist(L2idx_log), seat_b - 1.96*movmean(SEAT_stats.se(SEAT_L2idx), 20), 'r--')
+
+h3 = scatter(L2_dist(~OIB_Pidx), oib_b(~OIB_Pidx), 10, 'kx');
+% alpha(h3, 0.50)
+h4 = scatter(L2_seatD(~SEAT_Pidx), seat_b(~SEAT_Pidx), 10, 'kx');
+% alpha(h4, 0.50)
 xlabel('Distance along cross section (m)')
 ylabel('Linear trend in SMB 1978-2008 (mm/a)')
 legend([h1 h2 h3], 'OIB radar', 'SEAT radar', 'Insignificant trend')
