@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'laptop';
+        computer = 'work';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -31,8 +31,8 @@ addpath(genpath(addon_folder))
 addon_folder = fullfile(addon_path, 'altmany-export_fig-cafc7c5/');
 addpath(genpath(addon_folder))
 
-output_dir = uigetdir(data_path, ...
-    'Select directory to which to output images');
+% output_dir = uigetdir(data_path, ...
+%     'Select directory to which to output images');
 
 %%
 
@@ -303,10 +303,93 @@ set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
 % title('SEAT mean annual SMB')
 hold off
 
-map1_name = 'SMB_mean_map';
-export_fig(map_SMB, fullfile(output_dir, map1_name), '-png');
-close(map_SMB)
+pts = {[-1.143e+06 -4.6390e+05], [-1.0643e+06 -4.313e+05], ...
+    [-1.063e+06 -4.6390e+05], [-1.0155e+06 -4.6494e+05]};
+figure(map_SMB)
+hold on
+for i = 1:length(pts)
+    scatter(pts{i}(1), pts{i}(2), 50, 'rx')
+end
 
+% map1_name = 'SMB_mean_map';
+% export_fig(map_SMB, fullfile(output_dir, map1_name), '-png');
+% close(map_SMB)
+
+
+%% Mean SMB outset plots
+
+
+
+for i = 1:length(pts)
+    
+    D_SEATi = pdist2(pts{i}, [seat_E' seat_N']);
+    [~, SEAT_near] = min(D_SEATi);
+    SEAT_SMB_near = seat_SMB_MC{SEAT_near};
+    SEAT_yr_near = seat_yr{SEAT_near};
+    [coeff, SEATnear_stats] = robustfit(SEAT_yr_near, mean(SEAT_SMB_near,2));
+    SEATnear_stats.b = coeff;
+    
+    D_OIBi = pdist2(pts{i}, [oib_E' oib_N']);
+    [~, OIB_near] = min(D_OIBi);
+    OIB_SMB_near = oib_SMB_MC{OIB_near};
+    OIB_yr_near = oib_yr{OIB_near};
+    [coeff, OIBnear_stats] = robustfit(OIB_yr_near, mean(OIB_SMB_near,2));
+    OIBnear_stats.b = coeff;
+    
+    figure
+    hold on
+    for n = 1:size(SEAT_SMB_near, 2)
+        h0 = plot(SEAT_yr_near, SEAT_SMB_near(:,n), 'r', 'LineWidth', 0.5);
+        h0.Color(4) = 0.02;
+    end
+    h1 = plot(SEAT_yr_near, mean(SEAT_SMB_near, 2), 'r', 'LineWidth', 2);
+    % plot(SEAT_yr_near, mean(SEAT_SMB_near, 2)+std(SEAT_SMB_near,[],2),'r--')
+    % plot(SEAT_yr_near, mean(SEAT_SMB_near, 2)-std(SEAT_SMB_near,[],2),'r--')
+    
+    for n = 1:size(OIB_SMB_near, 2)
+        h0 = plot(OIB_yr_near, OIB_SMB_near(:,n), 'm', 'LineWidth', 0.5);
+        h0.Color(4) = 0.02;
+    end
+    h2 = plot(OIB_yr_near, mean(OIB_SMB_near, 2), 'm', 'LineWidth', 2);
+    % plot(OIB_yr_near, mean(OIB_SMB_near, 2)+std(OIB_SMB_near,[],2),'m--')
+    % plot(OIB_yr_near, mean(OIB_SMB_near, 2)-std(OIB_SMB_near,[],2),'m--')
+    
+    h3 = plot(SEAT_yr_near, SEATnear_stats.b(2)*SEAT_yr_near+SEATnear_stats.b(1));
+    if SEATnear_stats.p(2) <= 0.05
+        h3.Color = 'r';
+        h3.LineStyle = '-';
+    else
+        h3.Color = 'k';
+        h3.LineStyle = '--';
+    end
+    
+    h4 = plot(OIB_yr_near, OIBnear_stats.b(2)*OIB_yr_near+OIBnear_stats.b(1));
+    if OIBnear_stats.p(2) <= 0.05
+        h4.Color = 'm';
+        h4.LineStyle = '-';
+    else
+        h4.Color = 'k';
+        h4.LineStyle = '--';
+    end
+    % core_start = find(core_i.SMB_yr==yr_start);
+    % core_end = find(core_i.SMB_yr==yr_end);
+    % coreI_SMB = core_i.SMB(core_start:core_end,:);
+    % % core4_SMB = movmean(core4_SMB, 3);
+    % for n = 1:size(coreI_SMB, 2)
+    %     h0 = plot(siteI_yr, coreI_SMB(:,n), 'b', 'LineWidth', 0.5);
+    %     h0.Color(4) = 0.02;
+    % end
+    % h3 = plot(siteI_yr, mean(coreI_SMB, 2), 'b', 'LineWidth', 2);
+    % plot(siteI_yr, mean(coreI_SMB, 2) + std(coreI_SMB, [], 2), 'b--')
+    % plot(siteI_yr, mean(coreI_SMB, 2) - std(coreI_SMB, [], 2), 'b--')
+    xlim([min([min(SEAT_yr_near) min(OIB_yr_near)]) ...
+        max([max(SEAT_yr_near) max(OIB_yr_near)])])
+    xlabel('Calendar Year')
+    ylabel('Annual SMB (mm w.e./a)')
+    legend([h1 h2], 'SEAT radar', 'OIB radar')
+    hold off
+    
+end
 
 %% Main map of SMB trends
 
@@ -332,8 +415,9 @@ h5 = scatter(OIB_E(OIB_stats.p<=0.05), OIB_N(OIB_stats.p<=0.05), 3, ...
     'MarkerEdgeAlpha', 0.25);
 h6 = scatter(cores.Easting(core_idx), cores.Northing(core_idx), 125, ...
     cores_beta, 'filled', 'MarkerEdgeColor', 'k');
-text(cores.Easting, cores.Northing, strcat(labels, '\rightarrow'), ...
-    'FontSize', 13, 'Interpreter', 'tex', 'HorizontalAlignment', 'right');
+text(cores.Easting(core_idx), cores.Northing(core_idx), ...
+    strcat(labels, '\rightarrow'), 'FontSize', 13, ...
+    'Interpreter', 'tex', 'HorizontalAlignment', 'right');
 colormap(b2r(-4, 2))
 c0 = colorbar;
 c0.Label.String = ['Linear trend in annual SMB ' num2str(yr_start) '-' ...
@@ -348,5 +432,59 @@ mapzoomps('ne', 'insetsize', 0.30)
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
 hold off
 
+% map2_name = 'SMB_trend_map';
+% export_fig(map_trend, fullfile(output_dir, map2_name), '-png');
+% close(map_trend)
+
 %%
 
+% Select OIB members of L1 cross-section (out of place data causes a gap
+% that is addressed here) and flip data so that directions match those in
+% the maps
+OIB_L1idx = fliplr([5500:5500+3322-1 5500+4125-1:17000]);
+
+% Find nearest SEAT radar to each OIB location in L1
+SEAT_d = pdist2([OIB_E(OIB_L1idx)' OIB_N(OIB_L1idx)'], [seat_E' seat_N']);
+[SEAT_dist, tmp_idx] = min(SEAT_d,[],2);
+
+% Logical index for nearest SEAT members within 50 m of OIB locations
+L1idx_log = SEAT_dist<=50;
+SEAT_L1idx = (tmp_idx(L1idx_log))';
+
+% Distance along L1 cross-section
+L1_dist = [0 cumsum(hypot(diff(OIB_E(OIB_L1idx)), diff(OIB_N(OIB_L1idx))))];
+L1_seatD = L1_dist(L1idx_log);
+
+% OIB trends along L1 which are significant at 95%
+p_tmp = OIB_stats.p(OIB_L1idx);
+oib_b = movmean(OIB_stats.b(OIB_L1idx),50);
+OIB_Pidx = p_tmp<=0.05;
+
+% SEAT trends along L1 which are significant at 95%
+p_tmp = SEAT_stats.p(SEAT_L1idx);
+seat_b = movmean(SEAT_stats.b(SEAT_L1idx),50);
+SEAT_Pidx = p_tmp<=0.05;
+
+
+figure
+hold on
+% h1 = plot(L1_dist(1), OIB_stats.b(OIB_L1idx(1)), 'm');
+h1 = plot(L1_dist, movmean(OIB_stats.b(OIB_L1idx), 50), 'm.');
+plot(L1_dist, movmean(OIB_stats.b(OIB_L1idx),50) + ...
+    1.96*movmean(OIB_stats.se(OIB_L1idx), 50), 'm--')
+plot(L1_dist, movmean(OIB_stats.b(OIB_L1idx),50) - ...
+    1.96*movmean(OIB_stats.se(OIB_L1idx), 50), 'm--')
+% h2 = plot(L1_dist(L1idx_log(1)), SEAT_stats.b(SEAT_L1idx(1)), 'r');
+h2 = plot(L1_dist(L1idx_log), movmean(SEAT_stats.b(SEAT_L1idx),50), 'r.');
+plot(L1_dist(L1idx_log), movmean(SEAT_stats.b(SEAT_L1idx),50) + ...
+    1.96*movmean(SEAT_stats.se(SEAT_L1idx), 50), 'r--')
+plot(L1_dist(L1idx_log), movmean(SEAT_stats.b(SEAT_L1idx),50) - ...
+    1.96*movmean(SEAT_stats.se(SEAT_L1idx), 50), 'r--')
+
+% h3 = plot(L1_dist(~OIB_Pidx(1)), oib_b(~OIB_Pidx(1)), 'k');
+h3 = plot(L1_dist(~OIB_Pidx), oib_b(~OIB_Pidx), 'k.');
+plot(L1_seatD(~SEAT_Pidx), seat_b(~SEAT_Pidx), 'k.')
+xlabel('Distance along cross section (m)')
+ylabel('Linear trend in SMB 1978-2008 (mm/a)')
+legend([h1 h2 h3], 'OIB radar', 'SEAT radar', 'Insignificant trend')
+hold off
