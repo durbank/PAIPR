@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'work';
+        computer = 'laptop';
         %         computer = input('Current PC: ');
         switch computer
             case 'work'
@@ -300,6 +300,8 @@ mapzoomps('ne', 'insetsize', 0.30)
 % legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
 %     'SEAT radar mean SMB', 'Location', 'northwest')
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 10, 6], ...
+    'PaperUnits', 'Inches', 'PaperSize', [10, 6])
 % title('SEAT mean annual SMB')
 hold off
 
@@ -354,23 +356,25 @@ for i = 1:length(pts)
     % plot(OIB_yr_near, mean(OIB_SMB_near, 2)+std(OIB_SMB_near,[],2),'m--')
     % plot(OIB_yr_near, mean(OIB_SMB_near, 2)-std(OIB_SMB_near,[],2),'m--')
     
-    h3 = plot(SEAT_yr_near, SEATnear_stats.b(2)*SEAT_yr_near+SEATnear_stats.b(1));
-    if SEATnear_stats.p(2) <= 0.05
-        h3.Color = 'r';
-        h3.LineStyle = '-';
-    else
-        h3.Color = 'k';
-        h3.LineStyle = '--';
-    end
-    
-    h4 = plot(OIB_yr_near, OIBnear_stats.b(2)*OIB_yr_near+OIBnear_stats.b(1));
-    if OIBnear_stats.p(2) <= 0.05
-        h4.Color = 'm';
-        h4.LineStyle = '-';
-    else
-        h4.Color = 'k';
-        h4.LineStyle = '--';
-    end
+%     h3 = plot(SEAT_yr_near, SEATnear_stats.b(2)*SEAT_yr_near+SEATnear_stats.b(1));
+%     if SEATnear_stats.p(2) <= 0.05
+%         h3.Color = 'r';
+%         h3.LineStyle = '-';
+%     else
+%         h3.Color = 'k';
+%         h3.LineStyle = '--';
+%     end
+%     
+%     h4 = plot(OIB_yr_near, OIBnear_stats.b(2)*OIB_yr_near+OIBnear_stats.b(1));
+%     if OIBnear_stats.p(2) <= 0.05
+%         h4.Color = 'm';
+%         h4.LineStyle = '-';
+%     else
+%         h4.Color = 'k';
+%         h4.LineStyle = '--';
+%     end
+
+
     % core_start = find(core_i.SMB_yr==yr_start);
     % core_end = find(core_i.SMB_yr==yr_end);
     % coreI_SMB = core_i.SMB(core_start:core_end,:);
@@ -387,6 +391,8 @@ for i = 1:length(pts)
     xlabel('Calendar Year')
     ylabel('Annual SMB (mm w.e./a)')
     legend([h1 h2], 'SEAT radar', 'OIB radar')
+    set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 6], ...
+    'PaperUnits', 'Inches', 'PaperSize', [8, 6])
     hold off
     
 end
