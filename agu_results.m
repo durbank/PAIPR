@@ -278,7 +278,7 @@ map_SMB = figure('Position', [0 0 1400 800]);
 h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
 set(gca, 'Ydir', 'normal')
 hold on
-h1 = mapshow(basins, 'FaceAlpha', 0);
+% h1 = mapshow(basins, 'FaceAlpha', 0);
 h2 = scatter(SEAT_E, SEAT_N, 50, mean(cell2mat(mSEAT_SMB)), 'filled');
 h3 = scatter(OIB_E, OIB_N, 50, mean(cell2mat(mOIB_SMB)), 'filled');
 h4 = scatter(cores.Easting(core_idx), cores.Northing(core_idx), 125, ...
@@ -297,11 +297,9 @@ ylim(Northing_lims)
 scalebarps
 box on
 mapzoomps('ne', 'insetsize', 0.30)
-% legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
-%     'SEAT radar mean SMB', 'Location', 'northwest')
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
-% set(gcf, 'Units', 'Inches', 'Position', [0, 0, 10, 6], ...
-%     'PaperUnits', 'Inches', 'PaperSize', [10, 6])
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 18, 9], ...
+    'PaperUnits', 'Inches', 'PaperSize', [18, 9])
 % title('SEAT mean annual SMB')
 hold off
 
@@ -317,7 +315,7 @@ for i = 1:length(pts)
 end
 
 map1_name = 'SMB_mean_map';
-export_fig(map_SMB, fullfile(output_dir, map1_name), '-pdf', '-q101', '-cmyk')
+export_fig(map_SMB, fullfile(output_dir, map1_name), '-pdf', '-q101', '-cmyk', '-a1')
 close(map_SMB)
 
 
@@ -395,8 +393,8 @@ for i = 1:length(pts)
     ylabel('Annual SMB (mm w.e./a)')
     legend([h1 h2], 'SEAT radar', 'OIB radar')
     title(strcat(pts_names{i}, ' SMB time-series'))
-    set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 6], ...
-        'PaperUnits', 'Inches', 'PaperSize', [8, 6])
+    set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
+        'PaperUnits', 'Inches', 'PaperSize', [8, 4])
     hold off
     
     figi_nm = strcat(pts_names{i}, ' SMB');
@@ -454,9 +452,12 @@ h3 = scatter(L1_dist(~OIB_Pidx), oib_b(~OIB_Pidx), 10, 'kx');
 % alpha(h3, 0.50)
 scatter(L1_seatD(~SEAT_Pidx), seat_b(~SEAT_Pidx), 10, 'kx');
 % alpha(h4, 0.50)
+ylim([-8.5 4])
 xlabel('Distance along cross section (m)')
 ylabel('Linear trend in SMB 1978-2008 (mm/a)')
 legend([h1 h2 h3], 'OIB radar', 'SEAT radar', 'Insignificant trend')
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
+    'PaperUnits', 'Inches', 'PaperSize', [8, 4])
 hold off
 
 fig_nm = 'L1_trend';
@@ -513,6 +514,8 @@ scatter(L2_seatD(~SEAT_Pidx), seat_b(~SEAT_Pidx), 10, 'kx');
 xlabel('Distance along cross section (m)')
 ylabel('Linear trend in SMB 1978-2008 (mm/a)')
 legend([h1 h2 h3], 'OIB radar', 'SEAT radar', 'Insignificant trend')
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
+    'PaperUnits', 'Inches', 'PaperSize', [8, 4])
 hold off
 
 fig_nm = 'L2_trend';
@@ -528,7 +531,7 @@ addpath(genpath(addon_folder))
 map_trend = figure('Position', [0 0 1400 800]);
 % title('SEAT radar SMB trends')
 hold on
-h1 = mapshow(basins, 'FaceAlpha', 0);
+% h1 = mapshow(basins, 'FaceAlpha', 0);
 h2 = scatter(SEAT_E, SEAT_N, 50, SEAT_stats.b, 'filled');
 % h3 = scatter(SEAT_E(SEAT_stats.p<=0.05), SEAT_N(SEAT_stats.p<=0.05), 3, ...
 %     'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
@@ -564,12 +567,11 @@ scalebarps
 box on
 mapzoomps('ne', 'insetsize', 0.30)
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 18, 9], ...
+    'PaperUnits', 'Inches', 'PaperSize', [18, 9])
 hold off
 
 fig_nm = 'SMBmap_trend';
 export_fig(map_trend, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk')
 close(map_trend)
 
-% map2_name = 'SMB_trend_map';
-% export_fig(map_trend, fullfile(output_dir, map2_name), '-png');
-% close(map_trend)
