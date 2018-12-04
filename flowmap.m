@@ -331,20 +331,34 @@ for k = 1:length(XY)
     XY{k}(:,2) = XY_raw{k}(:,2)*.02;
 end
 
+% fig6 = figure;
+% imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
+% hold on
+% hlines = streamline(XY);
+% set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
+% plot([radar.dist(T-h_sz) radar.dist(T-h_sz)], [radar.depth(601) radar.depth(800)], ...
+%     'm', 'LineWidth', 2)
+% plot([radar.dist(T+h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(800)],...
+%     'm', 'LineWidth', 2)
+% plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(601)],...
+%     'm', 'LineWidth', 2)
+% plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(800) radar.depth(800)],...
+%     'm', 'LineWidth', 2)
+% scatter(radar.dist(T-h_sz+col_n-1), radar.depth(601+row_n), 50, 'm*')
+% xlabel('Distance (m)')
+% ylabel('Depth (m)')
+% ylim([0 25])
+% set(gcf, 'Units', 'Inches', 'Position', [0, 0, 12, 7], ...
+%     'PaperUnits', 'Inches', 'PaperSize', [12, 7])
+% hold off
+
 fig6 = figure;
 imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
 hold on
 hlines = streamline(XY);
 set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
-plot([radar.dist(T-h_sz) radar.dist(T-h_sz)], [radar.depth(601) radar.depth(800)], ...
-    'm', 'LineWidth', 2)
-plot([radar.dist(T+h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(800)],...
-    'm', 'LineWidth', 2)
-plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(601)],...
-    'm', 'LineWidth', 2)
-plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(800) radar.depth(800)],...
-    'm', 'LineWidth', 2)
-scatter(radar.dist(T-h_sz+col_n-1), radar.depth(601+row_n), 50, 'm*')
+plot([radar.dist(T) radar.dist(T)], [min(radar.depth) max(radar.depth)], ...
+    'b', 'LineWidth', 2)
 xlabel('Distance (m)')
 ylabel('Depth (m)')
 ylim([0 25])
@@ -399,8 +413,15 @@ end
 fig = figure('Position', [50 50 1500 800]);
 imagesc(radar.dist, radar.depth, peaks_raw, [0 3.5])
 hold on
-plot([radar.dist(T) radar.dist(T)], [min(radar.depth) max(radar.depth)], ...
-    'b', 'LineWidth', 2)
+plot([radar.dist(T-h_sz) radar.dist(T-h_sz)], [radar.depth(601) radar.depth(800)], ...
+    'm', 'LineWidth', 2)
+plot([radar.dist(T+h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(800)],...
+    'm', 'LineWidth', 2)
+plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(601) radar.depth(601)],...
+    'm', 'LineWidth', 2)
+plot([radar.dist(T-h_sz) radar.dist(T+h_sz)], [radar.depth(800) radar.depth(800)],...
+    'm', 'LineWidth', 2)
+scatter(radar.dist(T-h_sz+col_n-1), radar.depth(601+row_n), 50, 'm*')
 xlabel('Distance (m)')
 ylabel('Depth (m)')
 ylim([0 25])
@@ -415,13 +436,13 @@ close(fig)
 
 fig = figure;
 hold on
-scatter(radar.data_smooth(601+121,T)+0.12, radar.depth(601+121)+0.12, 'r*')
+scatter(radar.data_smooth(601+121,T)+0.12, radar.depth(601+121)+0.12, 'b*')
 plot([radar.data_smooth(601+121,T) radar.data_smooth(601+121,T)], ...
-    [radar.depth(722-30) radar.depth(722+30)], 'r', 'LineWidth', 2)
+    [radar.depth(722-30) radar.depth(722+30)], 'b', 'LineWidth', 2)
 plot([-1.44 radar.data_smooth(601+121,T)], [radar.depth(722) radar.depth(722)],...
-    'r', 'LineWidth', 2)
-plot([-1.44 -1.44], [radar.depth(722-30) radar.depth(722+30)], 'r', 'LineWidth', 2)
-plot(radar.data_smooth(:,T), radar.depth, 'b')
+    'b', 'LineWidth', 2)
+plot([-1.44 -1.44], [radar.depth(722-30) radar.depth(722+30)], 'b', 'LineWidth', 2)
+plot(radar.data_smooth(:,T), radar.depth, 'k')
 set(gca, 'Ydir', 'reverse')
 xlabel('Z-score')
 ylabel('Depth (m)')
