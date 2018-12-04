@@ -62,8 +62,8 @@ T = 710;
 fig1 = figure;
 imagesc(radar.dist, radar.depth(:,T), radar.data_stack)
 hold on
-plot([radar.dist(T) radar.dist(T)], [min(radar.depth(:,T)) max(radar.depth(:,T))], ...
-    'b', 'LineWidth', 2)
+% plot([radar.dist(T) radar.dist(T)], [min(radar.depth(:,T)) max(radar.depth(:,T))], ...
+%     'b', 'LineWidth', 2)
 xlabel('Distance (m)')
 ylabel('Depth (m)')
 ylim([0 25])
@@ -396,19 +396,43 @@ for i = 1:size(radar.data_smooth, 2)
 end
 
 
-% figure('Position', [50 50 1500 800])
-% imagesc(radar.dist, radar.depth, peaks_raw, [0 3.5])
-% hold on
-% hlines = streamline(XY);
-% set(hlines, 'Color', 'r', 'LineStyle', '--')
-% xlabel('Distance (m)')
-% ylabel('Depth (m)')
-% ylim([0 25])
-% hold off
+fig = figure('Position', [50 50 1500 800]);
+imagesc(radar.dist, radar.depth, peaks_raw, [0 3.5])
+hold on
+plot([radar.dist(T) radar.dist(T)], [min(radar.depth) max(radar.depth)], ...
+    'b', 'LineWidth', 2)
+xlabel('Distance (m)')
+ylabel('Depth (m)')
+ylim([0 25])
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 12, 7], ...
+    'PaperUnits', 'Inches', 'PaperSize', [12, 7])
+hold off
+
+fig_nm = 'radargram_peaks';
+export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk');
+close(fig)
 
 
+fig = figure;
+hold on
+scatter(radar.data_smooth(601+121,T)+0.12, radar.depth(601+121)+0.12, 'r*')
+plot([radar.data_smooth(601+121,T) radar.data_smooth(601+121,T)], ...
+    [radar.depth(722-30) radar.depth(722+30)], 'r', 'LineWidth', 2)
+plot([-1.44 radar.data_smooth(601+121,T)], [radar.depth(722) radar.depth(722)],...
+    'r', 'LineWidth', 2)
+plot([-1.44 -1.44], [radar.depth(722-30) radar.depth(722+30)], 'r', 'LineWidth', 2)
+plot(radar.data_smooth(:,T), radar.depth, 'b')
+set(gca, 'Ydir', 'reverse')
+xlabel('Z-score')
+ylabel('Depth (m)')
+ylim([0 25])
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 5, 7], ...
+    'PaperUnits', 'Inches', 'PaperSize', [5, 7])
+hold off
 
-
+fig_nm = 'prominence';
+export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk');
+close(fig)
 
 
 
