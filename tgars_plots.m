@@ -189,9 +189,57 @@ for i = 1:length(sites)
     
     OIB_manual.man_ages = ages_man;
     
+    % Find manual count data within a threshold of ith core and the nearest
+    % manual count data to ith core
+    dist_man = pdist2([cores.(site_nm).Easting  cores.(site_nm).Northing], ...
+        [OIB_manual.Easting', OIB_manual.Northing']);
+    trace_idx = 1:length(OIB_E);
+    threshold = 5000;
+    man_idx = trace_idx(dist_man<=threshold);
+    [~, man_near] = min(dist_man);
+    
+    figure
+    hold on
+    for n = 1:Ndraw
+        h0 = plot(OIB_manual.depth, OIB_manual.ages(:,man_near,n), ...
+            'm', 'LineWidth', 0.5);
+        h0.Color(4) = 0.03;
+    end
+    plot(cores.(site_nm).depth, mean(cores.(site_nm).ages, 2), ...
+        'b', 'LineWidth', 2)
+    plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) + ...
+        std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
+    plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) - ...
+        std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
+    plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2), ...
+        'm', 'LineWidth', 2)
+    plot(OIB_manual.depth, OIB_manual.man_ages(:,man_near), ...
+        'k', 'LineWidth', 2)
+    hold off
     
     
-    
+    idx_ages = reshape(OIB_manual.ages(:,man_idx,:), ...
+        size(OIB_manual.ages,1), length(man_idx)*Ndraw);
+    figure
+    hold on
+    plot(cores.(site_nm).depth, mean(cores.(site_nm).ages, 2), ...
+        'b', 'LineWidth', 2)
+    plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) + ...
+        std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
+    plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) - ...
+        std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
+    plot(OIB_manual.depth, mean(idx_ages, 2), 'm', 'LineWidth', 2)
+    plot(OIB_manual.depth, mean(idx_ages, 2) + std(idx_ages, [], 2), ...
+        'm--', 'LineWidth', 0.5)
+    plot(OIB_manual.depth, mean(idx_ages, 2) - std(idx_ages, [], 2), ...
+        'm--', 'LineWidth', 0.5)
+    plot(OIB_manual.depth, mean(OIB_manual.man_ages(:,man_idx), 2), ...
+        'k', 'LineWidth', 2)
+    plot(OIB_manual.depth, mean(OIB_manual.man_ages(:,man_idx), 2) + ...
+        std(OIB_manual.man_ages(:,man_idx), [], 2), 'k--', 'LineWidth', 0.5)
+    plot(OIB_manual.depth, mean(OIB_manual.man_ages(:,man_idx), 2) - ...
+        std(OIB_manual.man_ages(:,man_idx), [], 2), 'k--', 'LineWidth', 0.5)
+    hold off
     
     
     text_name = strrep(site_nm, '_', '-');
@@ -204,6 +252,23 @@ for i = 1:length(sites)
     OIB_idx = trace_idx(dist_OIB<=5000);
     [~, OIB_near] = min(dist_OIB);
     
+    % Find min length of SMB records within OIB data in threshold, and
+    % extract calendar year values
+    min_length = min(cellfun(@length, oib_SMB(OIB_idx)));
+    OIBi_yr = OIB_yr{OIB_near}(1:min_length);
+    
+    % Subset OIB SMB records to those within distance threshold and clipped
+    % to minimum length
+    OIB_clip = cellfun(@(x) x(1:min_length,:), OIB_SMB_MC(OIB_idx), ...
+        'UniformOutput', false);
+    
+    % Convert full dataset (all MC simulations) to matrix)
+    OIBi_SMB = cell2mat(OIB_clip);
+%     % Convert mean dataset (averages of MC simulation sets) to matrix
+%     OIBi_SMB = cell2mat(cellfun(@(x) mean(x,2), OIB_clip, ...
+%         'UniformOutput', false));
+    
+    
     % Find SEAT data within 5 km of the ith core and the nearest trace to
     % the core
     dist_SEAT = pdist2([cores.(site_nm).Easting  cores.(site_nm).Northing], ...
@@ -212,36 +277,78 @@ for i = 1:length(sites)
     SEAT_idx = trace_idx(dist_SEAT<=5000);
     [~, SEAT_near] = min(dist_SEAT);
     
-    % figure
-    % plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2), 'b')
+    % Find min length of SMB records within SEAT data in threshold, and
+    % extract calendar year values
+    min_length = min(cellfun(@length, seat_SMB(SEAT_idx)));
+    SEATi_yr = SEAT_yr{SEAT_near}(1:min_length);
+    
+    % Subset OIB SMB records to those within distance threshold and clipped
+    % to minimum length
+    SEAT_clip = cellfun(@(x) x(1:min_length,:), SEAT_SMB_MC(SEAT_idx), ...
+        'UniformOutput', false);
+    
+    % Convert full dataset (all MC simulations) to matrix)
+    SEATi_SMB = cell2mat(SEAT_clip);
+%     % Convert mean dataset (averages of MC simulation sets) to matrix
+%     SEATi_SMB = cell2mat(cellfun(@(x) mean(x,2), SEAT_clip, ...
+%         'UniformOutput', false));
+    
+    
     
     figure
     hold on
-    % for n = 1:Ndraw
-    %     h0 = plot(SEAT_yr{SEAT_near}, SEAT_SMB_MC{SEAT_near}(:,n), ...
-    %         'r', 'LineWidth', 0.5);
-    %     h0.Color(4) = 0.05;
-    % end
-    % for n = 1:Ndraw
-    %     h0 = plot(OIB_yr{OIB_near}, OIB_SMB_MC{OIB_near}(:,n), ...
-    %         'm', 'LineWidth', 0.5);
-    %     h0.Color(4) = 0.05;
-    % end
+    for n = 1:Ndraw
+        h0 = plot(SEAT_yr{SEAT_near}, SEAT_SMB_MC{SEAT_near}(:,n), ...
+            'r', 'LineWidth', 0.5);
+        h0.Color(4) = 0.05;
+    end
+    for n = 1:Ndraw
+        h0 = plot(OIB_yr{OIB_near}, OIB_SMB_MC{OIB_near}(:,n), ...
+            'm', 'LineWidth', 0.5);
+        h0.Color(4) = 0.05;
+    end
+    for n = 1:Ndraw
+        h0 = plot(cores.(site_nm).SMB_yr, cores.(site_nm).SMB(:,n), ...
+            'b', 'LineWidth', 0.5);
+        h0.Color(4) = 0.05;
+    end
     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB,2),'b','LineWidth',2)
+%     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) + ...
+%         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
+%     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) - ...
+%         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
+    plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2), 'r','LineWidth',2)
+%     plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2) + ...
+%         std(SEAT_SMB_MC{SEAT_near}, [], 2), 'r--', 'LineWidth', 0.5)
+%     plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2) - ...
+%         std(SEAT_SMB_MC{SEAT_near}, [], 2), 'r--', 'LineWidth', 0.5)
+    plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2), 'm', 'LineWidth', 2)
+%     plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2) + ...
+%         std(OIB_SMB_MC{OIB_near}, [], 2), 'm--', 'LineWidth', 0.5)
+%     plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2) - ...
+%         std(OIB_SMB_MC{OIB_near}, [], 2), 'm--', 'LineWidth', 0.5)
+    hold off
+    
+    
+    
+    
+    figure
+    hold on
+    plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB,2), ...
+        'b', 'LineWidth', 2)
     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) + ...
         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) - ...
         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
-    plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2), 'r','LineWidth',2)
-    plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2) + ...
-        std(SEAT_SMB_MC{SEAT_near}, [], 2), 'r--', 'LineWidth', 0.5)
-    plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2) - ...
-        std(SEAT_SMB_MC{SEAT_near}, [], 2), 'r--', 'LineWidth', 0.5)
-    plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2), 'm', 'LineWidth', 2)
-    plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2) + ...
-        std(OIB_SMB_MC{OIB_near}, [], 2), 'm--', 'LineWidth', 0.5)
-    plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2) - ...
-        std(OIB_SMB_MC{OIB_near}, [], 2), 'm--', 'LineWidth', 0.5)
-    hold off
+    plot(SEATi_yr, mean(SEATi_SMB,2), 'r', 'LineWidth', 2)
+    plot(SEATi_yr, mean(SEATi_SMB,2) + std(SEATi_SMB, [], 2), ...
+        'r--', 'LineWidth', 0.5)
+    plot(SEATi_yr, mean(SEATi_SMB,2) - std(SEATi_SMB, [], 2), ...
+        'r--', 'LineWidth', 0.5)
+    plot(OIBi_yr, mean(OIBi_SMB,2), 'm', 'LineWidth', 2)
+    plot(OIBi_yr, mean(OIBi_SMB,2) + std(OIBi_SMB, [], 2), ...
+        'm--', 'LineWidth', 0.5)
+    plot(OIBi_yr, mean(OIBi_SMB,2) - std(OIBi_SMB, [], 2), ...
+        'm--', 'LineWidth', 0.5)
     
 end
