@@ -5,8 +5,9 @@ rho_std = sqrt((radar.rho_var(1,:)-radar.rho_var(2,:))./...
     (radar.rho_var(3,:).^radar.depth) + radar.rho_var(2,:));
 
 % Generate density with depth model for radar data
-rho_mod = radar.rho_coeff(1,:).*radar.depth.^radar.rho_coeff(2,:) + ...
-    radar.rho_coeff(3,:);
+
+% rho_mod = radar.rho_coeff(1,:).*radar.depth.^radar.rho_coeff(2,:) + ...
+%     radar.rho_coeff(3,:);
 
 %% Calculate annual accumulation for each radar trace
 
