@@ -1,5 +1,5 @@
-% This script generates the results figures used in the TGARS paper (Keeler
-% et al, 2019)
+% This script generates the site-specific results figures and values used 
+% in the TGARS paper (Keeler et al, 2019)
 
 % Directories to data of interest based on computer (eventually will be
 % replaced with GUI for data directory selection)
@@ -32,8 +32,8 @@ addpath(genpath(addon_folder))
 addon_folder = fullfile(addon_path, 'altmany-export_fig-cafc7c5/');
 addpath(genpath(addon_folder))
 
-output_dir = uigetdir(data_path, ...
-    'Select directory to which to output images');
+% output_dir = uigetdir(data_path, ...
+%     'Select directory to which to output images');
 
 %%
 
@@ -133,6 +133,7 @@ end
 %%
 
 sites = {'SEAT10_4', 'SEAT10_5', 'SEAT10_6'};
+bias_stats = struct();
 
 for i = 1:length(sites)
     
@@ -242,49 +243,27 @@ for i = 1:length(sites)
     hold off
     
     
-    text_name = strrep(site_nm, '_', '-');
-    
-    % Find OIB data within 5 km of the ith core and the nearest trace to
-    % the core
-    dist_OIB = pdist2([cores.(site_nm).Easting  cores.(site_nm).Northing], ...
-        [OIB_E', OIB_N']);
-    trace_idx = 1:length(OIB_E);
-    OIB_idx = trace_idx(dist_OIB<=5000);
-    [~, OIB_near] = min(dist_OIB);
-    
-    % Find min length of SMB records within OIB data in threshold, and
-    % extract calendar year values
-    min_length = min(cellfun(@length, oib_SMB(OIB_idx)));
-    OIBi_yr = OIB_yr{OIB_near}(1:min_length);
-    
-    % Subset OIB SMB records to those within distance threshold and clipped
-    % to minimum length
-    OIB_clip = cellfun(@(x) x(1:min_length,:), OIB_SMB_MC(OIB_idx), ...
-        'UniformOutput', false);
-    
-    % Convert full dataset (all MC simulations) to matrix)
-    OIBi_SMB = cell2mat(OIB_clip);
-%     % Convert mean dataset (averages of MC simulation sets) to matrix
-%     OIBi_SMB = cell2mat(cellfun(@(x) mean(x,2), OIB_clip, ...
-%         'UniformOutput', false));
     
     
-    % Find SEAT data within 5 km of the ith core and the nearest trace to
-    % the core
+    
+    
+    % Find SEAT data within a threshold of the ith core and the nearest 
+    % trace to the core
     dist_SEAT = pdist2([cores.(site_nm).Easting  cores.(site_nm).Northing], ...
         [SEAT_E', SEAT_N']);
     trace_idx = 1:length(SEAT_E);
-    SEAT_idx = trace_idx(dist_SEAT<=5000);
-    [~, SEAT_near] = min(dist_SEAT);
+    threshold = 7500;
+    SEATi_idx = trace_idx(dist_SEAT<=threshold);
+    [~, SEATi_near] = min(dist_SEAT);
     
     % Find min length of SMB records within SEAT data in threshold, and
     % extract calendar year values
-    min_length = min(cellfun(@length, seat_SMB(SEAT_idx)));
-    SEATi_yr = SEAT_yr{SEAT_near}(1:min_length);
+    min_length = min(cellfun(@length, seat_SMB(SEATi_idx)));
+    SEATi_yr = SEAT_yr{SEATi_near}(1:min_length);
     
     % Subset OIB SMB records to those within distance threshold and clipped
     % to minimum length
-    SEAT_clip = cellfun(@(x) x(1:min_length,:), SEAT_SMB_MC(SEAT_idx), ...
+    SEAT_clip = cellfun(@(x) x(1:min_length,:), SEAT_SMB_MC(SEATi_idx), ...
         'UniformOutput', false);
     
     % Convert full dataset (all MC simulations) to matrix)
@@ -293,17 +272,39 @@ for i = 1:length(sites)
 %     SEATi_SMB = cell2mat(cellfun(@(x) mean(x,2), SEAT_clip, ...
 %         'UniformOutput', false));
     
+    % Find OIB data within a threshold of the ith core and the nearest 
+    % trace to the core
+    dist_OIB = pdist2([cores.(site_nm).Easting  cores.(site_nm).Northing], ...
+        [OIB_E', OIB_N']);
+    trace_idx = 1:length(OIB_E);
+    OIBi_idx = trace_idx(dist_OIB<=threshold);
+    [~, OIBi_near] = min(dist_OIB);
     
+    % Find min length of SMB records within OIB data in threshold, and
+    % extract calendar year values
+    min_length = min(cellfun(@length, oib_SMB(OIBi_idx)));
+    OIBi_yr = OIB_yr{OIBi_near}(1:min_length);
+    
+    % Subset OIB SMB records to those within distance threshold and clipped
+    % to minimum length
+    OIB_clip = cellfun(@(x) x(1:min_length,:), OIB_SMB_MC(OIBi_idx), ...
+        'UniformOutput', false);
+    
+    % Convert full dataset (all MC simulations) to matrix)
+    OIBi_SMB = cell2mat(OIB_clip);
+%     % Convert mean dataset (averages of MC simulation sets) to matrix
+%     OIBi_SMB = cell2mat(cellfun(@(x) mean(x,2), OIB_clip, ...
+%         'UniformOutput', false));
     
     figure
     hold on
     for n = 1:Ndraw
-        h0 = plot(SEAT_yr{SEAT_near}, SEAT_SMB_MC{SEAT_near}(:,n), ...
+        h0 = plot(SEAT_yr{SEATi_near}, SEAT_SMB_MC{SEATi_near}(:,n), ...
             'r', 'LineWidth', 0.5);
         h0.Color(4) = 0.05;
     end
     for n = 1:Ndraw
-        h0 = plot(OIB_yr{OIB_near}, OIB_SMB_MC{OIB_near}(:,n), ...
+        h0 = plot(OIB_yr{OIBi_near}, OIB_SMB_MC{OIBi_near}(:,n), ...
             'm', 'LineWidth', 0.5);
         h0.Color(4) = 0.05;
     end
@@ -317,12 +318,12 @@ for i = 1:length(sites)
 %         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
 %     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) - ...
 %         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
-    plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2), 'r','LineWidth',2)
+    plot(SEAT_yr{SEATi_near}, mean(SEAT_SMB_MC{SEATi_near},2), 'r','LineWidth',2)
 %     plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2) + ...
 %         std(SEAT_SMB_MC{SEAT_near}, [], 2), 'r--', 'LineWidth', 0.5)
 %     plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2) - ...
 %         std(SEAT_SMB_MC{SEAT_near}, [], 2), 'r--', 'LineWidth', 0.5)
-    plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2), 'm', 'LineWidth', 2)
+    plot(OIB_yr{OIBi_near}, mean(OIB_SMB_MC{OIBi_near},2), 'm', 'LineWidth', 2)
 %     plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2) + ...
 %         std(OIB_SMB_MC{OIB_near}, [], 2), 'm--', 'LineWidth', 0.5)
 %     plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2) - ...
@@ -350,5 +351,138 @@ for i = 1:length(sites)
         'm--', 'LineWidth', 0.5)
     plot(OIBi_yr, mean(OIBi_SMB,2) - std(OIBi_SMB, [], 2), ...
         'm--', 'LineWidth', 0.5)
+    
+    
+    
+    
+    
+    yr_start = min([cores.(site_nm).SMB_yr(1) ...
+        cellfun(@(x) x(1), SEAT_yr(SEATi_idx)) ...
+        cellfun(@(x) x(1), OIB_yr(OIBi_idx))]);
+    yr_end = max([cores.(site_nm).SMB_yr(end) ...
+        cellfun(@(x) x(end), SEAT_yr(SEATi_idx)) ...
+        cellfun(@(x) x(end), OIB_yr(OIBi_idx))]);
+    site_yr_i = (yr_start:-1:yr_end)';
+    
+    core_start = find(cores.(site_nm).SMB_yr==yr_start);
+    core_end = find(cores.(site_nm).SMB_yr==yr_end);
+    core_SMB_i = cores.(site_nm).SMB(core_start:core_end,:);
+    
+    SEAT_start = cellfun(@(x) find(x==yr_start, 1), SEAT_yr(SEATi_idx));
+    SEAT_end = cellfun(@(x) find(x==yr_end, 1), SEAT_yr(SEATi_idx));
+    OIB_start = cellfun(@(x) find(x==yr_start, 1), OIB_yr(OIBi_idx));
+    OIB_end = cellfun(@(x) find(x==yr_end, 1), OIB_yr(OIBi_idx));
+    
+    
+    SEAT_SMB_near = SEAT_SMB_MC{SEATi_near}(SEAT_start(1):...
+        SEAT_start(1)+length(site_yr_i)-1,:);
+    OIB_SMB_near = OIB_SMB_MC{OIBi_near}(OIB_start(1):...
+        OIB_start(1)+length(site_yr_i)-1,:);
+    
+    
+    SEAT_tmp = cellfun(@(x) mean(x, 2), SEAT_SMB_MC, 'UniformOutput', 0);
+    SMB_tmp = SEAT_tmp(SEATi_idx);
+    SEATi_SMB = zeros(length(site_yr_i), length(SEAT_start));
+    for j = 1:length(SEAT_start)
+        
+        SEATi_SMB(:,j) = SMB_tmp{j}(SEAT_start(j):SEAT_end(j));
+    end
+    
+    OIB_tmp = cellfun(@(x) mean(x, 2), OIB_SMB_MC, 'UniformOutput', 0);
+    SMB_tmp = OIB_tmp(OIBi_idx);
+    OIBi_SMB = zeros(length(site_yr_i), length(OIB_start));
+    for j = 1:length(OIB_start)
+        
+        OIBi_SMB(:,j) = SMB_tmp{j}(OIB_start(j):OIB_end(j));
+    end
+    
+    
+    
+    
+    % SEAT bias relative to the core (nearest trace distribution)
+    bias_SEATnear = (SEAT_SMB_near - mean(core_SMB_i,2))./mean(core_SMB_i,2);
+    bias_Snear_mu = median(bias_SEATnear(:));
+%     bias_Snear_mu = mean(bias_SEATnear(:));
+    bias_Snear_std = std(bias_SEATnear(:));
+    bias_Snear_SEM = bias_Snear_std/sqrt(numel(bias_SEATnear));
+    T_SEATnear = tinv(0.975, numel(bias_SEATnear)-1);
+    MoE_SEATnear = T_SEATnear*bias_Snear_SEM;
+    
+    % OIB bias relative to the core (nearest trace distribution)
+    bias_OIBnear = (OIB_SMB_near - mean(core_SMB_i,2))./mean(core_SMB_i,2);
+    bias_Onear_mu = median(bias_OIBnear(:));
+%     bias_Onear_mu = mean(bias_OIBnear(:));
+    bias_Onear_std = std(bias_OIBnear(:));
+    bias_Onear_SEM = bias_Onear_std/sqrt(numel(bias_OIBnear));
+    T_OIBnear = tinv(0.975, numel(bias_OIBnear)-1);
+    MoE_OIBnear = T_OIBnear*bias_Onear_SEM;
+
+    % SEAT bias relative to the core (distribution of nearby mean traces)
+    bias_SEATi = (SEATi_SMB - mean(core_SMB_i,2))./mean(core_SMB_i,2);
+    biasSEATi_mu = median(bias_SEATi(:));
+%     biasSEATi_mu = mean(bias_SEATi(:));
+    biasSEATi_std = std(bias_SEATi(:));
+    biasSEATi_sem = biasSEATi_std/sqrt(numel(bias_SEATi));
+    T_SEATi = tinv(0.975, numel(bias_SEATi)-1);
+    MoE_SEATi = T_SEATi*biasSEATi_sem;
+    
+    % OIB bias relative to the core (distribution of nearby mean traces)
+    bias_OIBi = (OIBi_SMB - mean(core_SMB_i,2))./mean(core_SMB_i,2);
+    biasOIBi_mu = median(bias_OIBi(:));
+%     biasOIBi_mu = mean(bias_OIBi(:));
+    biasOIBi_std = std(bias_OIBi(:));
+    biasOIBi_sem = biasOIBi_std/sqrt(numel(bias_OIBi));
+    T_OIBi = tinv(0.975, numel(bias_OIBi)-1);
+    MoE_OIBi = T_OIBi*biasOIBi_sem;
+    
+    bias_mu = [bias_Snear_mu; biasSEATi_mu; bias_Onear_mu; biasOIBi_mu];
+    bias_MoE = [MoE_SEATnear; MoE_SEATi; MoE_OIBnear; MoE_OIBi];
+    bias_std = [bias_Snear_std; biasSEATi_std; bias_Onear_std; biasOIBi_std];
+    bias_stats.(site_nm) = table(bias_mu, bias_MoE, bias_std, ...
+        'VariableNames', {'mean', 'MoE', 'StdDev'}, 'RowNames', ...
+        {'SEAT-core (nearest trace)', 'SEAT-core (mean traces)', ...
+        'OIB-core (nearest trace)', 'OIB-core (mean traces)'});
+    
+    
+    
+    
+    
+%     SEATi_b1 = zeros(1, size(SEATi_SMB, 2));
+%     SEATi_p = zeros(1, size(SEATi_SMB, 2));
+%     for j = 1:size(SEATi_SMB, 2)
+% %         [trend, stats] = robustfit(site_yr_i, SEATi_SMB(:,j));
+% %         SEATi_b1(j) = trend(2);
+% %         SEATi_p(j) = stats.p(2);
+%         [trend,~,~,~,stats] = regress(SEATi_SMB(:,j), ...
+%             [ones(length(site_yr_i),1) site_yr_i]);
+%         SEATi_b1(j) = trend(2);
+%         SEATi_p(j) = stats(3);
+%     end
+%     
+%     OIBi_b1 = zeros(1, size(OIBi_SMB, 2));
+%     OIBi_p = zeros(1, size(OIBi_SMB, 2));
+%     for j = 1:size(OIBi_SMB, 2)
+% %         [trend, stats] = robustfit(siteI_yr, OIBi_SMB(:,j));
+% %         OIBi_b1(j) = trend(2);
+% %         OIBi_p(j) = stats.p(2);
+%         [trend,~,~,~,stats] = regress(OIBi_SMB(:,j), ...
+%             [ones(length(site_yr_i),1) site_yr_i]);
+%         OIBi_b1(j) = trend(2);
+%         OIBi_p(j) = stats(3);
+%     end
+%     
+%     core_trend = zeros(1, size(core_SMB_i,2));
+%     core_p = zeros(1, size(core_SMB_i,2));
+%     for j = 1:size(core_SMB_i,2)
+% %         [trend, stats] = robustfit(siteI_yr, coreI_SMB(:,j));
+% %         core_trend(j) = trend(2);
+% %         core_p(j) = stats.p(2);
+%         [trend_tmp,~,~,~,stats] = regress(core_SMB_i(:,j), ...
+%             [ones(length(site_yr_i),1) site_yr_i]);
+%         core_trend(j) = trend_tmp(2);
+%         core_p(j) = stats(3);
+%     end
+    
+    
     
 end
