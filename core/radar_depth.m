@@ -8,8 +8,8 @@ function [radar] = radar_depth(radar, cores)
 
 % Indices for composite core locations (every 10 km along echogram)
 comp_idx = 1:round(10000/mean(diff(radar.dist))):size(radar.data_out, 2);
-% rho_coeff = zeros(4, length(comp_idx));
-rho_coeff = zeros(3, length(comp_idx));
+rho_coeff = zeros(5, length(comp_idx));
+% rho_coeff = zeros(3, length(comp_idx));
 rho_var = zeros(3, length(comp_idx));
 depths = zeros(size(radar.data_out, 1), length(comp_idx));
 
@@ -32,6 +32,8 @@ for i = 1:length(comp_idx)
     p1 = polyfit(X(cutoff-50:end), Y(cutoff-50:end), 1);
     x_idx = round((p0(2)-p1(2))/(p1(1)-p0(1))/0.02);
     
+    rho_coeff(:,i) = [x_idx; p0'; p1'];
+    
     depth0 = 0:0.02:core_composite.depth(x_idx);
     depth1 = core_composite.depth(x_idx+1):0.02:150;
     rho0 = (exp(p0(1)*depth0+p0(2))./(1+exp(p0(1)*depth0+p0(2))))*rho_ice;
@@ -48,17 +50,17 @@ for i = 1:length(comp_idx)
 %     rho_coeff(:,i) = coeffvalues(rho_fit);
 %     rho_mod = rho_coeff(1,i)*depth_mod.^rho_coeff(2,i) + rho_coeff(3,i);
     
-    % Diagnostic figures for density modeling
-    figure
-    hold on
-    plot(core_composite.rho, core_composite.depth)
-    plot(rho_mod, depth_mod)
-    ylim([0 core_composite.depth(end)])
-    ylabel('Depth (m)')
-    xlabel('Density (g/cm^3)')
-    set(gca, 'Ydir', 'reverse')
-    legend('Composite firn core', 'Density model')
-    hold off
+%     % Diagnostic figures for density modeling
+%     figure
+%     hold on
+%     plot(core_composite.rho, core_composite.depth)
+%     plot(rho_mod, depth_mod)
+%     ylim([0 core_composite.depth(end)])
+%     ylabel('Depth (m)')
+%     xlabel('Density (g/cm^3)')
+%     set(gca, 'Ydir', 'reverse')
+%     legend('Composite firn core', 'Density model')
+%     hold off
     
     % Calculate the real part of the relative permittivity of firn
     e_mod = (1 + 0.845*rho_mod).^2;  % Kovacs
@@ -96,5 +98,7 @@ else
     radar.rho_var = rho_var;
     radar.depth = depths;
 end
+
+radar.rho_coeff(1,:) = round(radar.rho_coeff(1,:));
 
 end

@@ -5,6 +5,19 @@ rho_std = sqrt((radar.rho_var(1,:)-radar.rho_var(2,:))./...
     (radar.rho_var(3,:).^radar.depth) + radar.rho_var(2,:));
 
 % Generate density with depth model for radar data
+radar.rho_coeff(1,:) = round(radar.rho_coeff(1,:));
+rho_ice = 0.917;
+rho_mod = zeros(size(radar.data_smooth));
+
+for i = 1:length(radar.Easting)
+    depth0 = 0:0.02:radar.depth(radar.rho_coeff(1,i));
+    depth1 = radar.depth(radar.rho_coeff(1,i)+1):0.02:radar.depth(end);
+    rho0 = (exp(radar.rho_coeff(2,i)*depth0+radar.rho_coeff(3,i))./...
+        (1+exp(radar.rho_coeff(2,i)*depth0+radar.rho_coeff(3,i))))*rho_ice;
+    rho1 = (exp(radar.rho_coeff(4,i)*depth1+radar.rho_coeff(5,i))./...
+        (1+exp(radar.rho_coeff(4,i)*depth1+radar.rho_coeff(5,i))))*rho_ice;
+    rho_mod(:,i) = [rho0 rho1]';
+end
 
 % rho_mod = radar.rho_coeff(1,:).*radar.depth.^radar.rho_coeff(2,:) + ...
 %     radar.rho_coeff(3,:);
