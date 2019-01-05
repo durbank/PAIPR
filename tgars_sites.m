@@ -86,8 +86,8 @@ seat_SMB = cellfun(@(x) mean(x, 2), SEAT_SMB_MC, 'UniformOutput', 0);
 seat_std = cellfun(@(x) std(x, [], 2), SEAT_SMB_MC, 'UniformOutput', 0);
 
 % Load previously processed 2011 OIB snow radar accumulation results
-OIB_files = dir(fullfile(data_path, 'IceBridge/SNO_radar/',...
-    '2011/SMB_results/', wild));
+OIB_files = dir(fullfile(data_path, 'IceBridge/SEAT10_4to10_6/',...
+    '2011_SNO/SMB_results/', wild));
 
 OIB_E = zeros(1, length(OIB_files)*2*(50*1000/25));
 OIB_N = OIB_E;
