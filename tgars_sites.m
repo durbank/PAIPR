@@ -163,11 +163,11 @@ for i = 1:length(sites)
     
     % Place manual layer group numbers within a matrix array of the same size
     % as radargram data
-    for i = 1:length(OIB_manual.man_layers)
+    for k = 1:length(OIB_manual.man_layers)
         
-        layer_idx = sub2ind(size(man_Gnum), round(OIB_manual.man_layers{i}(:,2)), ...
-            OIB_manual.man_layers{i}(:,1));
-        man_Gnum(layer_idx) = i;
+        layer_idx = sub2ind(size(man_Gnum), round(OIB_manual.man_layers{k}(:,2)), ...
+            OIB_manual.man_layers{k}(:,1));
+        man_Gnum(layer_idx) = k;
     end
     
     % Logical array of presence of manual layer member
@@ -181,10 +181,10 @@ for i = 1:length(sites)
     yr_pick1 = ceil(OIB_manual.collect_date - 1);
     
     % Interpolate manual layer age-depth scales for each trace
-    for i = 1:size(ages_man,2)
-        depths_i = [0; OIB_manual.depth(man_log(:,i))];
+    for k = 1:size(ages_man,2)
+        depths_i = [0; OIB_manual.depth(man_log(:,k))];
         yrs_i = ([age_top yr_pick1:-1:yr_pick1-length(depths_i)+2])';
-        ages_man(:,i) = interp1(depths_i, yrs_i, OIB_manual.depth, ...
+        ages_man(:,k) = interp1(depths_i, yrs_i, OIB_manual.depth, ...
             'linear', 'extrap');
     end
     
@@ -199,24 +199,24 @@ for i = 1:length(sites)
     man_idx = trace_idx(dist_man<=threshold);
     [~, man_near] = min(dist_man);
     
-    figure
-    hold on
-    for n = 1:Ndraw
-        h0 = plot(OIB_manual.depth, OIB_manual.ages(:,man_near,n), ...
-            'm', 'LineWidth', 0.5);
-        h0.Color(4) = 0.03;
-    end
-    plot(cores.(site_nm).depth, mean(cores.(site_nm).ages, 2), ...
-        'b', 'LineWidth', 2)
-    plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) + ...
-        std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
-    plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) - ...
-        std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
-    plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2), ...
-        'm', 'LineWidth', 2)
-    plot(OIB_manual.depth, OIB_manual.man_ages(:,man_near), ...
-        'k', 'LineWidth', 2)
-    hold off
+%     figure
+%     hold on
+%     for n = 1:Ndraw
+%         h0 = plot(OIB_manual.depth, OIB_manual.ages(:,man_near,n), ...
+%             'm', 'LineWidth', 0.5);
+%         h0.Color(4) = 0.03;
+%     end
+%     plot(cores.(site_nm).depth, mean(cores.(site_nm).ages, 2), ...
+%         'b', 'LineWidth', 2)
+%     plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) + ...
+%         std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
+%     plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) - ...
+%         std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
+%     plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2), ...
+%         'm', 'LineWidth', 2)
+%     plot(OIB_manual.depth, OIB_manual.man_ages(:,man_near), ...
+%         'k', 'LineWidth', 2)
+%     hold off
     
     
     idx_ages = reshape(OIB_manual.ages(:,man_idx,:), ...
@@ -229,6 +229,12 @@ for i = 1:length(sites)
         std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
     plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) - ...
         std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
+%     plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2), ...
+%         'm', 'LineWidth', 2)
+%     plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2)+ ...
+%         std(squeeze(OIB_manual.ages(:,man_near,:)),[],2),'m--','LineWidth',0.5)
+%     plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2)- ...
+%         std(squeeze(OIB_manual.ages(:,man_near,:)),[],2),'m--','LineWidth',0.5)
     plot(OIB_manual.depth, mean(idx_ages, 2), 'm', 'LineWidth', 2)
     plot(OIB_manual.depth, mean(idx_ages, 2) + std(idx_ages, [], 2), ...
         'm--', 'LineWidth', 0.5)
@@ -243,6 +249,28 @@ for i = 1:length(sites)
     hold off
     
     
+    age_err_auto = 10*max(std(idx_ages, [], 2))/...
+        (mean(idx_ages(1,:))-mean(idx_ages(end,:)));
+    age_err_man = 10*max(std(OIB_manual.man_ages(:,man_idx), [], 2))/...
+        (mean(OIB_manual.man_ages(1,man_idx), 2) - ...
+        mean(OIB_manual.man_ages(end,man_idx), 2));
+    
+    core_mean = mean(cores.(site_nm).ages, 2);
+    radar_mean =  mean(idx_ages, 2);
+    man_bias = median(radar_mean - mean(OIB_manual.man_ages(:,man_idx), 2));
+    med_bias = median(radar_mean(1:length(core_mean)) - core_mean);
+    max_bias = max(radar_mean(1:length(core_mean)) - core_mean);
+    
+    site_nm
+    age_err_auto
+    max(std(idx_ages, [], 2))
+    age_err_man
+    max(std(OIB_manual.man_ages(:,man_idx), [], 2))
+    man_bias
+    med_bias
+    max_bias
+    
+    
     
     
     
@@ -252,7 +280,7 @@ for i = 1:length(sites)
     dist_SEAT = pdist2([cores.(site_nm).Easting  cores.(site_nm).Northing], ...
         [SEAT_E', SEAT_N']);
     trace_idx = 1:length(SEAT_E);
-    threshold = 7500;
+    threshold = 6000;
     SEATi_idx = trace_idx(dist_SEAT<=threshold);
     [~, SEATi_near] = min(dist_SEAT);
     
@@ -439,7 +467,7 @@ for i = 1:length(sites)
     bias_MoE = [MoE_SEATnear; MoE_SEATi; MoE_OIBnear; MoE_OIBi];
     bias_std = [bias_Snear_std; biasSEATi_std; bias_Onear_std; biasOIBi_std];
     bias_stats.(site_nm) = table(bias_mu, bias_MoE, bias_std, ...
-        'VariableNames', {'mean', 'MoE', 'StdDev'}, 'RowNames', ...
+        'VariableNames', {'Median', 'MoE', 'StdDev'}, 'RowNames', ...
         {'SEAT-core (nearest trace)', 'SEAT-core (mean traces)', ...
         'OIB-core (nearest trace)', 'OIB-core (mean traces)'});
     
