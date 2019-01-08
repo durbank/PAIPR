@@ -129,6 +129,58 @@ catch
     disp('Flag: Missing elevation data')
 end
 
+%% Study site map
+
+% Get subset of cores used in study
+core_idx = 3:5;
+
+% Generate labels
+labels = strrep(cores.name(core_idx), '_', '-');
+
+% Get basin boundaries, and generate map limits based on included data
+% basins = shaperead(strcat(data_path, ...
+%     'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
+Easting_lims = [min([min(cores.Easting(core_idx)) min(SEAT_E) min(OIB_E)]) ...
+    - 10000 max([max(cores.Easting(core_idx)) max(SEAT_E) max(OIB_E)]) + 10000];
+Northing_lims = [min([min(cores.Northing(core_idx)) min(SEAT_N) min(OIB_N)])...
+    - 35000 max([max(cores.Northing(core_idx)) max(SEAT_N) max(OIB_N)]) + 35000];
+
+% Generate bulk accumulation rate estimates from Arthern et al (2006)
+[Arth_E, Arth_N, Arth_accum] = accumulation_data(Easting_lims, Northing_lims, 'xy');
+
+% Get elevation data
+[elev_E, elev_N, elev] = cryosat2_data(Easting_lims, Northing_lims, 'xy');
+
+map_SMB = figure('Position', [0 0 1400 800]);
+h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
+set(gca, 'Ydir', 'normal')
+hold on
+h1 = contour(elev_E(1,:), elev_N(:,1)', elev, 'k', 'showtext', 'on');
+set(gca,'clim',[min(Arth_accum(:)) max(Arth_accum(:))]);
+
+% h1 = mapshow(basins, 'FaceAlpha', 0);
+% h2 = plot(SEAT_E, SEAT_N, 'r.');
+h3 = plot(OIB_E, OIB_N, 'm.');
+h4 = scatter(cores.Easting(core_idx), cores.Northing(core_idx), 125, 'b', ...
+    'filled', 'MarkerEdgeColor', 'k');
+text(cores.Easting(core_idx), cores.Northing(core_idx), ...
+    strcat(labels, '\rightarrow'), 'FontSize', 13, ...
+    'Interpreter', 'tex', 'HorizontalAlignment', 'right');
+c0 = colorbar;
+c0.Label.String = 'Mean annual accumulation (mm/a)';
+c0.Label.FontSize = 18;
+graticuleps(-81:0.5:-77,-125:2:-105, 'c')
+xlim(Easting_lims)
+ylim(Northing_lims)
+scalebarps
+box on
+mapzoomps('ne', 'insetsize', 0.30)
+set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+% set(gcf, 'Units', 'Inches', 'Position', [0, 0, 18, 9], ...
+%     'PaperUnits', 'Inches', 'PaperSize', [18, 9])
+hold off
+
+
 %% SEAT and OIB SMB bias tests
 
 SEAT_SMB = cellfun(@(x) mean(x, 2), SEAT_SMB_MC, 'UniformOutput', 0);
