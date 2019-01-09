@@ -31,8 +31,8 @@ addpath(genpath(addon_folder))
 addon_folder = fullfile(addon_path, 'altmany-export_fig-cafc7c5/');
 addpath(genpath(addon_folder))
 
-% output_dir = uigetdir(data_path, ...
-%     'Select directory to which to output images');
+output_dir = uigetdir(data_path, ...
+    'Select directory to which to output images');
 
 %%
 
@@ -151,34 +151,36 @@ Northing_lims = [min([min(cores.Northing(core_idx)) min(SEAT_N) min(OIB_N)])...
 % Get elevation data
 [elev_E, elev_N, elev] = cryosat2_data(Easting_lims, Northing_lims, 'xy');
 
-map_SMB = figure('Position', [0 0 1400 800]);
+% Plot of the study site
+fig = figure('Position', [0 0 1400 800]);
 h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
 set(gca, 'Ydir', 'normal')
 hold on
 h1 = contour(elev_E(1,:), elev_N(:,1)', elev, 'k', 'showtext', 'on');
 set(gca,'clim',[min(Arth_accum(:)) max(Arth_accum(:))]);
-
-% h1 = mapshow(basins, 'FaceAlpha', 0);
 % h2 = plot(SEAT_E, SEAT_N, 'r.');
 h3 = plot(OIB_E, OIB_N, 'm.');
 h4 = scatter(cores.Easting(core_idx), cores.Northing(core_idx), 125, 'b', ...
     'filled', 'MarkerEdgeColor', 'k');
-text(cores.Easting(core_idx), cores.Northing(core_idx), ...
-    strcat(labels, '\rightarrow'), 'FontSize', 13, ...
-    'Interpreter', 'tex', 'HorizontalAlignment', 'right');
+text(cores.Easting(core_idx), cores.Northing(core_idx), labels, 'white', ...
+    'FontSize', 12, 'VerticalAlignment', 'top', 'HorizontalAlignment', 'center');
 c0 = colorbar;
 c0.Label.String = 'Mean annual accumulation (mm/a)';
-c0.Label.FontSize = 18;
-graticuleps(-81:0.5:-77,-125:2:-105, 'c')
+c0.Label.FontSize = 14;
 xlim(Easting_lims)
 ylim(Northing_lims)
 scalebarps
 box on
-mapzoomps('ne', 'insetsize', 0.30)
-set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
-% set(gcf, 'Units', 'Inches', 'Position', [0, 0, 18, 9], ...
-%     'PaperUnits', 'Inches', 'PaperSize', [18, 9])
+mapzoomps('ne', 'insetsize', 0.25)
+set(gca, 'xtick', [], 'ytick', [], 'FontSize', 12)
 hold off
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
+    'PaperUnits', 'Inches', 'PaperSize', [8, 4])
+
+% Export figure
+fig_nm = 'site-map';
+export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+close(fig)
 
 
 %% SEAT and OIB SMB bias tests
@@ -191,7 +193,7 @@ OIB_near = 1:length(OIB_E);
 SEAT_near = near_tmp;
 D_near = diag(pdist2([OIB_E(OIB_near)' OIB_N(OIB_near)'], ...
     [SEAT_E(SEAT_near)' SEAT_N(SEAT_near)']));
-D_idx = D_near<=50;
+D_idx = D_near<=25;
 OIB_near = OIB_near(D_idx);
 SEAT_near = SEAT_near(D_idx);
 
@@ -223,8 +225,8 @@ end
 % SMB bias for each individual year in each trace (% change of mean)
 bias_dist = cellfun(@(x,y) x./y, bias_SMB, SEATbias_mean, 'UniformOutput', 0);
 bias_dist = vertcat(bias_dist{:});
-% bias_perc_mu = mean(bias_dist_perc);
-bias_mu = median(bias_dist);
+bias_mu = mean(bias_dist);
+bias_med = median(bias_dist);
 bias_std = std(bias_dist);
 bias_SEM = bias_std/sqrt(length(bias_dist));
 Ts = tinv(0.975, length(bias_dist)-1);
@@ -232,5 +234,56 @@ bias_MoE = Ts*bias_SEM;
 figure
 histogram(bias_dist, 100)
 
-bias_stats = table(bias_mu, bias_MoE, bias_std, 'VariableNames', ...
-    {'Mean','MarginOfError','StdDev'}, 'RowNames', {'SEAT-OIB (% bias)'});
+
+
+SEAT_var = cellfun(@(x) var(x,[],2)./(mean(x,2)).^2, SEAT_SMB_MC, 'UniformOutput', false);
+SEAT_std = sqrt(mean(vertcat(SEAT_var{:})));
+% std(vertcat(SEAT_std{:}));
+
+OIB_var = cellfun(@(x) var(x,[],2)./(mean(x,2)).^2, OIB_SMB_MC, 'UniformOutput', false);
+OIB_std = sqrt(mean(vertcat(OIB_var{:})));
+
+bias_stats.radar = table(bias_med, bias_mu, bias_MoE, bias_std, 'VariableNames', ...
+    {'Median', 'Mean','MarginOfError','StdDev'}, 'RowNames', {'SEAT-OIB (% bias)'});
+
+%% Age bias tests
+
+% depth = 0:0.02:25;
+% SEAT_ages = zeros(length(depth), length(SEAT_E));
+% pos_start = 1;
+% 
+% for i = 1:length(SEAT_files)
+%     load(fullfile(SEAT_files(i).folder, SEAT_files(i).name), 'ages');
+%     SEAT_ages(:,pos_start:pos_start+size(ages,2)-1) = mean(ages, 3);
+%     pos_start = pos_start+size(ages,2);
+% end
+% 
+% OIB_ages = zeros(length(depth), length(OIB_E));
+% pos_start = 1;
+% for i = 1:length(OIB_files)
+%     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'ages');
+%     OIB_ages(:,pos_start:pos_start+size(ages,2)-1) = mean(ages, 3);
+%     pos_start = pos_start+size(ages,2);
+% end
+% 
+% age_bias = SEAT_ages(:,SEAT_near) - OIB_ages(:,OIB_near);
+% figure
+% hold on
+% plot(depth, mean(age_bias, 2), 'k', 'LineWidth', 2)
+% plot(depth, mean(age_bias, 2) + std(age_bias, [], 2), 'k--')
+% plot(depth, mean(age_bias, 2) - std(age_bias, [], 2), 'k--')
+% hold off
+% 
+% % ERR_tmp = 10*age_bias./(SEAT_ages(1,SEAT_near)-SEAT_ages(:,SEAT_near));
+% % ERR_decade = mean(ERR_tmp(100:end,:));
+% res_decade = 10*age_bias(end,:)./(SEAT_ages(1,SEAT_near)-SEAT_ages(end,SEAT_near));
+% 
+% figure
+% histogram(res_decade, 100)
+% 
+% bias_age_med = median(res_decade);
+% bias_age_mu = mean(res_decade);
+% bias_age_std = std(res_decade);
+% bias_SEM = std(bias_age_std)/sqrt(length(res_decade));
+% Ts = tinv(0.975, length(res_decade)-1);
+% bias_age_MoE = Ts*bias_SEM;
