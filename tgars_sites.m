@@ -32,8 +32,8 @@ addpath(genpath(addon_folder))
 addon_folder = fullfile(addon_path, 'altmany-export_fig-cafc7c5/');
 addpath(genpath(addon_folder))
 
-% output_dir = uigetdir(data_path, ...
-%     'Select directory to which to output images');
+output_dir = uigetdir(data_path, ...
+    'Select directory to which to output images');
 
 %%
 
@@ -133,6 +133,7 @@ end
 %%
 
 sites = {'SEAT10_4', 'SEAT10_5', 'SEAT10_6'};
+age_stats = struct();
 bias_stats = struct();
 
 for i = 1:length(sites)
@@ -140,7 +141,7 @@ for i = 1:length(sites)
     site_nm = sites{i};
     
     % Load relevant radar data (previously generated using the above section)
-    OIB_manual = load(fullfile(data_path, 'IceBridge/manual_layers', site_nm, ...
+    OIB_radar = load(fullfile(data_path, 'IceBridge/manual_layers', site_nm, ...
         strcat('layers_', site_nm, '_opt.mat')));
     
     % Load manually traced layers for current SEAT core site (generated using
@@ -151,22 +152,74 @@ for i = 1:length(sites)
     
     % Remove manual count layer data deeper than the deepest point in processed
     % radargram data
-    keep_idx = cellfun(@(x) round(x(:,2))<=size(OIB_manual.data_smooth,1), ...
+    keep_idx = cellfun(@(x) round(x(:,2))<=size(OIB_radar.data_smooth,1), ...
         man_layers, 'UniformOutput', false);
-    OIB_manual.man_layers = cellfun(@(x,y) x(y,:), man_layers, keep_idx, ...
+    OIB_radar.man_layers = cellfun(@(x,y) x(y,:), man_layers, keep_idx, ...
         'UniformOutput', false);
+    
+%     % Plot comparing radargram to isochrone likelihoods
+%     fig = figure;
+%     ax1 = axes;
+%     imagesc(ax1, OIB_radar.dist, OIB_radar.depth, OIB_radar.data_smooth, [-2 2]);
+%     ax2 = axes;
+%     %%Transparency mask
+%     zero_mask = OIB_radar.likelihood > 0;
+%     imagesc(ax2, OIB_radar.dist, OIB_radar.depth, OIB_radar.likelihood, ...
+%         'AlphaData', zero_mask, [0 1]);
+%     %%Link axes
+%     linkaxes([ax1,ax2])
+%     %%Hide the top axes
+%     ax2.Visible = 'off';
+%     ax2.XTick = [];
+%     ax2.YTick = [];
+%     %%Give each one its own colormap
+%     colormap(ax1, 'gray')
+%     colormap(ax2,'jet')
+%     set([ax1,ax2],'Position',[.13 .11 .73 .815]);
+%     cb2 = colorbar(ax2,'Position',[.87 .11 .03 .815]);
+%     xlabel(ax1, 'Distance (m)')
+%     ylabel(ax1, 'Depth (m)')
+%     cb2.Label.String = 'Isochrone likelihood';
+%     cb2.Label.FontSize = 12;
+%     set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4.5], ...
+%     'PaperUnits', 'Inches', 'PaperSize', [8, 4.5])
+%     
+%     fig_nm = strcat('iso-gram_', site_nm);
+%     export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+%     close(fig)
+    
+    % Plot comparing manually picked layers to isochrone likelihoods
+    fig = figure;
+    zero_mask = OIB_radar.likelihood > 0;
+    imagesc(OIB_radar.dist, OIB_radar.depth, OIB_radar.likelihood, ...
+        'AlphaData', zero_mask, [0 1]);
+    hold on
+    cellfun(@(x) plot(OIB_radar.dist(round(x(:,1))), OIB_radar.depth(round(x(:,2))),...
+        'k--'), OIB_radar.man_layers);
+    colormap('jet')
+    cb = colorbar;
+    xlabel('Distance (m)')
+    ylabel('Depth (m)')
+    cb.Label.String = 'Isochrone likelihood';
+    cb.Label.FontSize = 12;
+    set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4.5], ...
+    'PaperUnits', 'Inches', 'PaperSize', [8, 4.5])
+    
+    fig_nm = strcat('iso-comp_', site_nm);
+    export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+    close(fig)
     
     %%% Age-depth scales from manual count data
     
     % Preallocate matrix array for manual layer group number indices
-    man_Gnum = zeros(size(OIB_manual.data_smooth));
+    man_Gnum = zeros(size(OIB_radar.data_smooth));
     
     % Place manual layer group numbers within a matrix array of the same size
     % as radargram data
-    for k = 1:length(OIB_manual.man_layers)
+    for k = 1:length(OIB_radar.man_layers)
         
-        layer_idx = sub2ind(size(man_Gnum), round(OIB_manual.man_layers{k}(:,2)), ...
-            OIB_manual.man_layers{k}(:,1));
+        layer_idx = sub2ind(size(man_Gnum), round(OIB_radar.man_layers{k}(:,2)), ...
+            OIB_radar.man_layers{k}(:,1));
         man_Gnum(layer_idx) = k;
     end
     
@@ -174,57 +227,38 @@ for i = 1:length(sites)
     man_log = logical(man_Gnum);
     
     % Preallocate matrix of manual layer ages
-    ages_man = zeros(size(OIB_manual.data_smooth));
+    ages_man = zeros(size(OIB_radar.data_smooth));
     
     % Define surface age as the collection date of the radar data
-    age_top = OIB_manual.collect_date;
-    yr_pick1 = ceil(OIB_manual.collect_date - 1);
+    age_top = OIB_radar.collect_date;
+    yr_pick1 = ceil(OIB_radar.collect_date - 1);
     
     % Interpolate manual layer age-depth scales for each trace
     for k = 1:size(ages_man,2)
-        depths_i = [0; OIB_manual.depth(man_log(:,k))];
+        depths_i = [0; OIB_radar.depth(man_log(:,k))];
         yrs_i = ([age_top yr_pick1:-1:yr_pick1-length(depths_i)+2])';
-        ages_man(:,k) = interp1(depths_i, yrs_i, OIB_manual.depth, ...
+        ages_man(:,k) = interp1(depths_i, yrs_i, OIB_radar.depth, ...
             'linear', 'extrap');
     end
     
-    OIB_manual.man_ages = ages_man;
+    OIB_radar.man_ages = ages_man;
     
     % Find manual count data within a threshold of ith core and the nearest
     % manual count data to ith core
     dist_man = pdist2([cores.(site_nm).Easting  cores.(site_nm).Northing], ...
-        [OIB_manual.Easting', OIB_manual.Northing']);
+        [OIB_radar.Easting', OIB_radar.Northing']);
     trace_idx = 1:length(OIB_E);
     threshold = 5000;
     man_idx = trace_idx(dist_man<=threshold);
     [~, man_near] = min(dist_man);
     
-%     figure
-%     hold on
-%     for n = 1:Ndraw
-%         h0 = plot(OIB_manual.depth, OIB_manual.ages(:,man_near,n), ...
-%             'm', 'LineWidth', 0.5);
-%         h0.Color(4) = 0.03;
-%     end
-%     plot(cores.(site_nm).depth, mean(cores.(site_nm).ages, 2), ...
-%         'b', 'LineWidth', 2)
-%     plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) + ...
-%         std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
-%     plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) - ...
-%         std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
-%     plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2), ...
-%         'm', 'LineWidth', 2)
-%     plot(OIB_manual.depth, OIB_manual.man_ages(:,man_near), ...
-%         'k', 'LineWidth', 2)
-%     hold off
     
-    
-    idx_ages = reshape(OIB_manual.ages(:,man_idx,:), ...
-        size(OIB_manual.ages,1), length(man_idx)*Ndraw);
-    figure
+    idx_ages = reshape(OIB_radar.ages(:,man_idx,:), ...
+        size(OIB_radar.ages,1), length(man_idx)*Ndraw);
+    fig = figure;
     hold on
-    plot(cores.(site_nm).depth, mean(cores.(site_nm).ages, 2), ...
-        'b', 'LineWidth', 2)
+    h1 = plot(cores.(site_nm).depth, mean(cores.(site_nm).ages, 2), ...
+        'b', 'LineWidth', 2);
     plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) + ...
         std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
     plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) - ...
@@ -235,42 +269,51 @@ for i = 1:length(sites)
 %         std(squeeze(OIB_manual.ages(:,man_near,:)),[],2),'m--','LineWidth',0.5)
 %     plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2)- ...
 %         std(squeeze(OIB_manual.ages(:,man_near,:)),[],2),'m--','LineWidth',0.5)
-    plot(OIB_manual.depth, mean(idx_ages, 2), 'm', 'LineWidth', 2)
-    plot(OIB_manual.depth, mean(idx_ages, 2) + std(idx_ages, [], 2), ...
+    h2 = plot(OIB_radar.depth, mean(idx_ages, 2), 'm', 'LineWidth', 2);
+    plot(OIB_radar.depth, mean(idx_ages, 2) + std(idx_ages, [], 2), ...
         'm--', 'LineWidth', 0.5)
-    plot(OIB_manual.depth, mean(idx_ages, 2) - std(idx_ages, [], 2), ...
+    plot(OIB_radar.depth, mean(idx_ages, 2) - std(idx_ages, [], 2), ...
         'm--', 'LineWidth', 0.5)
-    plot(OIB_manual.depth, mean(OIB_manual.man_ages(:,man_idx), 2), ...
-        'k', 'LineWidth', 2)
-    plot(OIB_manual.depth, mean(OIB_manual.man_ages(:,man_idx), 2) + ...
-        std(OIB_manual.man_ages(:,man_idx), [], 2), 'k--', 'LineWidth', 0.5)
-    plot(OIB_manual.depth, mean(OIB_manual.man_ages(:,man_idx), 2) - ...
-        std(OIB_manual.man_ages(:,man_idx), [], 2), 'k--', 'LineWidth', 0.5)
+    h3 = plot(OIB_radar.depth, mean(OIB_radar.man_ages(:,man_idx), 2), ...
+        'k', 'LineWidth', 2);
+    plot(OIB_radar.depth, mean(OIB_radar.man_ages(:,man_idx), 2) + ...
+        std(OIB_radar.man_ages(:,man_idx), [], 2), 'k--', 'LineWidth', 0.5)
+    plot(OIB_radar.depth, mean(OIB_radar.man_ages(:,man_idx), 2) - ...
+        std(OIB_radar.man_ages(:,man_idx), [], 2), 'k--', 'LineWidth', 0.5)
     hold off
+    xlim([0 25])
+    xlabel('Depth (m)')
+    ylabel('Calendar year')
+    legend([h1 h2 h3], 'Firn core', 'PAIPR picks', 'Manual picks')
+    set(gcf, 'Units', 'Inches', 'Position', [0, 0, 2.5, 3.5], ...
+    'PaperUnits', 'Inches', 'PaperSize', [2.5, 3.5])
+    
+    fig_nm = strcat('ages_', site_nm);
+    export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+    close(fig)
     
     
     age_err_auto = 10*max(std(idx_ages, [], 2))/...
         (mean(idx_ages(1,:))-mean(idx_ages(end,:)));
-    age_err_man = 10*max(std(OIB_manual.man_ages(:,man_idx), [], 2))/...
-        (mean(OIB_manual.man_ages(1,man_idx), 2) - ...
-        mean(OIB_manual.man_ages(end,man_idx), 2));
+    age_err_man = 10*max(std(OIB_radar.man_ages(:,man_idx), [], 2))/...
+        (mean(OIB_radar.man_ages(1,man_idx), 2) - ...
+        mean(OIB_radar.man_ages(end,man_idx), 2));
     
     core_mean = mean(cores.(site_nm).ages, 2);
     radar_mean =  mean(idx_ages, 2);
-    man_bias = median(radar_mean - mean(OIB_manual.man_ages(:,man_idx), 2));
+    man_bias = median(radar_mean - mean(OIB_radar.man_ages(:,man_idx), 2));
     med_bias = median(radar_mean(1:length(core_mean)) - core_mean);
     max_bias = max(radar_mean(1:length(core_mean)) - core_mean);
     
+    % Later I should add these values to the bias_stats structure
     site_nm
     age_err_auto
     max(std(idx_ages, [], 2))
     age_err_man
-    max(std(OIB_manual.man_ages(:,man_idx), [], 2))
+    max(std(OIB_radar.man_ages(:,man_idx), [], 2))
     man_bias
     med_bias
     max_bias
-    
-    
     
     
     
@@ -324,63 +367,98 @@ for i = 1:length(sites)
 %     OIBi_SMB = cell2mat(cellfun(@(x) mean(x,2), OIB_clip, ...
 %         'UniformOutput', false));
     
-    figure
+%     figure
+%     hold on
+%     for n = 1:Ndraw
+%         h0 = plot(SEAT_yr{SEATi_near}, SEAT_SMB_MC{SEATi_near}(:,n), ...
+%             'r', 'LineWidth', 0.5);
+%         h0.Color(4) = 0.05;
+%     end
+%     for n = 1:Ndraw
+%         h0 = plot(OIB_yr{OIBi_near}, OIB_SMB_MC{OIBi_near}(:,n), ...
+%             'm', 'LineWidth', 0.5);
+%         h0.Color(4) = 0.05;
+%     end
+%     for n = 1:Ndraw
+%         h0 = plot(cores.(site_nm).SMB_yr, cores.(site_nm).SMB(:,n), ...
+%             'b', 'LineWidth', 0.5);
+%         h0.Color(4) = 0.05;
+%     end
+%     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB,2),'b','LineWidth',2)
+% %     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) + ...
+% %         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
+% %     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) - ...
+% %         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
+%     plot(SEAT_yr{SEATi_near}, mean(SEAT_SMB_MC{SEATi_near},2), 'r','LineWidth',2)
+% %     plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2) + ...
+% %         std(SEAT_SMB_MC{SEAT_near}, [], 2), 'r--', 'LineWidth', 0.5)
+% %     plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2) - ...
+% %         std(SEAT_SMB_MC{SEAT_near}, [], 2), 'r--', 'LineWidth', 0.5)
+%     plot(OIB_yr{OIBi_near}, mean(OIB_SMB_MC{OIBi_near},2), 'm', 'LineWidth', 2)
+% %     plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2) + ...
+% %         std(OIB_SMB_MC{OIB_near}, [], 2), 'm--', 'LineWidth', 0.5)
+% %     plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2) - ...
+% %         std(OIB_SMB_MC{OIB_near}, [], 2), 'm--', 'LineWidth', 0.5)
+%     hold off
+    
+    
+    
+    fig = figure;
     hold on
-    for n = 1:Ndraw
-        h0 = plot(SEAT_yr{SEATi_near}, SEAT_SMB_MC{SEATi_near}(:,n), ...
-            'r', 'LineWidth', 0.5);
-        h0.Color(4) = 0.05;
-    end
-    for n = 1:Ndraw
-        h0 = plot(OIB_yr{OIBi_near}, OIB_SMB_MC{OIBi_near}(:,n), ...
-            'm', 'LineWidth', 0.5);
-        h0.Color(4) = 0.05;
-    end
-    for n = 1:Ndraw
-        h0 = plot(cores.(site_nm).SMB_yr, cores.(site_nm).SMB(:,n), ...
-            'b', 'LineWidth', 0.5);
-        h0.Color(4) = 0.05;
-    end
-    plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB,2),'b','LineWidth',2)
-%     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) + ...
-%         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
-%     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) - ...
-%         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
-    plot(SEAT_yr{SEATi_near}, mean(SEAT_SMB_MC{SEATi_near},2), 'r','LineWidth',2)
-%     plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2) + ...
-%         std(SEAT_SMB_MC{SEAT_near}, [], 2), 'r--', 'LineWidth', 0.5)
-%     plot(SEAT_yr{SEAT_near}, mean(SEAT_SMB_MC{SEAT_near},2) - ...
-%         std(SEAT_SMB_MC{SEAT_near}, [], 2), 'r--', 'LineWidth', 0.5)
-    plot(OIB_yr{OIBi_near}, mean(OIB_SMB_MC{OIBi_near},2), 'm', 'LineWidth', 2)
-%     plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2) + ...
-%         std(OIB_SMB_MC{OIB_near}, [], 2), 'm--', 'LineWidth', 0.5)
-%     plot(OIB_yr{OIB_near}, mean(OIB_SMB_MC{OIB_near},2) - ...
-%         std(OIB_SMB_MC{OIB_near}, [], 2), 'm--', 'LineWidth', 0.5)
-    hold off
-    
-    
-    
-    
-    figure
-    hold on
-    plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB,2), ...
-        'b', 'LineWidth', 2)
+    h1 = plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB,2),'b','LineWidth',2);
     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) + ...
         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) - ...
         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
-    plot(SEATi_yr, mean(SEATi_SMB,2), 'r', 'LineWidth', 2)
-    plot(SEATi_yr, mean(SEATi_SMB,2) + std(SEATi_SMB, [], 2), ...
-        'r--', 'LineWidth', 0.5)
-    plot(SEATi_yr, mean(SEATi_SMB,2) - std(SEATi_SMB, [], 2), ...
-        'r--', 'LineWidth', 0.5)
-    plot(OIBi_yr, mean(OIBi_SMB,2), 'm', 'LineWidth', 2)
-    plot(OIBi_yr, mean(OIBi_SMB,2) + std(OIBi_SMB, [], 2), ...
-        'm--', 'LineWidth', 0.5)
-    plot(OIBi_yr, mean(OIBi_SMB,2) - std(OIBi_SMB, [], 2), ...
-        'm--', 'LineWidth', 0.5)
+    h2 = plot(SEAT_yr{SEATi_near}, mean(SEAT_SMB_MC{SEATi_near},2), 'r','LineWidth',2);
+    plot(SEAT_yr{SEATi_near}, mean(SEAT_SMB_MC{SEATi_near},2) + ...
+        std(SEAT_SMB_MC{SEATi_near}, [], 2), 'r--', 'LineWidth', 0.5)
+    plot(SEAT_yr{SEATi_near}, mean(SEAT_SMB_MC{SEATi_near},2) - ...
+        std(SEAT_SMB_MC{SEATi_near}, [], 2), 'r--', 'LineWidth', 0.5)
+    h3 = plot(OIB_yr{OIBi_near}, mean(OIB_SMB_MC{OIBi_near},2), 'm', 'LineWidth', 2);
+    plot(OIB_yr{OIBi_near}, mean(OIB_SMB_MC{OIBi_near},2) + ...
+        std(OIB_SMB_MC{OIBi_near}, [], 2), 'm--', 'LineWidth', 0.5)
+    plot(OIB_yr{OIBi_near}, mean(OIB_SMB_MC{OIBi_near},2) - ...
+        std(OIB_SMB_MC{OIBi_near}, [], 2), 'm--', 'LineWidth', 0.5)
+    hold off
+    xlabel('Calendar year')
+    ylabel('Annual SMB (mm/a)')
+    legend([h1 h2 h3], 'Firn core', 'SEAT PAIPR', 'OIB PAIPR')
+    set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
+    'PaperUnits', 'Inches', 'PaperSize', [8, 4])
+    
+    fig_nm = strcat('aSMB_', site_nm);
+    export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+    close(fig)
     
     
+%     figure
+%     hold on
+%     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB,2), ...
+%         'b', 'LineWidth', 2)
+%     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) + ...
+%         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
+%     plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB, 2) - ...
+%         std(cores.(site_nm).SMB, [], 2),'b--', 'LineWidth', 0.5)
+%     plot(SEATi_yr, mean(SEATi_SMB,2), 'r', 'LineWidth', 2)
+%     plot(SEATi_yr, mean(SEATi_SMB,2) + std(SEATi_SMB, [], 2), ...
+%         'r--', 'LineWidth', 0.5)
+%     plot(SEATi_yr, mean(SEATi_SMB,2) - std(SEATi_SMB, [], 2), ...
+%         'r--', 'LineWidth', 0.5)
+% %     plot(SEAT_yr{SEATi_near}, mean(SEAT_SMB_MC{SEATi_near},2) + ...
+% %         std(SEAT_SMB_MC{SEATi_near}, [], 2), 'r-.', 'LineWidth', 0.5)
+% %     plot(SEAT_yr{SEATi_near}, mean(SEAT_SMB_MC{SEATi_near},2) - ...
+% %         std(SEAT_SMB_MC{SEATi_near}, [], 2), 'r-.', 'LineWidth', 0.5)
+%     plot(OIBi_yr, mean(OIBi_SMB,2), 'm', 'LineWidth', 2)
+%     plot(OIBi_yr, mean(OIBi_SMB,2) + std(OIBi_SMB, [], 2), ...
+%         'm--', 'LineWidth', 0.5)
+%     plot(OIBi_yr, mean(OIBi_SMB,2) - std(OIBi_SMB, [], 2), ...
+%         'm--', 'LineWidth', 0.5)
+% %     plot(OIB_yr{OIBi_near}, mean(OIB_SMB_MC{OIBi_near},2) + ...
+% %         std(OIB_SMB_MC{OIBi_near}, [], 2), 'm-.', 'LineWidth', 0.5)
+% %     plot(OIB_yr{OIBi_near}, mean(OIB_SMB_MC{OIBi_near},2) - ...
+% %         std(OIB_SMB_MC{OIBi_near}, [], 2), 'm-.', 'LineWidth', 0.5)
+% %     hold off
     
     
     
@@ -429,8 +507,8 @@ for i = 1:length(sites)
     
     % SEAT bias relative to the core (nearest trace distribution)
     bias_SEATnear = (SEAT_SMB_near - mean(core_SMB_i,2))./mean(core_SMB_i,2);
-    bias_Snear_mu = median(bias_SEATnear(:));
-%     bias_Snear_mu = mean(bias_SEATnear(:));
+    bias_Snear_med = median(bias_SEATnear(:));
+    bias_Snear_mu = mean(bias_SEATnear(:));
     bias_Snear_std = std(bias_SEATnear(:));
     bias_Snear_SEM = bias_Snear_std/sqrt(numel(bias_SEATnear));
     T_SEATnear = tinv(0.975, numel(bias_SEATnear)-1);
@@ -438,8 +516,8 @@ for i = 1:length(sites)
     
     % OIB bias relative to the core (nearest trace distribution)
     bias_OIBnear = (OIB_SMB_near - mean(core_SMB_i,2))./mean(core_SMB_i,2);
-    bias_Onear_mu = median(bias_OIBnear(:));
-%     bias_Onear_mu = mean(bias_OIBnear(:));
+    bias_Onear_med = median(bias_OIBnear(:));
+    bias_Onear_mu = mean(bias_OIBnear(:));
     bias_Onear_std = std(bias_OIBnear(:));
     bias_Onear_SEM = bias_Onear_std/sqrt(numel(bias_OIBnear));
     T_OIBnear = tinv(0.975, numel(bias_OIBnear)-1);
@@ -447,8 +525,8 @@ for i = 1:length(sites)
 
     % SEAT bias relative to the core (distribution of nearby mean traces)
     bias_SEATi = (SEATi_SMB - mean(core_SMB_i,2))./mean(core_SMB_i,2);
-    biasSEATi_mu = median(bias_SEATi(:));
-%     biasSEATi_mu = mean(bias_SEATi(:));
+    biasSEATi_med = median(bias_SEATi(:));
+    biasSEATi_mu = mean(bias_SEATi(:));
     biasSEATi_std = std(bias_SEATi(:));
     biasSEATi_sem = biasSEATi_std/sqrt(numel(bias_SEATi));
     T_SEATi = tinv(0.975, numel(bias_SEATi)-1);
@@ -456,18 +534,19 @@ for i = 1:length(sites)
     
     % OIB bias relative to the core (distribution of nearby mean traces)
     bias_OIBi = (OIBi_SMB - mean(core_SMB_i,2))./mean(core_SMB_i,2);
-    biasOIBi_mu = median(bias_OIBi(:));
-%     biasOIBi_mu = mean(bias_OIBi(:));
+    biasOIBi_med = median(bias_OIBi(:));
+    biasOIBi_mu = mean(bias_OIBi(:));
     biasOIBi_std = std(bias_OIBi(:));
     biasOIBi_sem = biasOIBi_std/sqrt(numel(bias_OIBi));
     T_OIBi = tinv(0.975, numel(bias_OIBi)-1);
     MoE_OIBi = T_OIBi*biasOIBi_sem;
     
+    bias_med = [bias_Snear_med; biasSEATi_med; bias_Onear_med; biasOIBi_med];
     bias_mu = [bias_Snear_mu; biasSEATi_mu; bias_Onear_mu; biasOIBi_mu];
     bias_MoE = [MoE_SEATnear; MoE_SEATi; MoE_OIBnear; MoE_OIBi];
     bias_std = [bias_Snear_std; biasSEATi_std; bias_Onear_std; biasOIBi_std];
-    bias_stats.(site_nm) = table(bias_mu, bias_MoE, bias_std, ...
-        'VariableNames', {'Median', 'MoE', 'StdDev'}, 'RowNames', ...
+    bias_stats.(site_nm) = table(bias_med, bias_mu, bias_MoE, bias_std, ...
+        'VariableNames', {'Median', 'Mean', 'MoE', 'StdDev'}, 'RowNames', ...
         {'SEAT-core (nearest trace)', 'SEAT-core (mean traces)', ...
         'OIB-core (nearest trace)', 'OIB-core (mean traces)'});
     
