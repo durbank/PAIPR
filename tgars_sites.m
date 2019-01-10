@@ -32,8 +32,8 @@ addpath(genpath(addon_folder))
 addon_folder = fullfile(addon_path, 'altmany-export_fig-cafc7c5/');
 addpath(genpath(addon_folder))
 
-output_dir = uigetdir(data_path, ...
-    'Select directory to which to output images');
+% output_dir = uigetdir(data_path, ...
+%     'Select directory to which to output images');
 
 %%
 

@@ -40,8 +40,8 @@ core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
 cores = load(core_file);
 Ndraw = 100;
 
-output_dir = uigetdir(data_path, ...
-    'Select directory in which to output images');
+% output_dir = uigetdir(data_path, ...
+%     'Select directory in which to output images');
 
 %%
 

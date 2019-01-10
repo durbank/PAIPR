@@ -43,15 +43,8 @@ for i = 1:length(comp_idx)
     rho_mod = [rho0 rho1]';
     
     
-%     g = @(a, b, c, x) a*(x).^b + c;
-%     rho_fit = fit(core_composite.depth(25:end), core_composite.rho(25:end), g,...
-%         'StartPoint', [1 0.5 mean(core_composite.rho(1:25))]);
-%     depth_mod = (0:0.02:150)';
-%     rho_coeff(:,i) = coeffvalues(rho_fit);
-%     rho_mod = rho_coeff(1,i)*depth_mod.^rho_coeff(2,i) + rho_coeff(3,i);
-    
 %     % Diagnostic figures for density modeling
-%     figure
+%     fig = figure;
 %     hold on
 %     plot(core_composite.rho, core_composite.depth)
 %     plot(rho_mod, depth_mod)
@@ -59,8 +52,17 @@ for i = 1:length(comp_idx)
 %     ylabel('Depth (m)')
 %     xlabel('Density (g/cm^3)')
 %     set(gca, 'Ydir', 'reverse')
-%     legend('Composite firn core', 'Density model')
+%     legend('Core composite', 'Model', 'Location', 'southwest')
 %     hold off
+%     grid minor
+%     set(gcf, 'Units', 'Inches', 'Position', [0, 0, 2.5, 5], ...
+%     'PaperUnits', 'Inches', 'PaperSize', [2.5, 5])
+% 
+%     % Export figure
+%     fig_nm = 'rho-fit';
+%     output_dir = uigetdir('Select directory in which to output rho-fit image');
+%     export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+%     close(fig)
     
     % Calculate the real part of the relative permittivity of firn
     e_mod = (1 + 0.845*rho_mod).^2;  % Kovacs
