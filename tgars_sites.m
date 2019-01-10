@@ -255,6 +255,8 @@ for i = 1:length(sites)
     
     idx_ages = reshape(OIB_radar.ages(:,man_idx,:), ...
         size(OIB_radar.ages,1), length(man_idx)*Ndraw);
+    % Plot comparing age-depth scales between firn cores, OIB PAIPR, and
+    % OIB manual picks
     fig = figure;
     hold on
     h1 = plot(cores.(site_nm).depth, mean(cores.(site_nm).ages, 2), ...
@@ -285,6 +287,7 @@ for i = 1:length(sites)
     xlabel('Depth (m)')
     ylabel('Calendar year')
     legend([h1 h2 h3], 'Firn core', 'PAIPR picks', 'Manual picks')
+    grid on
     set(gcf, 'Units', 'Inches', 'Position', [0, 0, 2.5, 3.5], ...
     'PaperUnits', 'Inches', 'PaperSize', [2.5, 3.5])
     
@@ -402,7 +405,8 @@ for i = 1:length(sites)
 %     hold off
     
     
-    
+    % Figure comparing annual SMB between firn cores SEAT PAIPR and OIB
+    % PAIPR
     fig = figure;
     hold on
     h1 = plot(cores.(site_nm).SMB_yr, mean(cores.(site_nm).SMB,2),'b','LineWidth',2);
@@ -424,8 +428,9 @@ for i = 1:length(sites)
     xlabel('Calendar year')
     ylabel('Annual SMB (mm/a)')
     legend([h1 h2 h3], 'Firn core', 'SEAT PAIPR', 'OIB PAIPR')
-    set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
-    'PaperUnits', 'Inches', 'PaperSize', [8, 4])
+    grid minor
+    set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 3.5], ...
+    'PaperUnits', 'Inches', 'PaperSize', [8, 3.5])
     
     fig_nm = strcat('aSMB_', site_nm);
     export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
