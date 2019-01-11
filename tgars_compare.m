@@ -141,9 +141,9 @@ labels = strrep(cores.name(core_idx), '_', '-');
 % basins = shaperead(strcat(data_path, ...
 %     'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
 Easting_lims = [min([min(cores.Easting(core_idx)) min(SEAT_E) min(OIB_E)]) ...
-    - 10000 max([max(cores.Easting(core_idx)) max(SEAT_E) max(OIB_E)]) + 10000];
+    - 15000 max([max(cores.Easting(core_idx)) max(SEAT_E) max(OIB_E)]) + 15000];
 Northing_lims = [min([min(cores.Northing(core_idx)) min(SEAT_N) min(OIB_N)])...
-    - 35000 max([max(cores.Northing(core_idx)) max(SEAT_N) max(OIB_N)]) + 35000];
+    - 30000 max([max(cores.Northing(core_idx)) max(SEAT_N) max(OIB_N)]) + 30000];
 
 % Generate bulk accumulation rate estimates from Arthern et al (2006)
 [Arth_E, Arth_N, Arth_accum] = accumulation_data(Easting_lims, Northing_lims, 'xy');
@@ -160,7 +160,7 @@ h1 = contour(elev_E(1,:), elev_N(:,1)', elev, 'k', 'showtext', 'on');
 set(gca,'clim',[min(Arth_accum(:)) max(Arth_accum(:))]);
 % h2 = plot(SEAT_E, SEAT_N, 'r.');
 h3 = plot(OIB_E, OIB_N, 'm.');
-h4 = scatter(cores.Easting(core_idx), cores.Northing(core_idx), 125, 'b', ...
+h4 = scatter(cores.Easting(core_idx), cores.Northing(core_idx), 50, 'b', ...
     'filled', 'MarkerEdgeColor', 'k');
 text(cores.Easting(core_idx), cores.Northing(core_idx), labels, 'white', ...
     'FontSize', 12, 'VerticalAlignment', 'top', 'HorizontalAlignment', 'center');
@@ -171,7 +171,7 @@ xlim(Easting_lims)
 ylim(Northing_lims)
 scalebarps
 box on
-mapzoomps('ne', 'insetsize', 0.25)
+mapzoomps('ne', 'insetsize', 0.30)
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 12)
 hold off
 set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
@@ -233,18 +233,24 @@ Ts = tinv(0.975, length(bias_dist)-1);
 bias_MoE = Ts*bias_SEM;
 figure
 histogram(bias_dist, 100)
-
-
-
-SEAT_var = cellfun(@(x) var(x,[],2)./(mean(x,2)).^2, SEAT_SMB_MC, 'UniformOutput', false);
-SEAT_std = sqrt(mean(vertcat(SEAT_var{:})));
-% std(vertcat(SEAT_std{:}));
-
-OIB_var = cellfun(@(x) var(x,[],2)./(mean(x,2)).^2, OIB_SMB_MC, 'UniformOutput', false);
-OIB_std = sqrt(mean(vertcat(OIB_var{:})));
-
 bias_stats.radar = table(bias_med, bias_mu, bias_MoE, bias_std, 'VariableNames', ...
     {'Median', 'Mean','MarginOfError','StdDev'}, 'RowNames', {'SEAT-OIB (% bias)'});
+
+
+
+SEAT_var = cellfun(@(x) var(x,[],2)./(mean(x,2)).^2, SEAT_SMB_MC(SEAT_near), ...
+    'UniformOutput', false);
+SEAT_std = sqrt(mean(vertcat(SEAT_var{:})));
+% std(vertcat(SEAT_std{:}));
+OIB_var = cellfun(@(x) var(x,[],2)./(mean(x,2)).^2, OIB_SMB_MC(OIB_near), ...
+    'UniformOutput', false);
+OIB_std = sqrt(mean(vertcat(OIB_var{:})));
+
+clip30 = cellfun(@(x,y) length(x)>=30 && length(y)>=30, SEAT_var, OIB_var); 
+SEAT_std30 = sqrt(mean(cell2mat(cellfun(@(x) x(1:30), SEAT_var(clip30), ...
+    'UniformOutput', false)), 2));
+OIB_std30 = sqrt(mean(cell2mat(cellfun(@(x) x(1:30), OIB_var(clip30), ...
+    'UniformOutput', false)), 2));
 
 %% Age bias tests
 

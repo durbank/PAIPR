@@ -6,8 +6,8 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'work';
-        %         computer = input('Current PC: ');
+%         computer = 'work';
+        computer = input('Current PC: ');
         switch computer
             case 'work'
                 data_path = 'E:/Research/Antarctica/Data/';
@@ -32,8 +32,8 @@ addpath(genpath(addon_folder))
 addon_folder = fullfile(addon_path, 'altmany-export_fig-cafc7c5/');
 addpath(genpath(addon_folder))
 
-% output_dir = uigetdir(data_path, ...
-%     'Select directory to which to output images');
+output_dir = uigetdir(data_path, ...
+    'Select directory to which to output images');
 
 %%
 
@@ -140,7 +140,7 @@ for i = 1:length(sites)
     
     site_nm = sites{i};
     
-    % Load relevant radar data (previously generated using the above section)
+    % Load relevant radar data
     OIB_radar = load(fullfile(data_path, 'IceBridge/manual_layers', site_nm, ...
         strcat('layers_', site_nm, '_opt.mat')));
     
@@ -252,6 +252,11 @@ for i = 1:length(sites)
     man_idx = trace_idx(dist_man<=threshold);
     [~, man_near] = min(dist_man);
     
+    % Find the nearest SEAT trace to manually picked trace
+    dist_tmp = pdist2([OIB_radar.Easting(man_near)  OIB_radar.Northing(man_near)], ...
+        [SEAT_E', SEAT_N']);
+    [~, man_SEAT] = min(dist_tmp);
+    
     
     idx_ages = reshape(OIB_radar.ages(:,man_idx,:), ...
         size(OIB_radar.ages,1), length(man_idx)*Ndraw);
@@ -265,17 +270,17 @@ for i = 1:length(sites)
         std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
     plot(cores.(site_nm).depth, mean(cores.(site_nm).ages,2) - ...
         std(cores.(site_nm).ages, [], 2), 'b--', 'LineWidth', 0.5)
-%     plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2), ...
-%         'm', 'LineWidth', 2)
-%     plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2)+ ...
-%         std(squeeze(OIB_manual.ages(:,man_near,:)),[],2),'m--','LineWidth',0.5)
-%     plot(OIB_manual.depth, mean(squeeze(OIB_manual.ages(:,man_near,:)), 2)- ...
-%         std(squeeze(OIB_manual.ages(:,man_near,:)),[],2),'m--','LineWidth',0.5)
-    h2 = plot(OIB_radar.depth, mean(idx_ages, 2), 'm', 'LineWidth', 2);
-    plot(OIB_radar.depth, mean(idx_ages, 2) + std(idx_ages, [], 2), ...
-        'm--', 'LineWidth', 0.5)
-    plot(OIB_radar.depth, mean(idx_ages, 2) - std(idx_ages, [], 2), ...
-        'm--', 'LineWidth', 0.5)
+    h2 = plot(OIB_radar.depth, mean(squeeze(OIB_radar.ages(:,man_near,:)), 2), ...
+        'm', 'LineWidth', 2);
+    plot(OIB_radar.depth, mean(squeeze(OIB_radar.ages(:,man_near,:)), 2)+ ...
+        std(squeeze(OIB_radar.ages(:,man_near,:)),[],2),'m--','LineWidth',0.5)
+    plot(OIB_radar.depth, mean(squeeze(OIB_radar.ages(:,man_near,:)), 2)- ...
+        std(squeeze(OIB_radar.ages(:,man_near,:)),[],2),'m--','LineWidth',0.5)
+%     h2 = plot(OIB_radar.depth, mean(idx_ages, 2), 'm', 'LineWidth', 2);
+%     plot(OIB_radar.depth, mean(idx_ages, 2) + std(idx_ages, [], 2), ...
+%         'm--', 'LineWidth', 0.5)
+%     plot(OIB_radar.depth, mean(idx_ages, 2) - std(idx_ages, [], 2), ...
+%         'm--', 'LineWidth', 0.5)
     h3 = plot(OIB_radar.depth, mean(OIB_radar.man_ages(:,man_idx), 2), ...
         'k', 'LineWidth', 2);
     plot(OIB_radar.depth, mean(OIB_radar.man_ages(:,man_idx), 2) + ...
