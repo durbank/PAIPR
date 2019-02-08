@@ -514,8 +514,26 @@ for i = 1:length(sites)
         OIBi_SMB(:,j) = SMB_tmp{j}(OIB_start(j):OIB_end(j));
     end
     
+    figure
+    hold on
+    plot([0 500], [0 500], 'k--')
+    h1 = qqplot(mean(core_SMB_i, 2), mean(SEAT_SMB_near, 2));
+    title("SEAT Q-Q Plot")
+    hold off
     
+    figure
+    hold on
+    plot([0 500], [0 500], 'k--')
+    h2 = qqplot(mean(core_SMB_i, 2), mean(OIB_SMB_near, 2));
+    title("OIB Q-Q Plot")
+    hold off
     
+    figure
+    hold on
+    plot([0 500], [0 500], 'k--')
+    h3 = qqplot(mean(SEAT_SMB_near, 2), mean(OIB_SMB_near, 2));
+    title("radar Q-Q Plot")
+    hold off
     
 %     % SEAT bias relative to the core (nearest trace distribution)
 %     bias_SEATnear = (SEAT_SMB_near - mean(core_SMB_i,2))./mean(core_SMB_i,2);
