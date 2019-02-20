@@ -53,8 +53,8 @@ cores = load(core_file);
 Ndraw = 100;
 
 
-radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/RawDataDurban', ...
-    '/SEAT2011/');
+radar_dir = fullfile(data_path, 'radar/SEAT_Traverses/Deprecated/',...
+    'RawDataDurban/SEAT2011/');
 
 %%
 
@@ -106,7 +106,7 @@ files = dir(strcat(radar_dir, wild));
 for i1 = 1:length(files)
     tic
 %     i1
-    filename = strcat(radar_dir, files(i1).name);
+    filename = fullfile(radar_dir, files(i1).name);
 %     filename = sprintf('%s.%04d.dat',filebase,i1);
     fid = fopen(filename,'r','ieee-be');
     deadbeef = hex2dec('deadbeef');
