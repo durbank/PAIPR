@@ -205,9 +205,9 @@ for i = 1:length(sites)
     set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4.5], ...
     'PaperUnits', 'Inches', 'PaperSize', [8, 4.5])
     
-    fig_nm = strcat('iso-comp_', site_nm);
-    export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
-    close(fig)
+%     fig_nm = strcat('iso-comp_', site_nm);
+%     export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+%     close(fig)
     
     %%% Age-depth scales from manual count data
     
@@ -296,11 +296,13 @@ for i = 1:length(sites)
     set(gcf, 'Units', 'Inches', 'Position', [0, 0, 2.5, 3.5], ...
     'PaperUnits', 'Inches', 'PaperSize', [2.5, 3.5])
     
-    fig_nm = strcat('ages_', site_nm);
-    export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
-    close(fig)
+%     fig_nm = strcat('ages_', site_nm);
+%     export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+%     close(fig)
     
     
+
+    % NEED TO ADAPT THIS TO USE RMSE RATHER THAN STD
     age_err_auto = 10*max(std(idx_ages, [], 2))/...
         (mean(idx_ages(1,:))-mean(idx_ages(end,:)));
     age_err_man = 10*max(std(OIB_radar.man_ages(:,man_idx), [], 2))/...
@@ -437,9 +439,9 @@ for i = 1:length(sites)
     set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 3.5], ...
     'PaperUnits', 'Inches', 'PaperSize', [8, 3.5])
     
-    fig_nm = strcat('aSMB_', site_nm);
-    export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
-    close(fig)
+%     fig_nm = strcat('aSMB_', site_nm);
+%     export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+%     close(fig)
     
     
 %     figure
@@ -512,53 +514,90 @@ for i = 1:length(sites)
         OIBi_SMB(:,j) = SMB_tmp{j}(OIB_start(j):OIB_end(j));
     end
     
+    figure
+    hold on
+    plot([0 500], [0 500], 'k--')
+    h1 = qqplot(mean(core_SMB_i, 2), mean(SEAT_SMB_near, 2));
+    title("SEAT Q-Q Plot")
+    hold off
     
+    figure
+    hold on
+    plot([0 500], [0 500], 'k--')
+    h2 = qqplot(mean(core_SMB_i, 2), mean(OIB_SMB_near, 2));
+    title("OIB Q-Q Plot")
+    hold off
     
+    figure
+    hold on
+    plot([0 500], [0 500], 'k--')
+    h3 = qqplot(mean(SEAT_SMB_near, 2), mean(OIB_SMB_near, 2));
+    title("radar Q-Q Plot")
+    hold off
     
-    % SEAT bias relative to the core (nearest trace distribution)
-    bias_SEATnear = (SEAT_SMB_near - mean(core_SMB_i,2))./mean(core_SMB_i,2);
-    bias_Snear_med = median(bias_SEATnear(:));
-    bias_Snear_mu = mean(bias_SEATnear(:));
-    bias_Snear_std = std(bias_SEATnear(:));
-    bias_Snear_SEM = bias_Snear_std/sqrt(numel(bias_SEATnear));
-    T_SEATnear = tinv(0.975, numel(bias_SEATnear)-1);
-    MoE_SEATnear = T_SEATnear*bias_Snear_SEM;
+%     % SEAT bias relative to the core (nearest trace distribution)
+%     bias_SEATnear = (SEAT_SMB_near - mean(core_SMB_i,2))./mean(core_SMB_i,2);
+%     bias_Snear_med = median(bias_SEATnear(:));
+%     bias_Snear_mu = mean(bias_SEATnear(:));
+%     bias_Snear_std = std(bias_SEATnear(:));
+%     bias_Snear_SEM = bias_Snear_std/sqrt(numel(bias_SEATnear));
+%     T_SEATnear = tinv(0.975, numel(bias_SEATnear)-1);
+%     MoE_SEATnear = T_SEATnear*bias_Snear_SEM;
     
-    % OIB bias relative to the core (nearest trace distribution)
-    bias_OIBnear = (OIB_SMB_near - mean(core_SMB_i,2))./mean(core_SMB_i,2);
-    bias_Onear_med = median(bias_OIBnear(:));
-    bias_Onear_mu = mean(bias_OIBnear(:));
-    bias_Onear_std = std(bias_OIBnear(:));
-    bias_Onear_SEM = bias_Onear_std/sqrt(numel(bias_OIBnear));
-    T_OIBnear = tinv(0.975, numel(bias_OIBnear)-1);
-    MoE_OIBnear = T_OIBnear*bias_Onear_SEM;
+    % SEAT mean bias error and square root error relative to core (nearest
+    % trace distribution)
+    res_SEATnear = SEAT_SMB_near - mean(core_SMB_i,2);
+    rmse_SEATnear = sqrt(mean(res_SEATnear.^2, 2))./mean(core_SMB_i,2);
+    mbe_SEATnear = mean(res_SEATnear./mean(core_SMB_i, 2), 2);
+    SEATnear_RMSE = median(rmse_SEATnear);
+    SEATnear_MBE = median(mbe_SEATnear);
+%     Snear_RMSE_mu = mean(rmse_SEATnear);
+    Snear_MBE_mu = mean(rmse_SEATnear);
 
-    % SEAT bias relative to the core (distribution of nearby mean traces)
-    bias_SEATi = (SEATi_SMB - mean(core_SMB_i,2))./mean(core_SMB_i,2);
-    biasSEATi_med = median(bias_SEATi(:));
-    biasSEATi_mu = mean(bias_SEATi(:));
-    biasSEATi_std = std(bias_SEATi(:));
-    biasSEATi_sem = biasSEATi_std/sqrt(numel(bias_SEATi));
-    T_SEATi = tinv(0.975, numel(bias_SEATi)-1);
-    MoE_SEATi = T_SEATi*biasSEATi_sem;
+    % OIB  mean bias error and square root error relative to core (nearest
+    % trace distribution)
+    res_OIBnear = OIB_SMB_near - mean(core_SMB_i,2);
+    rmse_OIBnear = sqrt(mean(res_OIBnear.^2, 2))./mean(core_SMB_i,2);
+    mbe_OIBnear = mean(res_OIBnear./mean(core_SMB_i, 2), 2);
+    OIBnear_RMSE = mean(rmse_OIBnear);
+    OIBnear_MBE = median(mbe_OIBnear);
+    Onear_MBE_mu = mean(rmse_OIBnear);
     
-    % OIB bias relative to the core (distribution of nearby mean traces)
-    bias_OIBi = (OIBi_SMB - mean(core_SMB_i,2))./mean(core_SMB_i,2);
-    biasOIBi_med = median(bias_OIBi(:));
-    biasOIBi_mu = mean(bias_OIBi(:));
-    biasOIBi_std = std(bias_OIBi(:));
-    biasOIBi_sem = biasOIBi_std/sqrt(numel(bias_OIBi));
-    T_OIBi = tinv(0.975, numel(bias_OIBi)-1);
-    MoE_OIBi = T_OIBi*biasOIBi_sem;
+    % SEAT mean bias error and square root error relative to core (nearby
+    % mean traces)
+    res_SEATi = SEATi_SMB - mean(core_SMB_i,2);
+    rmse_SEATi = sqrt(mean(res_SEATi.^2, 2))./mean(core_SMB_i,2);
+    mbe_SEATi = mean(res_SEATi./mean(core_SMB_i, 2), 2);
+    SEATi_RMSE = median(rmse_SEATi);
+    SEATi_MBE = median(mbe_SEATi);
+    Si_MBE_mu = mean(rmse_SEATi);
     
-    bias_med = [bias_Snear_med; biasSEATi_med; bias_Onear_med; biasOIBi_med];
-    bias_mu = [bias_Snear_mu; biasSEATi_mu; bias_Onear_mu; biasOIBi_mu];
-    bias_MoE = [MoE_SEATnear; MoE_SEATi; MoE_OIBnear; MoE_OIBi];
-    bias_std = [bias_Snear_std; biasSEATi_std; bias_Onear_std; biasOIBi_std];
-    bias_stats.(site_nm) = table(bias_med, bias_mu, bias_MoE, bias_std, ...
-        'VariableNames', {'Median', 'Mean', 'MoE', 'StdDev'}, 'RowNames', ...
+    % OIB mean bias error and square root error relative to core (nearby
+    % mean traces)
+    res_OIBi = OIBi_SMB - mean(core_SMB_i,2);
+    rmse_OIBi = sqrt(mean(res_OIBi.^2, 2))./mean(core_SMB_i,2);
+    mbe_OIBi = mean(res_OIBi./mean(core_SMB_i, 2), 2);
+    OIBi_RMSE = median(rmse_OIBi);
+    OIBi_MBE = median(mbe_OIBi);
+    Oi_MBE_mu = mean(rmse_OIBi);
+    
+    MBE = [SEATnear_MBE; SEATi_MBE; OIBnear_MBE; OIBi_MBE];
+    MBE_mu = [Snear_MBE_mu; Si_MBE_mu; Onear_MBE_mu; Oi_MBE_mu];
+    RMSE = [SEATnear_RMSE; SEATi_RMSE; OIBnear_RMSE; OIBi_RMSE];
+    bias_stats.(site_nm) = table(MBE, MBE_mu, RMSE, ...
+        'VariableNames', {'Median_MBE', 'Mean_MBE', 'Median_RMSE'}, 'RowNames', ...
         {'SEAT-core (nearest trace)', 'SEAT-core (mean traces)', ...
         'OIB-core (nearest trace)', 'OIB-core (mean traces)'});
+    
+%     bias_med = [bias_Snear_med; biasSEATi_med; bias_Onear_med; biasOIBi_med];
+%     bias_mu = [bias_Snear_mu; biasSEATi_mu; bias_Onear_mu; biasOIBi_mu];
+%     bias_rmse = [SEATnear_RMSE; SEATi_RMSE; OIBnear_RMSE; OIBi_RMSE];
+%     bias_MoE = [MoE_SEATnear; MoE_SEATi; MoE_OIBnear; MoE_OIBi];
+%     bias_std = [bias_Snear_std; biasSEATi_std; bias_Onear_std; biasOIBi_std];
+%     bias_stats.(site_nm) = table(bias_med, bias_mu, bias_MoE, bias_std, ...
+%         'VariableNames', {'Median', 'Mean', 'MoE', 'StdDev'}, 'RowNames', ...
+%         {'SEAT-core (nearest trace)', 'SEAT-core (mean traces)', ...
+%         'OIB-core (nearest trace)', 'OIB-core (mean traces)'});
     
     
     

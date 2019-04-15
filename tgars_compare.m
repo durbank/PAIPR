@@ -177,10 +177,10 @@ hold off
 set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
     'PaperUnits', 'Inches', 'PaperSize', [8, 4])
 
-% Export figure
-fig_nm = 'site-map';
-export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
-close(fig)
+% % Export figure
+% fig_nm = 'site-map';
+% export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+% close(fig)
 
 
 %% SEAT and OIB SMB bias tests
@@ -212,84 +212,60 @@ SEAT_end = cellfun(@(x,y) find(x==y(end), 1), SEAT_yr(SEAT_near), bias_yr);
 OIB_start = cellfun(@(x,y) find(x==y(1), 1), OIB_yr(OIB_near), bias_yr);
 OIB_end = cellfun(@(x,y) find(x==y(end), 1), OIB_yr(OIB_near), bias_yr);
 
-SEATbias_mean = cell(1,length(bias_yr));
-bias_SMB = cell(1,length(bias_yr));
+SEAT_SMB_mu = cell(1,length(bias_yr));
+SMB_res = cell(1,length(bias_yr));
 for j=1:length(bias_yr)
-    SEATbias_SMB = SEAT_SMB{SEAT_near(j)}(SEAT_start(j):SEAT_end(j));
+    SEAT_SMB_j = SEAT_SMB{SEAT_near(j)}(SEAT_start(j):SEAT_end(j));
 %     SEATbias_mean{j} = mean(SEATbias_SMB);
-    SEATbias_mean{j} = SEATbias_SMB;
-    OIBbias_SMB = OIB_SMB{OIB_near(j)}(OIB_start(j):OIB_end(j));
-    bias_SMB{j} = (SEATbias_SMB - OIBbias_SMB);
+    SEAT_SMB_mu{j} = SEAT_SMB_j;
+    OIB_SMB_j = OIB_SMB{OIB_near(j)}(OIB_start(j):OIB_end(j));
+    SMB_res{j} = (SEAT_SMB_j - OIB_SMB_j);
 end
 
-% SMB bias for each individual year in each trace (% change of mean)
-bias_dist = cellfun(@(x,y) x./y, bias_SMB, SEATbias_mean, 'UniformOutput', 0);
+
+SEAT_SMB_mu = cell(1,length(bias_yr));
+SMB_res = cell(1,length(bias_yr));
+for j=1:length(bias_yr)
+    SEAT_SMB_j = SEAT_SMB{SEAT_near(j)}(SEAT_start(j):SEAT_end(j));
+    SEAT_SMB_mu{j} = SEAT_SMB_j;
+    OIB_SMB_j = OIB_SMB{OIB_near(j)}(OIB_start(j):OIB_end(j));
+    SMB_res{j} = (SEAT_SMB_j - OIB_SMB_j);
+end
+
+
+% SMB bias stats for each individual year for each mean trace within the
+% threshold distance (% difference of mean SMB)
+bias_dist = cellfun(@(x,y) x./y, SMB_res, SEAT_SMB_mu, 'UniformOutput', 0);
 bias_dist = vertcat(bias_dist{:});
-bias_mu = mean(bias_dist);
-bias_med = median(bias_dist);
-bias_std = std(bias_dist);
-bias_SEM = bias_std/sqrt(length(bias_dist));
-Ts = tinv(0.975, length(bias_dist)-1);
-bias_MoE = Ts*bias_SEM;
-figure
-histogram(bias_dist, 100)
-bias_stats.radar = table(bias_med, bias_mu, bias_MoE, bias_std, 'VariableNames', ...
-    {'Median', 'Mean','MarginOfError','StdDev'}, 'RowNames', {'SEAT-OIB (% bias)'});
+MBE = median(bias_dist);
+MBE_mu = mean(bias_dist);
+RMSE = sqrt(mean(bias_dist.^2));
+bias_stats.radar = table(MBE, MBE_mu, RMSE, 'VariableNames', ...
+    {'MedianMBE', 'MeanMBE', 'RMSE'}, 'RowNames', {'SEAT-OIB (% bias)'});
+
+% bias_std = std(bias_dist);
+% bias_SEM = bias_std/sqrt(length(bias_dist));
+% Ts = tinv(0.975, length(bias_dist)-1);
+% bias_MoE = Ts*bias_SEM;
+% figure
+% histogram(bias_dist, 100)
+% bias_stats.radar = table(bias_med, bias_mu, bias_MoE, bias_std, 'VariableNames', ...
+%     {'Median', 'Mean','MarginOfError','StdDev'}, 'RowNames', {'SEAT-OIB (% bias)'});
+
+
 
 
 
 SEAT_var = cellfun(@(x) var(x,[],2)./(mean(x,2)).^2, SEAT_SMB_MC(SEAT_near), ...
     'UniformOutput', false);
-SEAT_std = sqrt(mean(vertcat(SEAT_var{:})));
+SEAT_std = sqrt(median(vertcat(SEAT_var{:})));
 % std(vertcat(SEAT_std{:}));
 OIB_var = cellfun(@(x) var(x,[],2)./(mean(x,2)).^2, OIB_SMB_MC(OIB_near), ...
     'UniformOutput', false);
-OIB_std = sqrt(mean(vertcat(OIB_var{:})));
+OIB_std = sqrt(median(vertcat(OIB_var{:})));
 
 clip30 = cellfun(@(x,y) length(x)>=30 && length(y)>=30, SEAT_var, OIB_var); 
 SEAT_std30 = sqrt(mean(cell2mat(cellfun(@(x) x(1:30), SEAT_var(clip30), ...
     'UniformOutput', false)), 2));
 OIB_std30 = sqrt(mean(cell2mat(cellfun(@(x) x(1:30), OIB_var(clip30), ...
     'UniformOutput', false)), 2));
-
-%% Age bias tests
-
-% depth = 0:0.02:25;
-% SEAT_ages = zeros(length(depth), length(SEAT_E));
-% pos_start = 1;
-% 
-% for i = 1:length(SEAT_files)
-%     load(fullfile(SEAT_files(i).folder, SEAT_files(i).name), 'ages');
-%     SEAT_ages(:,pos_start:pos_start+size(ages,2)-1) = mean(ages, 3);
-%     pos_start = pos_start+size(ages,2);
-% end
-% 
-% OIB_ages = zeros(length(depth), length(OIB_E));
-% pos_start = 1;
-% for i = 1:length(OIB_files)
-%     load(fullfile(OIB_files(i).folder, OIB_files(i).name), 'ages');
-%     OIB_ages(:,pos_start:pos_start+size(ages,2)-1) = mean(ages, 3);
-%     pos_start = pos_start+size(ages,2);
-% end
-% 
-% age_bias = SEAT_ages(:,SEAT_near) - OIB_ages(:,OIB_near);
-% figure
-% hold on
-% plot(depth, mean(age_bias, 2), 'k', 'LineWidth', 2)
-% plot(depth, mean(age_bias, 2) + std(age_bias, [], 2), 'k--')
-% plot(depth, mean(age_bias, 2) - std(age_bias, [], 2), 'k--')
-% hold off
-% 
-% % ERR_tmp = 10*age_bias./(SEAT_ages(1,SEAT_near)-SEAT_ages(:,SEAT_near));
-% % ERR_decade = mean(ERR_tmp(100:end,:));
-% res_decade = 10*age_bias(end,:)./(SEAT_ages(1,SEAT_near)-SEAT_ages(end,SEAT_near));
-% 
-% figure
-% histogram(res_decade, 100)
-% 
-% bias_age_med = median(res_decade);
-% bias_age_mu = mean(res_decade);
-% bias_age_std = std(res_decade);
-% bias_SEM = std(bias_age_std)/sqrt(length(res_decade));
-% Ts = tinv(0.975, length(res_decade)-1);
-% bias_age_MoE = Ts*bias_SEM;
