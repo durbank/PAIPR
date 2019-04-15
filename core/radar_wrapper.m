@@ -14,8 +14,9 @@ switch PC_true
                 addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
                 
             case 'laptop'
-                data_path = 'F:/Research/Antarctica/Data/';
-                addon_path = 'C:/Users/durba/Documents/MATLAB/Addons/';
+                data_path = 'E:/Research/Antarctica/Data/';
+                addon_path = fullfile('C:/Users/durba/', ...
+                    'OneDrive - University of Utah/Documents/MATLAB/Addons/');
         end
         
     case false
