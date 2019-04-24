@@ -2,7 +2,7 @@
 % analysis
 
 % Varargin defines the starting and ending trace indices to include in the
-% data import. These should numeric scalars, with values between 1 and
+% data import. These should be numeric scalars, with values between 1 and
 % the total length of the radargram file to import. If both starting and
 % ending indices are prescribed, varargin{2} should be greater than
 % varargin{1}
@@ -31,21 +31,50 @@ else
     end_idx = varargin{2};
 end
 
-% Calucate distance along traverse (in meters)
-distances = pathdist(mdata.lat, mdata.lon);
+% % Calucate distance along traverse (in meters)
+% distances = pathdist(mdata.lat, mdata.lon);
+%         
+% bounds_idx = 1:length(mdata.lat) < start_idx | 1:length(mdata.lat) > end_idx;
+% loc_idx = mdata.lat >= -65;
+% dist_idx = ~logical([1 diff(distances)]);
+% nan_idx = all(isnan(mdata.data_out));
+% 
+% rm_idx = logical(sum([bounds_idx; loc_idx; dist_idx; nan_idx]));
+% 
+% mdata.lat(rm_idx) = [];
+% mdata.lon(rm_idx) = [];
+% mdata.time_gps(rm_idx) = [];
+% mdata.time_trace(rm_idx) = [];
+% mdata.data_out(:,rm_idx) = [];
+
         
 bounds_idx = 1:length(mdata.lat) < start_idx | 1:length(mdata.lat) > end_idx;
-loc_idx = mdata.lat >= -65;
-dist_idx = ~logical([1 diff(distances)]);
+loc_idx = mdata.lat >= -65 | mdata.lat < -90;
 nan_idx = all(isnan(mdata.data_out));
 
-rm_idx = logical(sum([bounds_idx; loc_idx; dist_idx; nan_idx]));
+rm_idx = logical(sum([bounds_idx; loc_idx; nan_idx]));
 
 mdata.lat(rm_idx) = [];
 mdata.lon(rm_idx) = [];
 mdata.time_gps(rm_idx) = [];
 mdata.time_trace(rm_idx) = [];
 mdata.data_out(:,rm_idx) = [];
+
+try
+    % Calucate distance along traverse (in meters)
+    distances = pathdist(mdata.lat, mdata.lon);
+    dist_idx = ~logical([1 diff(distances)]);
+    
+    mdata.lat(dist_idx) = [];
+    mdata.lon(dist_idx) = [];
+    mdata.time_gps(dist_idx) = [];
+    mdata.time_trace(dist_idx) = [];
+    mdata.data_out(:,dist_idx) = [];
+    
+catch
+    disp(strcat("Warning: Too few points to calculate distances ", ...
+        "(current file will not be processed)"))
+end
 
 if ~isstruct(file)
     
@@ -81,7 +110,8 @@ try
     mdata.dist = pathdist(mdata.lat, mdata.lon);
 catch
     mdata.dist = [];
-    disp('Warning: error with calculating pathdist (Line 81 of import_radar.m)')
+    disp(strcat("Warning: Error on pathdist (Line 81 of import_radar.m);", ...
+        sprintf(" %i elements in array", length(mdata.lat))));
 end
 
 % Check to see if collection data is already present. If it is not, create

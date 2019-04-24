@@ -1,24 +1,7 @@
-figure
-imagesc(peaks_raw)
-hold on
-for k = 1:length(layers)
-    [r,c] = ind2sub(size(peaks_raw), layers{k});
-    plot(c, r, '.', 'MarkerSize', 15)
-end
-hold off
+%% Why are there such stark differences in trends between adjacent
+%  radargrams, even when the mean SMB doesn't have nearly as large as jump?
 
-figure
-imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
-hold on
-for k = 1:length(layers_idx)
-    [r,c] = ind2sub(size(radar.data_smooth), layers_idx{k});
-    r_scale = r*0.02;
-    c_scale = c*mean(diff(radar.dist));
-    plot(c_scale, r_scale, 'LineWidth', 3)
-end
-hold off
 
-%% Map concat (combine N-E points of multiple files to determine map position
 
 % Directories to data of interest based on computer (eventually will be
 % replaced with GUI for data directory selection)
@@ -26,14 +9,14 @@ PC_true = ispc;
 switch PC_true
     case true
         computer = 'work';
-%         computer = input('Current PC: ');
+        %         computer = input('Current PC: ');
         switch computer
             case 'work'
                 data_path = 'E:/Research/Antarctica/Data/';
                 addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
                 
             case 'laptop'
-                data_path = 'C:/Users/durba/Documents/Research/Antarctica/Data/';
+                data_path = 'F:/Research/Antarctica/Data/';
                 addon_path = 'C:/Users/durba/Documents/MATLAB/Addons/';
         end
         
@@ -44,70 +27,135 @@ end
 
 % Addons needed for analysis
 % Add Antarctic Mapping Toolbox (AMT) to path
-addon_folder = strcat(addon_path, 'AntarcticMappingTools_v5.03/');
+addon_folder = fullfile(addon_path, 'AntarcticMappingTools_v5.03/');
+addpath(genpath(addon_folder))
+% Add export_fig to path
+addon_folder = fullfile(addon_path, 'altmany-export_fig-cafc7c5/');
 addpath(genpath(addon_folder))
 
-% Load core data from file (data used was previously generated using
-% import_cores.m)
-core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
-cores = load(core_file);
-
-path2 = 'radar/SEAT_Traverses/SEAT2010Kuband/ProcessedSEAT2010/grid_SEAT10_6';
-radar_dir = fullfile(data_path, path2);
-
-% Get list of radar files in directory
 wild = '*.mat';
-files = dir(fullfile(radar_dir, wild));
+OIB_files = dir(fullfile(data_path, 'IceBridge/SNO_radar/',...
+    '2011/SMB_results/', wild));
+
+radar = load(fullfile(OIB_files(18).folder, OIB_files(18).name));
+radar2 = load(fullfile(OIB_files(19).folder, OIB_files(19).name));
+
+yrs = (2010:-1:2010-32+1)';
+mSMB = cell2mat(cellfun(@(x) mean(x(1:32,:),2), radar.SMB, ...
+    'UniformOutput', false));
+mSMB2 = cell2mat(cellfun(@(x) mean(x(1:32,:),2), radar2.SMB, ...
+    'UniformOutput', false));
+
+beta = zeros(1,length(mSMB));
+rbeta = zeros(1,length(mSMB));
+for i=1:length(mSMB)
+    coeff = polyfit(yrs, mSMB(:,i), 1);
+    beta(i) = coeff(1);
+    coeff = robustfit(yrs, mSMB(:,i));
+    rbeta(i) = coeff(2);
+end
+
+beta2 = zeros(1,length(mSMB2));
+rbeta2 = zeros(1,length(mSMB2));
+for i=1:length(mSMB2)
+    coeff = polyfit(yrs, mSMB2(:,i), 1);
+    beta2(i) = coeff(1);
+    coeff = robustfit(yrs, mSMB2(:,i));
+    rbeta2(i) = coeff(2);
+end
+
+E = [radar.Easting radar2.Easting];
+data = [radar.data_smooth radar2.data_smooth];
+
+
+
+layers = cell(1, max(radar.groups(:)));
+for i=1:length(layers)
+    [r,c] = find(radar.groups==i);
+    layers{i} = [r c];
+end
+layers = layers(~cellfun(@isempty, layers));
+
+layers2 = cell(1, max(radar2.groups(:)));
+for i=1:length(layers2)
+    [r,c] = find(radar2.groups==i);
+    layers2{i} = [r c];
+end
+layers2 = layers2(~cellfun(@isempty, layers2));
+
+figure
+imagesc(E, radar.depth, data, [-2 2])
+hold on
+cellfun(@(x) plot(radar.Easting(x(:,2)), radar.depth(x(:,1)), ...
+    'r', 'LineWidth', 1.5), layers);
+cellfun(@(x) plot(radar2.Easting(x(:,2)), radar2.depth(x(:,1)), ...
+    'm', 'LineWidth', 1.5), layers2);
+
+figure
+yyaxis left
+hold on
+plot(radar.Easting, mean(mSMB), 'b')
+plot(radar2.Easting, mean(mSMB2), 'c')
+yyaxis right
+plot(radar.Easting, rbeta, 'r')
+plot(radar2.Easting, rbeta2, 'm')
+xlim([min(E) max(E)])
+hold off
 
 figure
 hold on
-h1 = scatter(cores.Easting, cores.Northing, 100, 'b', 'filled');
-h2 = plot(radar.Easting(1), radar.Northing(1), 'r', 'LineWidth', 2);     % Correctly display radar as line in legend
-plot(radar.Easting, radar.Northing, 'r.', 'MarkerSize', 0.10)
-
-for i = 1:length(files)
-    data = radar_clean(fullfile(radar_dir, files(i).name));
-    plot(data.Easting, data.Northing, '.')
+num_plot = 100;
+for n = 1:num_plot
+    h0 = plot(yrs, mSMB(:,length(mSMB)-n), 'r', 'LineWidth', 0.5);
+    h0.Color(4) = 0.05;
+    h0 = plot(yrs, mSMB2(:,length(mSMB2)-n), 'm', 'LineWidth', 0.5);
+    h0.Color(4) = 0.05;
 end
 hold off
 
 
-%% Compare std of trace distributiions with those nearby
+%%
 
-cores_loop = {'SEAT10_4' 'SEAT10_5' 'SEAT10_6'};
-near_dist = 6500;
-i = 3;
-core_i = cores.(cores_loop{i});
+% Add gif addon to path
+addon_folder = fullfile(addon_path, 'gif_v1.0/');
+addpath(genpath(addon_folder))
 
-D_SEATi = pdist2([core_i.Easting, core_i.Northing], [SEAT_E' SEAT_N']);
-SEATi_idx = D_SEATi <= near_dist;
-[~, SEATi_near] = min(D_SEATi(SEATi_idx));
-
-SEAT_data = SEAT_SMB_MC(SEATi_idx);
-SMB_length = min(cellfun(@(x) size(x,1), SEAT_data));
-SEAT_std = cell2mat(cellfun(@(x) std(x(1:SMB_length,:),[],2), ...
-    SEAT_data, 'UniformOutput', 0));
-figure
-yr_start = SEAT_yr{1}(1);
-plot(yr_start:-1:(yr_start-SMB_length+1), SEAT_std, 'LineWidth', 0.5)
+fig = figure('Position', [10 500 1400 400]);
 hold on
-plot(yr_start:-1:(yr_start-SMB_length+1), SEAT_std(:,SEATi_near), ...
-    'r', 'LineWidth', 3)
+scatter(radar.Easting, radar.Northing, 10, mSMB(end,:), 'filled')
+scatter(radar2.Easting, radar2.Northing, 10, mSMB2(end,:), 'filled')
+scatter(radar.Easting(1), radar.Northing(1), 75, 'rx')
+scatter(radar.Easting(end), radar.Northing(end), 75, 'kx')
+scatter(radar2.Easting(end), radar2.Northing(end), 75, 'mx')
+xlim([min([min(radar.Easting) min(radar2.Easting)]) ...
+    max([max(radar.Easting) max(radar2.Easting)])]);
+ylim([min([min(radar.Northing) min(radar2.Northing)]) ...
+    max([max(radar.Northing) max(radar2.Northing)])]);
+colorbar
+caxis([150 500])
+title(sprintf('%i', yrs(end)))
 hold off
 
-D_OIBi = pdist2([core_i.Easting, core_i.Northing], [OIB_E' OIB_N']);
-OIBi_idx = D_OIBi <= near_dist;
-[~, OIBi_near] = min(D_OIBi(OIBi_idx));
 
-OIB_data = OIB_SMB_MC(OIBi_idx);
-SMB_length = min(cellfun(@(x) size(x,1), OIB_data));
-OIB_std = cell2mat(cellfun(@(x) std(x(1:SMB_length,:),[],2), ...
-    OIB_data, 'UniformOutput', 0));
-figure
-yr_start = OIB_yr{1}(1);
-plot(yr_start:-1:(yr_start-SMB_length+1), OIB_std, 'LineWidth', 0.5)
-hold on
-plot(yr_start:-1:(yr_start-SMB_length+1), OIB_std(:,OIBi_near), ...
-    'r', 'LineWidth', 3)
-hold off
+gif('test.gif', 'DelayTime', 1, 'LoopCount', 5,'frame', gcf)
+
+for i = length(yrs)-1:-1:1
+    fig.NextPlot = 'replace';
+    scatter(radar.Easting, radar.Northing, 10, mSMB(i,:), 'filled')
+    hold on
+    scatter(radar2.Easting, radar2.Northing, 10, mSMB2(i,:), 'filled')
+    scatter(radar.Easting(1), radar.Northing(1), 75, 'rx')
+    scatter(radar.Easting(end), radar.Northing(end), 75, 'kx')
+    scatter(radar2.Easting(end), radar2.Northing(end), 75, 'mx')
+    xlim([min([min(radar.Easting) min(radar2.Easting)]) ...
+        max([max(radar.Easting) max(radar2.Easting)])]);
+    ylim([min([min(radar.Northing) min(radar2.Northing)]) ...
+        max([max(radar.Northing) max(radar2.Northing)])]);
+    colorbar
+    caxis([150 500])
+    title(sprintf('%i', yrs(i)))
+    hold off
+    
+    gif
+end
 

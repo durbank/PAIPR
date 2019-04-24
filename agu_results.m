@@ -1,21 +1,21 @@
-% File to produce final estimates and results from the SEAT2010-4 to
-% SEAT2010-6 radar line
+% Script to perform analyses and generate figures for the results section
+% of AGU2018 poster presentation
 
 % Directories to data of interest based on computer (eventually will be
 % replaced with GUI for data directory selection)
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'work';
-        %         computer = input('Current PC: ');
+                computer = input('Current PC: ');
         switch computer
             case 'work'
                 data_path = 'E:/Research/Antarctica/Data/';
                 addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
                 
             case 'laptop'
-                data_path = 'F:/Research/Antarctica/Data/';
-                addon_path = 'C:/Users/durba/OneDrive - University of Utah/MATLAB/Addons/';
+                data_path = 'E:/Research/Antarctica/Data/';
+                addon_path = fullfile('C:/Users/durba/', ...
+                    'OneDrive - University of Utah/Documents/MATLAB/Addons/');
         end
         
     case false
@@ -164,88 +164,6 @@ catch
     disp('Flag: Missing elevation data')
 end
 
-
-%% Generate looped gif of annual SMB
-
-% Add gif addon to path
-addon_folder = fullfile(addon_path, 'gif_v1.0/');
-addpath(genpath(addon_folder))
-
-% Determine most distant year for which there exists SEAT data
-seat_lengths = cellfun(@length, seat_yr);
-[length_max, max_idx] = max(seat_lengths);
-
-% Create SMB year vector based on earliest and most recent years in SEAT
-% dataset
-yr_seat = seat_yr{max_idx}(1):-1:seat_yr{max_idx}(end);
-
-% Determine which traces in SEAT data extend to earliest year, and extract
-% the SMB values for that year
-seat_k = seat_lengths >= length_max;
-SMB_ks = cellfun(@(x) x(length_max), seat_SMB(seat_k));
-
-% Determine what age offset exists for the surface of OIB data, compared to
-% SEAT data
-yr_bias = oib_yr{1}(1) - yr_seat(1);
-
-
-oib_lengths = cellfun(@length, oib_yr);
-oib_k = oib_lengths >= length_max + yr_bias;
-SMB_ko = cellfun(@(x) x(length_max+yr_bias), oib_SMB(oib_k));
-
-% Import ice sheet drainage basin boundaries
-basins = shaperead(strcat(data_path, ...
-    'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
-
-% Determine map extent limits for plotting
-Easting_lims = [min([min(cores.Easting) min(seat_E) min(oib_E)]) - 5000 ...
-    max([max(cores.Easting) max(seat_E) max(oib_E)]) + 5000];
-Northing_lims = [min([min(cores.Northing) min(seat_N) min(oib_N)]) - 5000 ...
-    max([max(cores.Northing) max(seat_N) max(oib_N)]) + 5000];
-
-% Define gif map starting images
-map_gif = figure('Position', [10 10 1400 800]);
-hold on
-h1 = mapshow(basins, 'FaceAlpha', 0);
-h2 = scatter(seat_E(seat_k), seat_N(seat_k), 25, SMB_ks, 'filled');
-h3 = scatter(oib_E(oib_k), oib_N(oib_k), 25, SMB_ko, 'filled');
-% h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
-c0 = colorbar;
-c0.Label.String = sprintf('Annual SMB (mm/a) - %i', yr_seat(end));
-c0.Label.FontSize = 18;
-graticuleps(-81:0.5:-77,-125:2:-105, 'c')
-xlim(Easting_lims)
-ylim(Northing_lims)
-caxis([150 450])
-scalebarps
-box on
-mapzoomps('ne', 'insetsize', 0.30)
-set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
-
-% Generate first gif template
-gif(fullfile(output_dir, 'SMB-loop.gif'), 'DelayTime', 0.50, ...
-    'LoopCount', 7)
-
-% Loop through annual SMB up through the year 2008
-for k=length_max-1:-1:2
-    
-    seat_k = seat_lengths >= k;
-    SMB_ks = cellfun(@(x) x(k), seat_SMB(seat_k));
-    oib_k = oib_lengths >= k + yr_bias;
-    SMB_ko = cellfun(@(x) x(k+yr_bias), oib_SMB(oib_k));
-    
-    map_gif.NextPlot = 'add';
-    h2 = scatter(seat_E(seat_k), seat_N(seat_k), 25, SMB_ks, 'filled');
-    map_gif.NextPlot = 'add';
-    h3 = scatter(oib_E(oib_k), oib_N(oib_k), 25, SMB_ko, 'filled');
-
-    c0.Label.String = sprintf('Annual SMB (mm/a) - %i', yr_seat(k));
-
-    gif
-end
-
-
-
 %%
 
 % Define starting and end year for regression, and create yr vector based
@@ -317,14 +235,15 @@ OIB_stats.p = cellfun(@(x) x.p(2), stats);
 % OIB_stats = struct();
 % OIB_stats.b = cellfun(@(x) x(1), coeff);
 
-
 %%
 
-cores_SMB = nan(length(year), length(cores.name));
-cores_beta = zeros(1, length(cores.name));
-cores_se = zeros(1, length(cores.name));
-cores_pval = zeros(1, length(cores.name));
-for k = 1:length(cores.name)
+core_idx = 1:5;
+
+cores_SMB = nan(length(year), length(cores.name(core_idx)));
+cores_beta = zeros(1, length(cores.name(core_idx)));
+cores_se = zeros(1, length(cores.name(core_idx)));
+cores_pval = zeros(1, length(cores.name(core_idx)));
+for k = 1:length(cores.name(core_idx))
     core_k = cores.(cores.name{k});
     core_start = find(core_k.SMB_yr<=yr_end, 1, 'first');
     core_end = find(core_k.SMB_yr>=yr_start, 1, 'last');
@@ -342,10 +261,9 @@ for k = 1:length(cores.name)
 
 end
 
+%% Main map of mean SMB
 
-%% Index map and study site
-
-labels = strrep(cores.name, '_', '-');
+labels = strrep(cores.name(core_idx), '_', '-');
 basins = shaperead(strcat(data_path, ...
     'DEMs/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'));
 Easting_lims = [min([min(cores.Easting) min(SEAT_E) min(OIB_E)]) - 5000 ...
@@ -356,17 +274,18 @@ Northing_lims = [min([min(cores.Northing) min(SEAT_N) min(OIB_N)]) - 5000 ...
 [Arth_E, Arth_N, Arth_accum] = accumulation_data(Easting_lims, Northing_lims, 'xy');
 
 
-map_SMB = figure('Position', [10 10 1400 800]);
+map_SMB = figure('Position', [0 0 1400 800]);
 h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
 set(gca, 'Ydir', 'normal')
 hold on
-h1 = mapshow(basins, 'FaceAlpha', 0);
+% h1 = mapshow(basins, 'FaceAlpha', 0);
 h2 = scatter(SEAT_E, SEAT_N, 50, mean(cell2mat(mSEAT_SMB)), 'filled');
 h3 = scatter(OIB_E, OIB_N, 50, mean(cell2mat(mOIB_SMB)), 'filled');
-h4 = scatter(cores.Easting, cores.Northing, 125, nanmean(cores_SMB)', ...
-    'filled', 'MarkerEdgeColor', 'k');
-text(cores.Easting, cores.Northing, strcat(labels, '\rightarrow'), ...
-    'FontSize', 13, 'Interpreter', 'tex', 'HorizontalAlignment', 'right');
+h4 = scatter(cores.Easting(core_idx), cores.Northing(core_idx), 125, ...
+    nanmean(cores_SMB)', 'filled', 'MarkerEdgeColor', 'k');
+text(cores.Easting(core_idx), cores.Northing(core_idx), ...
+    strcat(labels, '\rightarrow'), 'FontSize', 13, ...
+    'Interpreter', 'tex', 'HorizontalAlignment', 'right');
 c0 = colorbar;
 caxis([150 450])
 c0.Label.String = ['Mean annual SMB ' num2str(yr_start) '-' ...
@@ -378,44 +297,256 @@ ylim(Northing_lims)
 scalebarps
 box on
 mapzoomps('ne', 'insetsize', 0.30)
-% legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
-%     'SEAT radar mean SMB', 'Location', 'northwest')
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 18, 9], ...
+    'PaperUnits', 'Inches', 'PaperSize', [18, 9])
 % title('SEAT mean annual SMB')
 hold off
 
+pts = {[-1.143e+06 -4.6390e+05], [-1.0643e+06 -4.313e+05], ...
+    [-1.063e+06 -4.6390e+05], [-1.0155e+06 -4.6494e+05]};
+pts_names = {'Example 1', 'Example 2', 'Example 3', 'Example 4'};
+figure(map_SMB)
+hold on
+for i = 1:length(pts)
+    scatter(pts{i}(1), pts{i}(2), 50, 'rx')
+    text(pts{i}(1), pts{i}(2), pts_names{i}, 'FontSize', 12, 'Color','r',...
+        'HorizontalAlignment', 'left', 'VerticalAlignment', 'top');
+end
+
 map1_name = 'SMB_mean_map';
-export_fig(map_SMB, fullfile(output_dir, map1_name), '-png');
+export_fig(map_SMB, fullfile(output_dir, map1_name), '-pdf', '-q101', '-cmyk', '-a1')
 close(map_SMB)
 
+
+%% Mean SMB outset plots
+
+
+
+for i = 1:length(pts)
+    
+    D_SEATi = pdist2(pts{i}, [seat_E' seat_N']);
+    [~, SEAT_near] = min(D_SEATi);
+    SEAT_SMB_near = seat_SMB_MC{SEAT_near};
+    SEAT_yr_near = seat_yr{SEAT_near};
+    [coeff, SEATnear_stats] = robustfit(SEAT_yr_near, mean(SEAT_SMB_near,2));
+    SEATnear_stats.b = coeff;
+    
+    D_OIBi = pdist2(pts{i}, [oib_E' oib_N']);
+    [~, OIB_near] = min(D_OIBi);
+    OIB_SMB_near = oib_SMB_MC{OIB_near};
+    OIB_yr_near = oib_yr{OIB_near};
+    [coeff, OIBnear_stats] = robustfit(OIB_yr_near, mean(OIB_SMB_near,2));
+    OIBnear_stats.b = coeff;
+    
+    fig_i = figure;
+    hold on
+    for n = 1:size(SEAT_SMB_near, 2)
+        h0 = plot(SEAT_yr_near, SEAT_SMB_near(:,n), 'r', 'LineWidth', 0.5);
+        h0.Color(4) = 0.02;
+    end
+    h1 = plot(SEAT_yr_near, mean(SEAT_SMB_near, 2), 'r', 'LineWidth', 2);
+    % plot(SEAT_yr_near, mean(SEAT_SMB_near, 2)+std(SEAT_SMB_near,[],2),'r--')
+    % plot(SEAT_yr_near, mean(SEAT_SMB_near, 2)-std(SEAT_SMB_near,[],2),'r--')
+    
+    for n = 1:size(OIB_SMB_near, 2)
+        h0 = plot(OIB_yr_near, OIB_SMB_near(:,n), 'm', 'LineWidth', 0.5);
+        h0.Color(4) = 0.02;
+    end
+    h2 = plot(OIB_yr_near, mean(OIB_SMB_near, 2), 'm', 'LineWidth', 2);
+    % plot(OIB_yr_near, mean(OIB_SMB_near, 2)+std(OIB_SMB_near,[],2),'m--')
+    % plot(OIB_yr_near, mean(OIB_SMB_near, 2)-std(OIB_SMB_near,[],2),'m--')
+    
+%     h3 = plot(SEAT_yr_near, SEATnear_stats.b(2)*SEAT_yr_near+SEATnear_stats.b(1));
+%     if SEATnear_stats.p(2) <= 0.05
+%         h3.Color = 'r';
+%         h3.LineStyle = '-';
+%     else
+%         h3.Color = 'k';
+%         h3.LineStyle = '--';
+%     end
+%     
+%     h4 = plot(OIB_yr_near, OIBnear_stats.b(2)*OIB_yr_near+OIBnear_stats.b(1));
+%     if OIBnear_stats.p(2) <= 0.05
+%         h4.Color = 'm';
+%         h4.LineStyle = '-';
+%     else
+%         h4.Color = 'k';
+%         h4.LineStyle = '--';
+%     end
+
+
+    % core_start = find(core_i.SMB_yr==yr_start);
+    % core_end = find(core_i.SMB_yr==yr_end);
+    % coreI_SMB = core_i.SMB(core_start:core_end,:);
+    % % core4_SMB = movmean(core4_SMB, 3);
+    % for n = 1:size(coreI_SMB, 2)
+    %     h0 = plot(siteI_yr, coreI_SMB(:,n), 'b', 'LineWidth', 0.5);
+    %     h0.Color(4) = 0.02;
+    % end
+    % h3 = plot(siteI_yr, mean(coreI_SMB, 2), 'b', 'LineWidth', 2);
+    % plot(siteI_yr, mean(coreI_SMB, 2) + std(coreI_SMB, [], 2), 'b--')
+    % plot(siteI_yr, mean(coreI_SMB, 2) - std(coreI_SMB, [], 2), 'b--')
+    xlim([min([min(SEAT_yr_near) min(OIB_yr_near)]) ...
+        max([max(SEAT_yr_near) max(OIB_yr_near)])])
+    xlabel('Calendar Year')
+    ylabel('Annual SMB (mm w.e./a)')
+    legend([h1 h2], 'SEAT radar', 'OIB radar')
+    title(strcat(pts_names{i}, ' SMB time-series'))
+    set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
+        'PaperUnits', 'Inches', 'PaperSize', [8, 4])
+    hold off
+    
+    figi_nm = strcat(pts_names{i}, ' SMB');
+    export_fig(fig_i, fullfile(output_dir, figi_nm), '-pdf', '-q101', '-cmyk')
+    close(fig_i)
+    
+end
+
+%%
+
+% Select OIB members of L1 cross-section (out of place data causes a gap
+% that is addressed here) and flip data so that directions match those in
+% the maps
+OIB_L1idx = fliplr([5500:5500+3322-1 5500+4125-1:17036]);
+
+% Find nearest SEAT radar to each OIB location in L1
+SEAT_d = pdist2([OIB_E(OIB_L1idx)' OIB_N(OIB_L1idx)'], [seat_E' seat_N']);
+[SEAT_dist, SEAT_L1idx] = min(SEAT_d,[],2);
+
+% Logical index for SEAT members further than 100m to nearest OIB member
+nan_idx = SEAT_dist>500;
+
+% Distance along L1 cross-section
+L1_dist = [0 cumsum(hypot(diff(OIB_E(OIB_L1idx)), diff(OIB_N(OIB_L1idx))))];
+
+L1dist_SEAT = L1_dist;
+L1dist_SEAT(nan_idx) = NaN;
+
+% OIB trends along L1 which are significant at 95%
+oib_b = movmean(OIB_stats.b(OIB_L1idx), 20);
+oib_se = movmean(OIB_stats.se(OIB_L1idx), 20);
+seat_b = movmean(SEAT_stats.b(SEAT_L1idx), 20);
+seat_se = movmean(SEAT_stats.se(SEAT_L1idx), 20);
+
+% Indices for significance
+p_OIBidx = oib_b+1.96*oib_se < 0 | oib_b-1.96*oib_se > 0;
+p_SEATidx = seat_b+1.96*seat_se < 0 | oib_b-1.96*seat_se > 0;
+
+L1_trend = figure('Position', [0 0 1400 800]);
+hold on
+h1 = plot(L1_dist, oib_b, 'm', 'LineWidth', 1);
+plot(L1_dist, oib_b + 1.96*oib_se, 'm--', 'LineWidth', 0.5)
+plot(L1_dist, oib_b - 1.96*oib_se, 'm--', 'LineWidth', 0.5)
+h2 = plot(L1dist_SEAT, seat_b, 'r', 'LineWidth', 1);
+plot(L1dist_SEAT, seat_b + 1.96*seat_se, 'r--', 'LineWidth', 0.5)
+plot(L1dist_SEAT, seat_b - 1.96*seat_se, 'r--', 'LineWidth', 0.5)
+plot([min(L1_dist) max(L1_dist)], [0 0], 'k--', 'LineWidth', 0.5)
+ylim([-8.5 4])
+xlabel('Distance along cross section (m)')
+ylabel('Linear trend in SMB 1978-2008 (mm/a)')
+legend([h1 h2], 'OIB radar', 'SEAT radar')
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
+    'PaperUnits', 'Inches', 'PaperSize', [8, 4])
+hold off
+
+fig_nm = 'L1_trend';
+export_fig(L1_trend, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk')
+close(L1_trend)
+
+OIB_sig = sum(OIB_stats.p<0.05)/length(OIB_stats.p);
+SEAT_sig = sum(SEAT_stats.p<0.05)/length(SEAT_stats.p);
+ALL_sig = (sum(OIB_stats.p<0.05)+sum(SEAT_stats.p<0.05))/...
+    (length(OIB_stats.p)+length(SEAT_stats.p));
+
+%%
+
+% Select OIB members of L2 cross-section (out of place data causes gaps
+% that are addressed here)
+OIB_L2idx = [1:802 8822:9623 17037:18396 21570:length(OIB_E) 803:3000];
+
+% Find nearest SEAT radar to each OIB location in L1
+SEAT_d = pdist2([OIB_E(OIB_L2idx)' OIB_N(OIB_L2idx)'], [seat_E' seat_N']);
+[SEAT_dist, SEAT_L2idx] = min(SEAT_d,[],2);
+% [SEAT_L2idx, L2idx_log] = unique(SEAT_L1idx, 'stable'); % Want to change this to 'last' eventually
+% % See https://www.mathworks.com/matlabcentral/answers/56553-why-can-t-i-use-unique-with-stable-and-last
+% % for info on how to do this
+
+% Logical index for SEAT members further than 100m to nearest OIB member
+nan_idx = SEAT_dist>500;
+
+% Distance along L1 cross-section
+L2_dist = [0 cumsum(hypot(diff(OIB_E(OIB_L2idx)), diff(OIB_N(OIB_L2idx))))];
+
+L2dist_SEAT = L2_dist;
+L2dist_SEAT(nan_idx) = NaN;
+
+% OIB trends along L1 which are significant at 95%
+oib_b = movmean(OIB_stats.b(OIB_L2idx), 20);
+oib_se = movmean(OIB_stats.se(OIB_L2idx), 20);
+seat_b = movmean(SEAT_stats.b(SEAT_L2idx), 20);
+seat_se = movmean(SEAT_stats.se(SEAT_L2idx), 20);
+
+% Indices for significance
+p_OIBidx = oib_b+1.96*oib_se < 0 | oib_b-1.96*oib_se > 0;
+p_SEATidx = seat_b+1.96*seat_se < 0 | oib_b-1.96*seat_se > 0;
+
+L2_trend = figure('Position', [0 0 1400 800]);
+hold on
+h1 = plot(L2_dist, oib_b, 'm', 'LineWidth', 1);
+plot(L2_dist, oib_b + 1.96*oib_se, 'm--', 'LineWidth', 0.5)
+plot(L2_dist, oib_b - 1.96*oib_se, 'm--', 'LineWidth', 0.5)
+h2 = plot(L2dist_SEAT, seat_b, 'r', 'LineWidth', 1);
+plot(L2dist_SEAT, seat_b + 1.96*seat_se, 'r--', 'LineWidth', 0.5)
+plot(L2dist_SEAT, seat_b - 1.96*seat_se, 'r--', 'LineWidth', 0.5)
+plot([min(L2_dist) max(L2_dist)], [0 0], 'k--', 'LineWidth', 0.5)
+xlabel('Distance along cross section (m)')
+ylabel('Linear trend in SMB 1978-2008 (mm/a)')
+legend([h1 h2], 'OIB radar', 'SEAT radar')
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 8, 4], ...
+    'PaperUnits', 'Inches', 'PaperSize', [8, 4])
+hold off
+
+fig_nm = 'L2_trend';
+export_fig(L2_trend, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk')
+close(L2_trend)
+
+%% Main map of SMB trends
 
 % Add addon to generate custom color scale to path
 addon_folder = fullfile(addon_path, 'b2r');
 addpath(genpath(addon_folder))
 
-map_trend = figure('Position', [10 10 1400 800]);
+map_trend = figure('Position', [0 0 1400 800]);
 % title('SEAT radar SMB trends')
 hold on
-h1 = mapshow(basins, 'FaceAlpha', 0);
+% h1 = mapshow(basins, 'FaceAlpha', 0);
 h2 = scatter(SEAT_E, SEAT_N, 50, SEAT_stats.b, 'filled');
-% h2 = scatter(SEAT_E(SEAT_stats.p<=0.05), SEAT_N(SEAT_stats.p<=0.05), 50, ...
-%     SEAT_stats.b(SEAT_stats.p<=0.05), 'filled');
-h3 = scatter(SEAT_E(SEAT_stats.p<=0.05), SEAT_N(SEAT_stats.p<=0.05), 3, ...
-    'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
-    'MarkerEdgeAlpha', 0.25);
+% h3 = scatter(SEAT_E(SEAT_stats.p<=0.05), SEAT_N(SEAT_stats.p<=0.05), 3, ...
+%     'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
+%     'MarkerEdgeAlpha', 0.25);
 h4 = scatter(OIB_E, OIB_N, 50, OIB_stats.b, 'filled');
-% h4 = scatter(OIB_E(OIB_stats.p<=0.05), OIB_N(OIB_stats.p<=0.05), 50, ...
-%     OIB_stats.b(OIB_stats.p<=0.05), 'filled');
-h5 = scatter(OIB_E(OIB_stats.p<=0.05), OIB_N(OIB_stats.p<=0.05), 3, ...
-    'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
-    'MarkerEdgeAlpha', 0.25);
-h6 = scatter(cores.Easting, cores.Northing, 125, cores_beta, 'filled', ...
-    'MarkerEdgeColor', 'k');
-text(cores.Easting, cores.Northing, strcat(labels, '\rightarrow'), ...
-    'FontSize', 13, 'Interpreter', 'tex', 'HorizontalAlignment', 'right');
-colormap(b2r(-4, 2))
+% h5 = scatter(OIB_E(OIB_stats.p<=0.05), OIB_N(OIB_stats.p<=0.05), 3, ...
+%     'y', 'filled', 'MarkerFaceAlpha', 0.25, ...
+%     'MarkerEdgeAlpha', 0.25);
+h6 = scatter(cores.Easting(core_idx), cores.Northing(core_idx), 125, ...
+    cores_beta, 'filled', 'MarkerEdgeColor', 'k');
+text(cores.Easting(core_idx), cores.Northing(core_idx), ...
+    strcat(labels, '\rightarrow'), 'FontSize', 13, ...
+    'Interpreter', 'tex', 'HorizontalAlignment', 'right');
+text(OIB_E(OIB_L1idx(1)), OIB_N(OIB_L1idx(1)), "A", 'FontSize', 18, ...
+    'Color', 'k', 'VerticalAlignment', 'bottom', ...
+    'HorizontalAlignment', 'center')
+text(OIB_E(OIB_L1idx(end)), OIB_N(OIB_L1idx(end)), "A'", 'FontSize', 18, ...
+    'Color', 'k', 'VerticalAlignment', 'bottom', ...
+    'HorizontalAlignment', 'center')
+text(OIB_E(OIB_L2idx(1)), OIB_N(OIB_L2idx(1)), "B", 'FontSize', 18, ...
+    'Color', 'k', 'HorizontalAlignment', 'right')
+text(OIB_E(OIB_L2idx(end)), OIB_N(OIB_L2idx(end)), "B'", 'FontSize', 18, ...
+    'Color', 'k', 'VerticalAlignment', 'top', 'HorizontalAlignment', 'right')
+colormap(b2r(-6, 2))
 c0 = colorbar;
-c0.Label.String = ['Linear trend in annual SMB ' num2str(yr_start) '-' ...
+c0.Label.String = ['Annual SMB trend ' num2str(yr_start) '-' ...
     num2str(yr_end) ' (mm/a)'];
 c0.Label.FontSize = 18;
 graticuleps(-81:0.5:-77,-125:2:-105, 'c')
@@ -425,97 +556,11 @@ scalebarps
 box on
 mapzoomps('ne', 'insetsize', 0.30)
 set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
+set(gcf, 'Units', 'Inches', 'Position', [0, 0, 18, 9], ...
+    'PaperUnits', 'Inches', 'PaperSize', [18, 9])
 hold off
 
-map2_name = 'SMB_trend_map';
-export_fig(map_trend, fullfile(output_dir, map2_name), '-png');
+fig_nm = 'SMBmap_trend';
+export_fig(map_trend, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk')
 close(map_trend)
-
-%%
-
-% figure('Position', [10 10 1400 800])
-% h0 = image(Arth_E(1,:), (Arth_N(:,1))', Arth_accum, 'CDataMapping', 'scaled');
-% set(gca, 'Ydir', 'normal')
-% hold on
-% h1 = mapshow(basins, 'FaceAlpha', 0);
-% % h2 = scatter(SEAT_E, SEAT_N, 25, mean(cell2mat(mSEAT_SMB)), 'filled');
-% h3 = scatter(OIB_E, OIB_N, 25, mean(cell2mat(mOIB_SMB)), 'filled');
-% h4 = scatter(cores.Easting, cores.Northing, 100, nanmean(cores_SMB)', 'filled');
-% text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
-%     'FontSize', 13, 'Interpreter', 'tex');
-% c0 = colorbar;
-% c0.Label.String = ['Mean annual SMB ' num2str(yr_start) '-' ...
-%     num2str(yr_end) ' (mm/a)'];
-% c0.Label.FontSize = 18;
-% graticuleps(-81:0.5:-77,-125:2:-105, 'c')
-% xlim(Easting_lims)
-% ylim(Northing_lims)
-% scalebarps
-% box on
-% mapzoomps('ne', 'insetsize', 0.30)
-% % legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
-% %     'SEAT radar mean SMB', 'Location', 'northwest')
-% set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
-% title('OIB mean annual SMB')
-% hold off
-% 
-% 
-% figure('Position', [10 10 1400 800])
-% title('OIB radar SMB trends')
-% hold on
-% h1 = mapshow(basins, 'FaceAlpha', 0);
-% % h2 = scatter(SEAT_E, SEAT_N, 25, SEAT_beta, 'filled');
-% h3 = scatter(OIB_E, OIB_N, 25, OIB_stats.b, 'filled');
-% h4 = scatter(cores.Easting, cores.Northing, 100, cores_beta, 'filled');
-% text(cores.Easting, cores.Northing, strcat('\leftarrow', labels), ...
-%     'FontSize', 15, 'Interpreter', 'tex');
-% c0 = colorbar;
-% c0.Label.String = ['Linear trend in annual SMB ' num2str(yr_start) '-' ...
-%     num2str(yr_end) ' (mm/a)'];
-% c0.Label.FontSize = 18;
-% graticuleps(-81:0.5:-77,-125:2:-105, 'c')
-% xlim(Easting_lims)
-% ylim(Northing_lims)
-% caxis([-7 0])
-% scalebarps
-% box on
-% mapzoomps('ne', 'insetsize', 0.30)
-% % legend([h0 h3 h4], 'Arthern mean SMB', 'SEAT core mean SMB', ...
-% %     'SEAT radar mean SMB', 'Location', 'northwest')
-% set(gca, 'xtick', [], 'ytick', [], 'FontSize', 18)
-% hold off
-
-
-
-%%
-
-% SEAT_set = SEAT_E >= -1.05E6 & SEAT_E <= -1.03E6 & SEAT_N <= -4.638E5;
-% OIB_set = OIB_E >= -1.05E6 & OIB_E <= -1.03E6 & OIB_N <= -4.638E5;
-% SMB_S = SEAT_SMB(SEAT_set);
-% SMB_O = fliplr(OIB_SMB(OIB_set));
-% std_S = SEAT_std(SEAT_set);
-% std_O = fliplr(OIB_std(OIB_set));
-% yr_S = SEAT_yr(SEAT_set);
-% yr_O = fliplr(OIB_yr(OIB_set));
-% 
-% % figure
-% % hold on
-% % scatter(SEAT_E(SEAT_set), SEAT_N(SEAT_set), 25, ...
-% %     SEAT_beta(SEAT_set), 'filled')
-% % scatter(OIB_E(OIB_set), OIB_N(OIB_set), 25, OIB_beta(OIB_set), 'filled')
-% % hold off
-% 
-% i = randi(length(SMB_O));
-% figure
-% hold on
-% plot(yr_S{i}, movmean(SMB_S{i},5), 'r', 'LineWidth', 2)
-% plot(yr_S{i}, movmean(SMB_S{i},5) + movmean(std_S{i},5), 'r--')
-% plot(yr_S{i}, movmean(SMB_S{i},5) - movmean(std_S{i},5), 'r--')
-% plot(yr_O{i}, movmean(SMB_O{i},5), 'm', 'LineWidth', 2)
-% plot(yr_O{i}, movmean(SMB_O{i},5) + movmean(std_O{i},5), 'm--')
-% plot(yr_O{i}, movmean(SMB_O{i},5) - movmean(std_O{i},5), 'm--')
-% hold off
-
-%%
-
 

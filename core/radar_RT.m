@@ -38,7 +38,8 @@ core_res = 0.02;
 
 % Define the cutoff depth for radar traces and find index of crossover
 % depth
-cutoff = 25;
+% cutoff = 25;
+cutoff = 28;
 depth_bott = floor(min([min(radar.depth(end,:)) cutoff]));
 
 % Trim radar traces to cutoff depth and interpolate data to vertical scale
@@ -278,17 +279,15 @@ radar.likelihood = zeros(size(radar.data_smooth));
 err_out = [];
 for i = 1:size(layer_peaks, 2)
     
-    % Assign the 50% likelihood point based on median trace prominence and
-    % layer length
-%     P_50 = median(Proms{i})*min([8750 0.5*radar.dist(end)]);
-%     P_50 = median(Proms{i})*max([8750 0.25*radar.dist(end)]);
-    P_50 = median(Proms{i})*max([10000 0.25*radar.dist(end)]);
-    
-    % Assign min/max layer likelihoods, and calculate the logistic rate
-    % coefficient
-    Po = 0.05;
-    K = 1;
-    r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
+%     % Assign the 50% likelihood point based on median trace prominence and
+%     % layer length
+%     P_50 = median(Proms{i})*max([10000 0.25*radar.dist(end)]);
+%     
+%     % Assign min/max layer likelihoods, and calculate the logistic rate
+%     % coefficient
+%     Po = 0.05;
+%     K = 1;
+%     r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
     
     % Get layer prom-distance values and depths for layers in ith trace
     peaks_i = layer_peaks(:,i);
@@ -298,7 +297,11 @@ for i = 1:size(layer_peaks, 2)
     
     % Likelihood of layer representing a year based on a logistic function
     % with rate (r) calculated above
-    likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
+    r = -2.4333e-4; % [-3.18e-4 -1.55e-4]
+    k = 4.4323;     % [3.25 4.8]
+    
+    likelihood = 1./(1+exp(r*peaks_i + k));
+%     likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
     radar.likelihood(peaks_idx,i) = likelihood;
     
     % Assign MC simulation annual layer presence based on layer likelihood
@@ -333,4 +336,19 @@ end
 
 radar.ages = ages;
 
+
+% Clip depth-related variables to final cutoff depth
+cutoff = 25;
+cut_idx = min([(round(cutoff/core_res)+1) length(radar.depth)]);
+radar_new = struct('collect_date', radar.collect_date, 'Easting', ...
+    radar.Easting, 'Northing', radar.Northing, 'dist', radar.dist, ...
+    'depth', radar.depth(1:cut_idx), 'rho_coeff', radar.rho_coeff, ...
+    'rho_var', radar.rho_var, 'data_smooth', radar.data_smooth(1:cut_idx,:),...
+    'peaks', radar.peaks(1:cut_idx,:), 'groups', radar.groups(1:cut_idx,:),...
+    'likelihood', radar.likelihood(1:cut_idx,:), ...
+    'ages', radar.ages(1:cut_idx,:,:));
+if isfield(radar, 'elev')
+    radar_new.elev = radar.elev;
+end
+radar = radar_new;
 end
