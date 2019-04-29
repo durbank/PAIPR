@@ -1,33 +1,13 @@
+%%% THIS IS A MODIFIED VERSION OF radar_depth.m INTENDED SPECIFICALLY FOR
+%%% USE WITH THE OIB 2011 SNOW RADAR TRANSECT BETWEEN SEAT10-4 AND SEAT10-6
+
 % This function provides an estimated depth scale for radar images based
 % off of depth-density relations from nearby firn cores
 
-%%% NEED TO REVAMP HOW TO CALCULATE COMPOSITE CORE AND DENSITIES (WHOLE
-%%% TRANSECTS COVER TOO MUCH SPACE TO USE A SINGLE COMPOSITE FOR THE ENTIRE
-%%% FILE
-
-function [radar] = radar_depth(radar_file, cores)
-
+function [radar] = OIB_depth(radar, cores)
 % Firn core data must be provided in the proper format (i.e. as outputted
 % by "import_cores.m"
 
-% Determine whether the radar dataset is from OIB or from SEAT records
-if contains(radar_file, '.nc')
-    source = 'OIB';
-elseif contains(radar_file, '.mat')
-    source = 'SEAT';
-else
-    disp('Check radar_file source: unrecognized format')
-end
-
-% Import and format data according to whether it is OIB or SEAT
-switch source
-    case 'OIB'
-        % Import, clean, and reformat radar data
-        radar = OIB_import(radar_file);
-    case 'SEAT'
-        % Import, clean, and reformat radar data
-        radar = radar_clean(radar_file);
-end
 
 % Indices for composite core locations (every 10 km along echogram)
 comp_idx = 1:round(10000/mean(diff(radar.dist))):size(radar.data_out, 2);

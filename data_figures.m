@@ -10,7 +10,7 @@ switch PC_true
         addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
-        addon_path = '/home/durbank/MATLAB/Addons/';
+        addon_path = '/home/durbank/MATLAB/Add-Ons/';
 end
 
 % Addons needed for analysis
@@ -21,7 +21,11 @@ addpath(genpath(addon_folder))
 % Add OIB scripts to path
 addpath cresis-L1B-matlab-readers/
 
-[cores] = import_cores(strcat(data_path, 'ice-cores/SEAT_cores/DGK_core_data.xlsx'), 100);
+% Load core data from file (data used was previously generated using
+% import_cores.m)
+core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
+cores = load(core_file);
+
 [SEAT10_GPR] = concat_loc(strcat(data_path,'radar/SEAT_Traverses/',...
     'SEAT2010Kuband/RawSEAT2010/'), 'layers_*');
 [SEAT11_GPR] = concat_loc(strcat(data_path, 'radar/SEAT_Traverses/',...

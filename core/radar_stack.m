@@ -10,7 +10,7 @@ end
 stack_idx = [unique(stack_idx) length(mdata.dist)];
 
 
-
+% mdata.data_out = movmean(mdata.data_out, 9, 2);
 
 
 % Calculate stack bin sizes based on original data lateral resolution and
@@ -69,5 +69,14 @@ else
     mdata_stack = struct('collect_date', mdata.collect_date, 'Easting', E_stack,...
         'Northing', N_stack, 'dist', dist_stack,  'depth', depth_stack, ...
         'data_stack', data_stack, 'rho_coeff', rho_stack, 'rho_var', var_stack);
+end
+
+% Check for elevation data, and if present, stack similarly as other data
+if isfield(mdata, 'elev')
+    elev_stack = zeros(1, length(stack_idx)-1);
+    for i = 1:length(stack_idx)-1
+        elev_stack(i) = mean(mdata.elev(stack_idx(i):stack_idx(i+1)));
+    end
+    mdata_stack.elev = elev_stack;
 end
 end

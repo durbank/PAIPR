@@ -1,10 +1,31 @@
 % Function to import and format Operation IceBridge data for use with
 % accum-radar functions
 
-function [mdata] = OIB_import(file)
+% Varargin defines the starting and ending trace indices to include in the
+% data import. These should numeric scalars, with values between 1 and
+% the total length of the radargram file to import. If both starting and
+% ending indices are prescribed, varargin{2} should be greater than
+% varargin{1}
+
+function [mdata] = OIB_import(file, varargin)
 
 % Load data as a .mat structure
 mdata = load_L1B(file);
+
+% Determine trace starting and ending indices from varargin variable
+if isempty(varargin)
+    start_idx = 1;
+    end_idx = length(mdata.lat);
+elseif length(varargin) == 1
+    start_idx = varargin{1};
+    end_idx = length(mdata.lat);
+elseif isempty(varargin{1})
+    start_idx = 1;
+    end_idx = varargin{2};
+else
+    start_idx = varargin{1};
+    end_idx = varargin{2};
+end
 
 %% Elevation correction
 param = [];
@@ -30,12 +51,12 @@ data_out = data_out(1:data_depth_min,:);
 TWTT = TWTT(1:data_depth_min,:);
 TWTT = TWTT(:,1) - TWTT(1,1);
 
-%% Cut off data below ~25 m depth
+%% Cut off data below ~30 m depth
 
 % Calculate velocity (assuming constant relative permittivity)
 c = 2.9979E8;
 u = c/sqrt(2.25);
-depth_cut = 25;     % Approximate cut-off depth (data below this depth unreliable)
+depth_cut = 30;     % Approximate cut-off depth (data below this depth unreliable)
 idx_end = ceil((depth_cut/u)/(0.5*TWTT(2)));
 
 % Truncate data at this cut off point
@@ -51,6 +72,14 @@ time_trace = 0.5*mode(diff(TWTT));  % time_trace is one-way travel time
 data_out = 10*log10(data_out);
 
 %% Modified code from 'radar_clean.m' (eventually want to combine this into single funtion)
+
+% Select data based on prescribed starting and ending indices
+lat = lat(start_idx:end_idx);
+lon = lon(start_idx:end_idx);
+time_gps = time_gps(start_idx:end_idx);
+time_trace = mdata.time_trace(start_idx:end_idx);
+mdata.data_out = mdata.data_out(:,start_idx:end_idx);
+mdata.arr_layers = mdata.arr_layers(:,start_idx:end_idx);
 
 % Remove data without valid location values (lat/lon)
 loc_idx = logical(lat);
@@ -100,7 +129,10 @@ collect_date = year(collect_date) + day(collect_date, 'dayofyear')/365;
 
 % Create new mdata structure from requisite variables
 mdata = struct('lat', lat, 'lon', lon, 'Northing', Northing, 'Easting', ...
-    Easting,  'dist', d, 'elev', elev, 'data_out', data_out, 'TWTT', ...
-    TWTT, 'time_trace', time_trace, 'collect_date', collect_date);
+    Easting,  'dist', d, 'elev', elev, 'data_out', data_out,...
+    'time_trace', time_trace, 'collect_date', collect_date);
+% mdata = struct('lat', lat, 'lon', lon, 'Northing', Northing, 'Easting', ...
+%     Easting,  'dist', d, 'elev', elev, 'data_out', data_out, 'TWTT', ...
+%     TWTT, 'time_trace', time_trace, 'collect_date', collect_date);
 
 end

@@ -1,7 +1,7 @@
-function [radar] = radar_age(file, cores, Ndraw)
+function [radar] = OIB_age(radar, cores, Ndraw)
 
 % Conversion to depth
-[radar] = radar_depth(file, cores);
+[radar] = OIB_depth(radar, cores);
 
 % Determine if there are data break points (large gaps in data that would
 % necessitate data processing over segments of the whole data)
