@@ -7,7 +7,8 @@
 % Data inputs should be an m x n matrix, where m is the number of years in
 % the time series and n is the number of Monte Carlo simulations
 
-function [accum_table] = accum_distGamma(accum_data, accum_yr)
+function [accum_table] = accum_distGamma(Easting, Northing, elevation, ...
+    accum_data, accum_yr)
 
 gamma_params = zeros(size(accum_data,1), 6);
 
@@ -26,15 +27,18 @@ for i = 1:size(accum_data, 1)
     
 end
 
-accum_table = table(accum_yr, median(accum_data, 2), gamma_params(:,1), ...
-    gamma_params(:,4), gamma_params(:,2:3), gamma_params(:,5:6), 'VariableNames', ...
-    {'Year', 'Median', 'gamma_shape', 'gamma_scale', 'Shape_CI95', 'Scale_CI95'});
+% Converts data to a long form space-time table
+accum_table = table(repmat(Northing, size(gamma_params,1), 1), ...
+    repmat(Easting, size(gamma_params,1), 1), ...
+    repmat(elevation, size(gamma_params,1), 1),...
+    accum_yr, median(accum_data, 2), gamma_params(:,1), gamma_params(:,4), ...
+    gamma_params(:,2:3), gamma_params(:,5:6), 'VariableNames', {'Easting', ...
+    'Northing', 'elev', 'Year', 'Median', 'gamma_shape', 'gamma_scale', ...
+    'Shape_CI95', 'Scale_CI95'});
     
 
 
 end
-
-
 
 
 
