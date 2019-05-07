@@ -10,11 +10,14 @@
 function [accum_table] = accum_distGamma(latitude, longitude, elevation, ...
     accum_data, accum_yr)
 
+accum_data(accum_data <= 0) = NaN;
+
 gamma_params = zeros(size(accum_data,1), 6);
 
 for i = 1:size(accum_data, 1)
     
     data_i = accum_data(i,:)';
+    data_i = data_i(~isnan(data_i));
     
     [phat, pci] = gamfit(data_i);
     % pd_gamma = fitdist(data_i, 'Gamma');
