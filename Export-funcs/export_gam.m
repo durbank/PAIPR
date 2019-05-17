@@ -12,7 +12,8 @@ output_dir = uigetdir('', 'Select directory to save converted tables');
 files = dir(fullfile(input_dir, '*.mat'));
 
 % Add Antarctic Mapping Toolbox (AMT) to path
-addon_path = '/home/durbank/MATLAB/Add-Ons/';
+addon_path = 'C:\Users\u1046484\Documents\MATLAB\Addons';
+% addon_path = '/home/durbank/MATLAB/Add-Ons/';
 addon_folder = fullfile(addon_path, 'AntarcticMappingTools_v5.03/');
 addpath(genpath(addon_folder))
 
