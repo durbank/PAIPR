@@ -22,6 +22,7 @@ for i = 1:length(core_names)
     
 end
 
-var_param = sum(SWM.*var_coeff, 2);
+var_param = sum(SWM(1,:).*var_coeff, 2);
+% var_param = sum(SWM.*var_coeff, 2);
 
 end
