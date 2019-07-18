@@ -9,12 +9,7 @@ range = 500000;
 % Create array for radar location
 loc_radar = [Easting, Northing];
 
-% % Easting/Northing of the midpoint of the radar trace
-% loc_radar = [radar.Easting(round(numel(radar.Easting)/2)) ...
-%     radar.Northing(round(numel(radar.Northing)/2))];
-
-% Calculate euclidean distance between cores and midpoint of the radar
-% transect
+% Calculate euclidean distance between cores and the current radar trace
 loc_core = [(cores.Easting)' (cores.Northing)'];
 loc = [loc_radar; loc_core];
 mDist = squareform(pdist(loc, 'euclidean'));
@@ -30,25 +25,39 @@ cores_all = cores_fd_nm(core_log);
 cores_SWM = cores_all(core_idx);
 vDist_SWM = vDist(core_idx);
 
-% Set depth of synthetic core to depth of the shallowest core used in
-% spatial weighting
+% % Set depth of synthetic core to depth of the shallowest core used in
+% % spatial weighting
+% max_depth = zeros(1, numel(cores_SWM));
+% for i = 1:numel(cores_SWM)
+%     max_depth(i) = max(cores.(cores_SWM{i}).depth);
+% end
+% depth_core = (0:0.02:min(max_depth))';
+
+% Set depth of synthetic core to depth of deepest core used in weighting
 max_depth = zeros(1, numel(cores_SWM));
+idx_max = zeros(1, length(cores_SWM));
 for i = 1:numel(cores_SWM)
     max_depth(i) = max(cores.(cores_SWM{i}).depth);
+    idx_max(i) = length(cores.(cores_SWM{i}).depth);
 end
-depth_core = (0:0.02:min(max_depth))';
+depth_core = (0:0.02:max(max_depth))';
 
-% % Calculate spatial weight matrix based on squared exponential kernel
-% % using hyperparamters 'hp'
-% hp = [1 range/exp(1)];
-% cov = hp(1)^2*exp((-1/2)*vDist_SWM.^2/hp(2)^2);
-% cov = cov.^2;
-% SWM = cov/sum(cov);
+
+
+    
 
 % Calculate a spatial weighting matrix based on exponential inverse 
 % distance (currently b = 2)
 IDW = 1./vDist_SWM.^2;
 SWM = IDW/sum(IDW);
+
+
+IDW = zeros(length(depth_core), length(cores_SWM));
+for i = 1:length(cores_SWM)  
+    IDW(1:idx_max(i),i) = 1/vDist_SWM(i)^2;
+end
+
+SWM = IDW./sum(IDW,2);
 
 % Generate a spatially weighted model of variance for the depth-density
 % profile at the radar location
@@ -62,13 +71,17 @@ dDs = zeros(numel(depth_core), numel(cores_SWM));
 d18Os = zeros(numel(depth_core), numel(cores_SWM));
 for i = 1:numel(cores_SWM)
     age_temp = cores.(cores_SWM{i}).age;
-    ages(:,i) = age_temp(1:numel(depth_core));
+    ages(1:length(age_temp),i) = age_temp;
+%     ages(:,i) = age_temp(1:numel(depth_core));
     rho_temp = cores.(cores_SWM{i}).rho;
-    rhos(:,i) = rho_temp(1:numel(depth_core));
+    rhos(1:length(rho_temp),i) = rho_temp;
+%     rhos(:,i) = rho_temp(1:numel(depth_core));
     dD_temp = cores.(cores_SWM{i}).dD;
-    dDs(:,i) = dD_temp(1:numel(depth_core));
+    dDs(1:length(dD_temp),i) = dD_temp;
+%     dDs(:,i) = dD_temp(1:numel(depth_core));
     d18O_temp = cores.(cores_SWM{i}).d18O;
-    d18Os(:,i) = d18O_temp(1:numel(depth_core));
+    d18Os(1:length(d18O_temp),i) = d18O_temp;
+%     d18Os(:,i) = d18O_temp(1:numel(depth_core));
 end
 core_composite = struct('depth', depth_core, 'age', sum(SWM.*ages, 2),...
     'rho', sum(SWM.*rhos, 2), 'rho_var', rho_var_coeff, 'dD', sum(SWM.*dDs, 2), ...
