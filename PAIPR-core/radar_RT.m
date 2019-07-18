@@ -39,7 +39,7 @@ core_res = 0.02;
 % Define the cutoff depth for radar traces and find index of crossover
 % depth
 % cutoff = 25;
-cutoff = 28;
+cutoff = 30;
 depth_bott = floor(min([min(radar.depth(end,:)) cutoff]));
 
 % Trim radar traces to cutoff depth and interpolate data to vertical scale
@@ -279,16 +279,6 @@ radar.likelihood = zeros(size(radar.data_smooth));
 err_out = [];
 for i = 1:size(layer_peaks, 2)
     
-%     % Assign the 50% likelihood point based on median trace prominence and
-%     % layer length
-%     P_50 = median(Proms{i})*max([10000 0.25*radar.dist(end)]);
-%     
-%     % Assign min/max layer likelihoods, and calculate the logistic rate
-%     % coefficient
-%     Po = 0.05;
-%     K = 1;
-%     r = log((K*Po/0.50-Po)/(K-Po))/-P_50;
-    
     % Get layer prom-distance values and depths for layers in ith trace
     peaks_i = layer_peaks(:,i);
     peaks_idx = peaks_i>0;
@@ -301,7 +291,6 @@ for i = 1:size(layer_peaks, 2)
     k = 4.4323;     % [3.25 4.8]
     
     likelihood = 1./(1+exp(r*peaks_i + k));
-%     likelihood = K*Po./(Po + (K-Po)*exp(-r*peaks_i));
     radar.likelihood(peaks_idx,i) = likelihood;
     
     % Assign MC simulation annual layer presence based on layer likelihood
@@ -310,12 +299,7 @@ for i = 1:size(layer_peaks, 2)
     for j = 1:length(depths_i)
         R = rand(Ndraw, 1) <= likelihood(j);
         yr_idx(j,:) = R;
-    end
-
-%     yr_idx = zeros(length(depths_i), Ndraw);
-%     for j = 1:length(depths_i)
-%         yr_idx(j,:) = likelihood(j) >= 0.5;
-%     end    
+    end 
 
     for j = 1:Ndraw
         depths_j = [0; depths_i(logical(yr_idx(:,j)))];
