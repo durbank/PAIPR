@@ -21,27 +21,34 @@ for i = 1:length(comp_idx)
         radar.Northing(comp_idx(i)), cores);
     rho_var(:,i) = core_composite.rho_var;
 
-    
-    
+    % Find the index of the transition depth in the composite core
     rho_ice = 0.917;
-    cutoff = 401;
-    X = core_composite.depth;
-    Y = log(core_composite.rho./(rho_ice-core_composite.rho));
+    rho_smooth = smoothdata(core_composite.rho, 'gaussian');
+    cutoff = find(rho_smooth >= 0.55, 1, 'first');
     
-    p0 = polyfit(X(1:cutoff+50), Y(1:cutoff+50), 1);
-    p1 = polyfit(X(cutoff-50:end), Y(cutoff-50:end), 1);
+    % Cut off composite core rho data to 17 m (depth with high core
+    % coverage)
+    depth_cut = round(17/0.02);
+    
+    % Fit linear models to the two sections of log-transformed rho data
+    X = core_composite.depth(1:depth_cut);
+    Y = log(core_composite.rho(1:depth_cut)./(rho_ice-core_composite.rho(1:depth_cut)));
+    p0 = polyfit(X(1:cutoff+25), Y(1:cutoff+25), 1);
+    p1 = polyfit(X(cutoff-25:end), Y(cutoff-25:end), 1);
+    
+    % Determine fitted line cross-over index (to ensure smooth transition)
     x_idx = round((p0(2)-p1(2))/(p1(1)-p0(1))/0.02);
     
+    % Store rho coefficients for later use
     rho_coeff(:,i) = [x_idx; p0'; p1'];
     
+    % Generate arrays of depth and modeled rho from 0:150 m
     depth0 = 0:0.02:core_composite.depth(x_idx);
     depth1 = core_composite.depth(x_idx+1):0.02:150;
     rho0 = (exp(p0(1)*depth0+p0(2))./(1+exp(p0(1)*depth0+p0(2))))*rho_ice;
     rho1 = (exp(p1(1)*depth1+p1(2))./(1+exp(p1(1)*depth1+p1(2))))*rho_ice;
-    
     depth_mod = [depth0 depth1]';
     rho_mod = [rho0 rho1]';
-    
     
 %     % Diagnostic figures for density modeling
 %     fig = figure;
