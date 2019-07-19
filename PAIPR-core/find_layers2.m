@@ -55,6 +55,7 @@ while search_new == true
     layer_i = matrix_idx(peak_group==group_num);
     search_R = true;
     
+    threshold = 3.5;
     
     while search_R == true
         
@@ -110,9 +111,20 @@ while search_new == true
         
         % Calculate distance between peaks in the local search window and
         % the estimated layer streamline
-        dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
-            (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
-            (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
+        w_x = 1/std(cols_stream);
+        w_y = 1/(0.5*width_i);
+        if length(mag_i) <= 3
+            w_m = 0;
+        else
+            w_m = 1/std(mag_i);
+        end
+        dist_n = sqrt(w_x*(data_local(:,2)-(data_stream(:,2))').^2 + ...
+            w_y*(data_local(:,1)-(data_stream(:,1))').^2 + ...
+            w_m*repmat(mag_local-mag_i, 1, size(data_stream,1)).^2);
+        
+%         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
+%             (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
+%             (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
 %         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
 %             (0.5*width_i)).^2 + ...
 %             ((data_local(:,2)-(data_stream(:,2))')./(50/horz_res)).^2 + ...
@@ -120,7 +132,7 @@ while search_new == true
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-        threshold = 3;
+%         threshold = 3;
 %         threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
@@ -207,9 +219,20 @@ while search_new == true
         
         % Calculate distance between peaks in the local search window and
         % the estimated layer streamline
-        dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
-            (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
-            (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
+        w_x = 1/std(cols_stream);
+        w_y = 1/(0.5*width_i);
+        if length(mag_i) <= 3
+            w_m = 0;
+        else
+            w_m = 1/std(mag_i);
+        end
+        dist_n = sqrt(w_x*(data_local(:,2)-(data_stream(:,2))').^2 + ...
+            w_y*(data_local(:,1)-(data_stream(:,1))').^2 + ...
+            w_m*repmat(mag_local-mag_i, 1, size(data_stream,1)).^2);
+        
+%         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
+%             (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
+%             (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
 %         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
 %             (0.5*width_i)).^2 + ...
 %             ((data_local(:,2)-(data_stream(:,2))')./(50/horz_res)).^2 + ...
@@ -217,7 +240,7 @@ while search_new == true
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-        threshold = 3;
+%         threshold = 3;
 %         threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
@@ -284,14 +307,25 @@ while search_new == true
         
         % Calculate distance between jth layer member and peaks within the
         % local search window
-        dist_j = sqrt(((data_local(:,1)-row_mean(j))./(0.5*width_j)).^2 + ...
-            ((data_local(:,2)-col(j))./(50/horz_res)).^2 + ...
-            (0.5*(mag_local-mag_j)).^2);
+        w_x = 1/std(col_local);
+        w_y = 1/(0.5*width_j);
+        if length(mag_j) <= 3
+            w_m = 0;
+        else
+            w_m = 1/std(mag_j);
+        end
+        dist_j = sqrt(w_x*(data_local(:,2)-col(j)).^2 + ...
+            w_y*(data_local(:,1)-row_mean(j)).^2 + ...
+            w_m*(mag_local-mag_j).^2);
+        
+%         dist_j = sqrt(((data_local(:,1)-row_mean(j))./(0.5*width_j)).^2 + ...
+%             ((data_local(:,2)-col(j))./(50/horz_res)).^2 + ...
+%             (0.5*(mag_local-mag_j)).^2);
 %         dist_j = sqrt(((data_local(:,1)-row_mean(j))/(0.5*width_j)).^2 + ...
 %             (data_local(:,2)-col(j)).^2 + (0.5*(mag_local - mag_j)).^2);
         
         % Set distance threshold
-        threshold = 3;
+%         threshold = 3;
 %         threshold = 2.5;
         
         % Assign all peaks within tolerance to the current layer group and
