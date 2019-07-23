@@ -6,8 +6,8 @@
 PC_true = ispc;
 switch PC_true
     case true
-%         computer = 'work';
-        computer = input('Current PC: ');
+        computer = 'work';
+%         computer = input('Current PC: ');
         switch computer
             case 'work'
                 data_path = 'E:/Research/Antarctica/Data/';
@@ -51,6 +51,10 @@ radar_dir = uigetdir(data_path, ...
 %     'SEAT10_4toSEAT10_6');
 % radar_dir = fullfile(data_path, 'IceBridge/SEAT10_4to10_6/2011_SNO');
 
+% Define path to output directory of where to store results
+output_dir = uigetdir(data_path, ...
+    "Select folder to store output .mat results files");
+
 %%
 
 % Find the breakpoints for radar processing, and divide data into
@@ -74,12 +78,12 @@ end
 % Only keep data segments of sufficient length
 radar_ALL = radar_ALL(keep_idx);
 
-% Check for existence of directory 'SMB_results' in data folder, and create
-% one if missing
-output_dir = 'SMB_results';
-if ~exist(fullfile(radar_dir, output_dir), 'dir')
-    mkdir(fullfile(radar_dir, output_dir));
-end
+% % Check for existence of directory 'SMB_results' in data folder, and create
+% % one if missing
+% output_dir = 'SMB_results';
+% if ~exist(fullfile(radar_dir, output_dir), 'dir')
+%     mkdir(fullfile(radar_dir, output_dir));
+% end
 
 % Parellel for loop to process all data segments
 parfor i = 1:length(radar_ALL)
@@ -127,7 +131,7 @@ parfor i = 1:length(radar_ALL)
     
     % Generate file names and paths under which to save data
     filename = sprintf('%s%d%s','radar_out',i, '.mat');
-    output = fullfile(radar_dir, output_dir, filename);
+    output = fullfile(output_dir, filename);
     
     % Save output structures to disk
     [save_success] = parsave(radar, output)
