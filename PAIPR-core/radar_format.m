@@ -20,10 +20,11 @@ end
 
 %%
 
-% Preallocate arrays for continuous lat/lon positions for all data in
+% Preallocate arrays for continuous lat/lon/time positions for all data in
 % directory
 lat = [];
 lon = [];
+time = [];
 
 % Preallocate array for the radargram length (in data bins) for each
 % data file in directory
@@ -40,6 +41,7 @@ switch format
             file_length(i) = length(data_i.lat);
             lat = [lat data_i.lat];
             lon = [lon data_i.lon];
+%             time = [time data_i.time_gps];
         end
         
     case 'NetCDF'
@@ -49,11 +51,20 @@ switch format
         for i = 1:length(files)
             lat_i = ncread(fullfile(files(i).folder, files(i).name), 'lat');
             lon_i = ncread(fullfile(files(i).folder, files(i).name), 'lon');
+            time_i = ncread(fullfile(files(i).folder, files(i).name), 'time');
             file_length(i) = length(lat_i);
             lat = [lat lat_i'];
             lon = [lon lon_i'];
+            time = [time time_i'];
         end
         
+end
+
+% Arrange lat/lon data in ascending order of collection time
+if ~isempty(time)
+    [~,sort_idx] = sort(time, 'ascend');
+    lat = lat(sort_idx);
+    lon = lon(sort_idx);
 end
 
 % Calculate the cummulative radargram length (in data bins) for the data
@@ -222,7 +233,7 @@ for i = 1:size(files_i,1)
         'Northing', 'dist', 'data_out', 'time_trace'};
 %     fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', 'Northing',...
 %         'dist', 'data_out', 'arr_layers', 'time_trace'};
-    
+
     % Preallocate logical array for field names to include
     fld_include = zeros(length(fld_names),1);
     
