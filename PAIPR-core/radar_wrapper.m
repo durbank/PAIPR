@@ -134,6 +134,45 @@ parfor i = 1:length(radar_ALL)
     output = fullfile(output_dir, filename);
     
     % Save output structures to disk
-    [save_success] = parsave(radar, output)
+    [save_success1] = parsave(radar, output)
+    
+    %% Output overlapping data for comparisons of neighboring echograms
+    
+    % Check for existence of directory for clipped results in output_dir,
+    % and create it if it does not exist
+    clip_dir = "result_clips";
+    if ~exist(fullfile(output_dir, clip_dir), 'dir')
+        mkdir(fullfile(output_dir, "result_clips"));
+    end
+    
+    % Keep relevant clipped variables from start of echogram for comparions 
+    % of overlapping results
+    clip_start = struct('Easting', radar_tmp.Easting(1:2*clip), ...
+        'Northing', radar_tmp.Northing(1:2*clip), ...
+        'groups', radar_tmp.groups(:,1:2*clip),...
+        'likelihood', radar_tmp.likelihood(:,1:2*clip), ...
+        'depth',radar_tmp.depth, 'ages',radar_tmp.ages(:,1:2*clip,:));
+    clip_start.SMB_yr = radar_tmp.SMB_yr(1:2*clip);
+    clip_start.SMB = radar_tmp.SMB(1:2*clip);
+    
+    % Generate file names/paths for starting clip output and save
+    fn_start = sprintf('%s%d%s','clip_start',i, '.mat');
+    start_path = fullfile(output_dir, clip_dir, fn_start);
+    [save_success2] = parsave(clip_start, start_path)
+    
+    % Keep relevant clipped variables from end of echogram for comparions 
+    % of overlapping results
+    clip_end = struct('Easting', radar_tmp.Easting(end-2*clip+1:end), ...
+        'Northing', radar_tmp.Northing(end-2*clip+1:end), ...
+        'groups', radar_tmp.groups(:,end-2*clip+1:end),...
+        'likelihood', radar_tmp.likelihood(:,end-2*clip+1:end), ...
+        'depth',radar_tmp.depth, 'ages',radar_tmp.ages(:,end-2*clip+1:end,:));
+    clip_end.SMB_yr = radar_tmp.SMB_yr(end-2*clip+1:end);
+    clip_end.SMB = radar_tmp.SMB(end-2*clip+1:end);
+    
+    % Generate file names/paths for end clip output and save
+    fn_end = sprintf('%s%d%s','clip_end',i, '.mat');
+    end_path = fullfile(output_dir, clip_dir, fn_end);
+    [save_success3] = parsave(clip_end, end_path)
     
 end

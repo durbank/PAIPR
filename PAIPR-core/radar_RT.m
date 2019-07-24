@@ -70,7 +70,10 @@ end
 radar.depth = (0:core_res:depth_bott)';
 
 % Smooth the laterally averaged radar traces with depth based on a 3rd
-% order Savitzky-Golay filter with a window of 9 frames (~20 m)
+% order Savitzky-Golay filter with a window of 9 frames (~20 cm)
+% radar.data_smooth = radarZ_interp;
+% radar.data_smooth = smoothdata(radarZ_interp,'movmean',7); 
+% radar.data_smooth = sgolayfilt(radarZ_interp, 3, 7);
 radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
 % Clear unnecessary variables
