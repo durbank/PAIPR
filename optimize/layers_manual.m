@@ -47,19 +47,31 @@ horz_res = 25;
 
 %%
 
-% Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_6';
+% % Name of SEAT core site to generate training data/perform regression
+% name = 'SEAT10_6';
+% 
+% % Load relevant radar data (previously generated using the above section)
+% radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
+%     strcat('layers_', name, '_opt.mat')));
+% 
+% % Load manually traced layers for current SEAT core site (generated using
+% % 'draw_manual.m')
+% tmp = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
+%     strcat('manual_', name, '.mat')));
+% man_layers = tmp.man_all;
 
-% Load relevant radar data (previously generated using the above section)
-radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
-    strcat('layers_', name, '_opt.mat')));
+% Select directory containing PAIPR-results and manual layers (picked using
+% the `draw_manual.m` file)
+input_dir = uigetdir(fullfile(data_path, "PAIPR-results/v-WIP", ...
+    "TGRS_2019_edits_v1/manual_layers"), ...
+    "Select directory containing input files");
 
-% Load manually traced layers for current SEAT core site (generated using
-% 'draw_manual.m')
-tmp = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
-    strcat('manual_', name, '.mat')));
+% Load PAIPR radar data
+radar = load(fullfile(input_dir, "PAIPR_output"));
+
+% Load manually picked layer indices for above radar echogram
+tmp = load(fullfile(input_dir, "manual_layers"));
 man_layers = tmp.man_all;
-
 
 %%
 
@@ -133,7 +145,7 @@ for i = 1:length(layers)
     % layer
     if SSE_min <= 5
         
-        % Remove manual layer neartest to ith auto layer from future
+        % Remove manual layer nearest to ith auto layer from future
         % match searches
         man_search(SSE_idx) = [];
         

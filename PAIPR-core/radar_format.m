@@ -230,7 +230,7 @@ for i = 1:size(files_i,1)
     % List of desired field names to search for and include in radar
     % processing
     fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', ...
-        'Northing', 'dist', 'data_out', 'time_trace'};
+        'Northing', 'time_gps', 'dist', 'data_out', 'time_trace'};
 %     fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', 'Northing',...
 %         'dist', 'data_out', 'arr_layers', 'time_trace'};
 

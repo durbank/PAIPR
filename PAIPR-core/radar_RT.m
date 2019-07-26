@@ -182,10 +182,10 @@ for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
     
     % Prominence threshold for peaks
-    minProm = 0.50;
+    minProm = 0.75;
     
     % Min distance between peaks (in meters)
-    minDist = 0.08;
+    minDist = 0.04;
     
     % Find peak statistics in each trace based on criteria
     [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...

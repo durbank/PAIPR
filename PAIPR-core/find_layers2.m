@@ -55,7 +55,7 @@ while search_new == true
     layer_i = matrix_idx(peak_group==group_num);
     search_R = true;
     
-    threshold = 3.5;
+    threshold = 3;
     
     while search_R == true
         
