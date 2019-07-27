@@ -182,15 +182,15 @@ for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
     
     % Prominence threshold for peaks
-    minProm = 0.75;
+    minProm = 0.50;
     
     % Min distance between peaks (in meters)
-    minDist = 0.04;
+    minDist = 0.08;
     
     % Find peak statistics in each trace based on criteria
     [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...
         'MinPeakProminence', minProm, ...
-        'MinPeakDistance', minDist/core_res, 'WidthReference', 'halfheight');
+        'MinPeakDistance', minDist/core_res, 'WidthReference', 'halfprom');
 
     % Add peak prominence and width values to relevent matrices
     peaks_raw(peaks_idx_i,i) = Prom_i;
@@ -208,7 +208,7 @@ end
 
 % Find continuous layers within radargram based on peaks and layer stream
 % field
-[peak_group, layers] = find_layers2(peaks_raw, peak_width, ...
+[~, layers] = find_layers2(peaks_raw, peak_width, ...
     grad_smooth, core_res, horz_res);
 
 % Preallocate arrays for the matrix indices of members of each layer
@@ -290,8 +290,10 @@ for i = 1:size(layer_peaks, 2)
     
     % Likelihood of layer representing a year based on a logistic function
     % with rate (r) calculated above
-    r = -2.4333e-4; % [-3.18e-4 -1.55e-4]
-    k = 4.4323;     % [3.25 4.8]
+%     r = -2.4333e-4; % [-3.18e-4 -1.55e-4]
+%     k = 4.4323;     % [3.25 4.8]
+    r = -2e-4;
+    k = 3;
     
     likelihood = 1./(1+exp(r*peaks_i + k));
     radar.likelihood(peaks_idx,i) = likelihood;
