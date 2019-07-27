@@ -6,19 +6,8 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'work';
-        %         computer = input('Current PC: ');
-        switch computer
-            case 'work'
-                data_path = 'E:/Research/Antarctica/Data/';
-                addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
-                
-            case 'laptop'
-                %                 data_path = 'C:/Users/durba/Documents/Research/Antarctica/Data/';
-                data_path = 'F:/Research/Antarctica/Data/';
-                addon_path = 'C:/Users/durba/Documents/MATLAB/Addons/';
-        end
-        
+        data_path = 'E:/Research/Antarctica/Data/';
+        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
         addon_path = '/home/durbank/MATLAB/Add-Ons/';
@@ -83,16 +72,17 @@ Ndraw = 100;
 
 %% 
 
-% Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_6';
-
 % Load relevant radar data (previously generated using the above section)
-radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
-    strcat('layers_', name, '.mat')));
+% radar_file = fullfile(data_path, 'IceBridge/manual_layers', name, ...
+%     strcat('layers_', name, '.mat'));
+[r_file, r_path] = uigetfile(data_path,...
+    "Select radar file to use in manual picking");
+radar_file = fullfile(r_path, r_file);
+radar = load(radar_file);
 
-guides = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
-    strcat('manual_', name, '.mat')));
-guides = guides.man_all;
+% guides = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
+%     strcat('manual_', name, '.mat')));
+% guides = guides.man_all;
 
 %%
 % Figure for manually tracing visible annual layers
@@ -108,9 +98,9 @@ while draw==true
     f_draw = figure;
     imagesc(radar.data_smooth, [-2 2])
     hold on
-    for j = 1:length(guides)
-        plot(guides{j}(:,1), guides{j}(:,2), 'm')
-    end
+%     for j = 1:length(guides)
+%         plot(guides{j}(:,1), guides{j}(:,2), 'm')
+%     end
     if i >= 2
         for k = 1:i-1
             plot(man_layers{k}(:,1), man_layers{k}(:,2), 'r')
