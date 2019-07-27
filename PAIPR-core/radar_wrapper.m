@@ -6,19 +6,8 @@
 PC_true = ispc;
 switch PC_true
     case true
-        computer = 'work';
-%         computer = input('Current PC: ');
-        switch computer
-            case 'work'
-                data_path = 'E:/Research/Antarctica/Data/';
-                addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
-                
-            case 'laptop'
-                data_path = 'E:/Research/Antarctica/Data/';
-                addon_path = fullfile('C:/Users/durba/', ...
-                    'OneDrive - University of Utah/Documents/MATLAB/Addons/');
-        end
-        
+        data_path = 'E:/Research/Antarctica/Data/';
+        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
         addon_path = '/home/durbank/MATLAB/Add-Ons/';
@@ -86,7 +75,7 @@ radar_ALL = radar_ALL(keep_idx);
 % end
 
 % Parellel for loop to process all data segments
-parfor i = 1:length(radar_ALL)
+for i = 1:length(radar_ALL)
     
     % Calculate radar age-depth scales
     [radar_tmp] = radar_RT(radar_ALL(i).segment, cores, Ndraw);
