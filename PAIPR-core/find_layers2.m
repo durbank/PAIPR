@@ -55,7 +55,7 @@ while search_new == true
     layer_i = matrix_idx(peak_group==group_num);
     search_R = true;
     
-    threshold = 3;
+    threshold = 3.5;
     
     while search_R == true
         
@@ -118,7 +118,7 @@ while search_new == true
         else
             mag_i_std = std(peaks_raw(group_idx));
         end
-        w_m = (1/mag_i_std)^2;
+        w_m = 0.5*(1/mag_i_std)^2;
 %         w_x = (3/std(col_local))^2;
 %         w_y = (1/(0.5*width_i))^2;
 %         if length(mag_i) <= 5
@@ -236,7 +236,7 @@ while search_new == true
         else
             mag_i_std = std(peaks_raw(group_idx));
         end
-        w_m = (1/mag_i_std)^2;
+        w_m = 0.5*(1/mag_i_std)^2;
 %         w_x = (3/std(col_local))^2;
 %         w_y = (1/(0.5*width_i))^2;
 %         if length(mag_i) <= 5
@@ -334,7 +334,8 @@ while search_new == true
         else
             mag_j_std = std(peaks_raw(group_idx));
         end
-        w_m = (1/mag_j_std)^2;
+        w_m = 0.5*(1/mag_j_std)^2;
+        w_m = 0;
 %         w_x = (1/std(col_local))^2;
 %         w_y = (1/(0.5*width_j))^2;
 %         if length(mag_j) <= 5
@@ -355,7 +356,7 @@ while search_new == true
 %             (data_local(:,2)-col(j)).^2 + (0.5*(mag_local - mag_j)).^2);
         
         % Set distance threshold
-%         threshold = 3;
+        threshold = 2.5;
         
         % Assign all peaks within tolerance to the current layer group and
         % remove those peaks from the pool of available peaks to search
