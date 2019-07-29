@@ -75,7 +75,7 @@ radar_ALL = radar_ALL(keep_idx);
 % end
 
 % Parellel for loop to process all data segments
-for i = 1:length(radar_ALL)
+parfor i = 1:length(radar_ALL)
     
     % Calculate radar age-depth scales
     [radar_tmp] = radar_RT(radar_ALL(i).segment, cores, Ndraw);

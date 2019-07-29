@@ -68,7 +68,7 @@ input_dir = uigetdir(fullfile(data_path, "PAIPR-results/v-WIP", ...
     "Select directory containing input files");
 
 % Load PAIPR radar data
-radar = load(fullfile(input_dir, "radar_out1"));
+radar = load(fullfile(input_dir, "PAIPR_output"));
 
 % Load manually picked layer indices for above radar echogram
 tmp = load(fullfile(input_dir, "manual_layers"));

@@ -182,7 +182,7 @@ for i = 1:size(radar.data_smooth, 2)
     data_i = radar.data_smooth(:,i);
     
     % Prominence threshold for peaks
-    minProm = 0.50;
+    minProm = 0.25;
     
     % Min distance between peaks (in meters)
     minDist = 0.08;
@@ -290,10 +290,10 @@ for i = 1:size(layer_peaks, 2)
     
     % Likelihood of layer representing a year based on a logistic function
     % with rate (r) calculated above
-    r = -2.4333e-4; % [-3.18e-4 -1.55e-4]
-    k = 4.4323;     % [3.25 4.8]
-%     r = -2e-4;
-%     k = 3;
+%     r = -2.4333e-4; % [-3.18e-4 -1.55e-4]
+%     k = 4.4323;     % [3.25 4.8]
+    r = -3.06e-4;
+    k = 2.94;
     
     likelihood = 1./(1+exp(r*peaks_i + k));
     radar.likelihood(peaks_idx,i) = likelihood;
