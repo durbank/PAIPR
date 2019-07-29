@@ -55,21 +55,21 @@ while search_new == true
     layer_i = matrix_idx(peak_group==group_num);
     search_R = true;
     
-    threshold = 3.5;
+    threshold = 3;
     
     while search_R == true
         
-        % Get nearest 10 group members
-        group_idx = layer_i(end-min([10 length(layer_i)])+1:end);
+        % Get nearest 20 group members
+        group_idx = layer_i(end-min([20 length(layer_i)])+1:end);
         
         % Get median magnitude and median peak width of 10 nearest group
         % members
         mag_i = mean(peaks_raw(group_idx));
         Hwidth_i = 0.5*mean(peak_width(group_idx));
         
-        % Get subscripts of farthest right 10 group members
+        % Get subscripts of farthest right 20 group members
         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx(end - ...
-            min([10 length(layer_i)])+1:end));
+            min([20 length(layer_i)])+1:end));
         
         % Get col and row subscripts of farthest right position of layer_i
         col_n = max(col_i);
@@ -118,7 +118,7 @@ while search_new == true
         else
             mag_i_std = std(peaks_raw(group_idx));
         end
-        w_m = 0.5*(1/mag_i_std)^2;
+        w_m = (1/mag_i_std)^2;
 %         w_x = (3/std(col_local))^2;
 %         w_y = (1/(0.5*width_i))^2;
 %         if length(mag_i) <= 5
@@ -177,17 +177,17 @@ while search_new == true
     
     while search_L == true
         
-        % Get nearest 10 group members
-        group_idx = layer_i(1: min([10 length(layer_i)]));
+        % Get nearest 20 group members
+        group_idx = layer_i(1: min([20 length(layer_i)]));
         
         % Get median magnitude and median peak width of 10 nearest group
         % members
         mag_i = mean(peaks_raw(group_idx));
         Hwidth_i = 0.5*mean(peak_width(group_idx));
         
-        % Get subscripts of farthest left 10 group members
+        % Get subscripts of farthest left 20 group members
         [row_i, col_i] = ind2sub(size(peaks_raw), ...
-            group_idx(1:min([10 length(layer_i)])));
+            group_idx(1:min([20 length(layer_i)])));
         
         % Get col and row subscripts of farthest left position of layer_i
         col_n = min(col_i);
@@ -236,7 +236,7 @@ while search_new == true
         else
             mag_i_std = std(peaks_raw(group_idx));
         end
-        w_m = 0.5*(1/mag_i_std)^2;
+        w_m = (1/mag_i_std)^2;
 %         w_x = (3/std(col_local))^2;
 %         w_y = (1/(0.5*width_i))^2;
 %         if length(mag_i) <= 5
@@ -260,8 +260,6 @@ while search_new == true
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-%         threshold = 3;
-%         threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
         % Get matrix index of nearest neighbors
@@ -334,7 +332,7 @@ while search_new == true
         else
             mag_j_std = std(peaks_raw(group_idx));
         end
-        w_m = 0.5*(1/mag_j_std)^2;
+        w_m = (1/mag_j_std)^2;
         w_m = 0;
 %         w_x = (1/std(col_local))^2;
 %         w_y = (1/(0.5*width_j))^2;
