@@ -45,21 +45,37 @@ Ndraw = 100;
 
 horz_res = 25;
 
+
 %%
 
-% Name of SEAT core site to generate training data/perform regression
-name = 'SEAT10_6';
+% % Name of SEAT core site to generate training data/perform regression
+% name = 'SEAT10_6';
+% 
+% % Load relevant radar data (previously generated using the above section)
+% radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
+%     strcat('layers_', name, '_opt.mat')));
+% 
+% % Load manually traced layers for current SEAT core site (generated using
+% % 'draw_manual.m')
+% tmp = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
+%     strcat('manual_', name, '.mat')));
+% man_layers = tmp.man_all;
 
-% Load relevant radar data (previously generated using the above section)
-radar = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
-    strcat('layers_', name, '_opt.mat')));
+% Select directory containing PAIPR-results and manual layers (picked using
+% the `draw_manual.m` file)
+input_dir = uigetdir(fullfile(data_path, "PAIPR-results/v-WIP", ...
+    "TGRS_2019_edits_v1/manual_layers"), ...
+    "Select directory containing input files");
 
-% Load manually traced layers for current SEAT core site (generated using
-% 'draw_manual.m')
-tmp = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
-    strcat('manual_', name, '.mat')));
+% Load PAIPR radar data
+radar = load(fullfile(input_dir, "PAIPR_output"));
+
+% Load manually picked layer indices for above radar echogram
+tmp = load(fullfile(input_dir, "manual_layers"));
 man_layers = tmp.man_all;
 
+% Define range resolution
+range_res = round(mean(diff(radar.depth)),2);
 
 %%
 
@@ -88,10 +104,12 @@ end
 % Remove empty cells from layer array
 layers_raw = layers_raw(~cellfun(@isempty,layers_raw));
 
-% Sort layers by layer length (descending order), so that in future
-% calculations operations on performed on longest layers first
+% Sort layers by mean peak power-distance (descending order), so that in
+% future calculations operations are performed on brightest/longest 
+% layers first
 layer_L = cellfun(@(x) size(x,1), layers_raw);
-[~,layer_idx] = sort(layer_L, 'descend');
+layer_P = cellfun(@(x) mean(x(:,3)), layers_raw);
+[~,layer_idx] = sort(layer_L.*layer_P, 'descend');
 layers = layers_raw(layer_idx);
 
 
@@ -100,17 +118,17 @@ layers = layers_raw(layer_idx);
 % layers
 man_search = man_layers;
 
-% Remove manual layers that do not extend across at least 50% of the
-% radargram (typically ~10 km)
-max_length = max(cellfun(@length, man_search));
-long_idx = cellfun(@(x) length(x) >= 0.50*max_length, man_search);
-man_search = man_search(long_idx);
+% % Remove manual layers that do not extend across at least 50% of the
+% % radargram (typically ~10 km)
+% max_length = max(cellfun(@length, man_search));
+% long_idx = cellfun(@(x) length(x) >= 0.50*max_length, man_search);
+% man_search = man_search(long_idx);
 
 for i = 1:length(layers)
     
     % Preallocate matrix for squared sum of errors for distance between
     % manually and auto picked layers
-    SSE = zeros(1,length(man_search));
+    MAE = zeros(1,length(man_search));
     
     for j = 1:length(man_search)
         
@@ -120,20 +138,20 @@ for i = 1:length(layers)
         Coord_j = man_search{j}(ja,:);
         layer_j = layers{i}(jb,:);
         
-        % Calculate the squared sum of distance errors between ith auto
-        % layer and jth manual layer
-        SSE(j) = abs(mean(layer_j(:,2) - Coord_j(:,2)));
+        % Calculate the mean absolute error between ith auto layer and jth
+        % manual layer
+        MAE(j) = sum(abs(layer_j(:,2) - Coord_j(:,2)))/length(layer_j);
 %         SSE(j) = sum((layer_j(:,2)-Coord_j(:,2)).^2)/size(layer_j,1);
     end
     
     % Find the nearest remaining manual layer to the ith auto layer
-    [SSE_min, SSE_idx] = min(SSE);
+    [MAE_min, SSE_idx] = min(MAE);
     
     % Determine if nearest manual layer is sufficiently close to ith auto
     % layer
-    if SSE_min <= 5
+    if MAE_min*range_res <= 0.08
         
-        % Remove manual layer neartest to ith auto layer from future
+        % Remove manual layer nearest to ith auto layer from future
         % match searches
         man_search(SSE_idx) = [];
         

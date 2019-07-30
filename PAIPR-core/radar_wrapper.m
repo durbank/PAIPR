@@ -6,19 +6,8 @@
 PC_true = ispc;
 switch PC_true
     case true
-%         computer = 'work';
-        computer = input('Current PC: ');
-        switch computer
-            case 'work'
-                data_path = 'E:/Research/Antarctica/Data/';
-                addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
-                
-            case 'laptop'
-                data_path = 'E:/Research/Antarctica/Data/';
-                addon_path = fullfile('C:/Users/durba/', ...
-                    'OneDrive - University of Utah/Documents/MATLAB/Addons/');
-        end
-        
+        data_path = 'E:/Research/Antarctica/Data/';
+        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
         addon_path = '/home/durbank/MATLAB/Add-Ons/';
@@ -51,6 +40,10 @@ radar_dir = uigetdir(data_path, ...
 %     'SEAT10_4toSEAT10_6');
 % radar_dir = fullfile(data_path, 'IceBridge/SEAT10_4to10_6/2011_SNO');
 
+% Define path to output directory of where to store results
+output_dir = uigetdir(data_path, ...
+    "Select folder to store output .mat results files");
+
 %%
 
 % Find the breakpoints for radar processing, and divide data into
@@ -74,12 +67,12 @@ end
 % Only keep data segments of sufficient length
 radar_ALL = radar_ALL(keep_idx);
 
-% Check for existence of directory 'SMB_results' in data folder, and create
-% one if missing
-output_dir = 'SMB_results';
-if ~exist(fullfile(radar_dir, output_dir), 'dir')
-    mkdir(fullfile(radar_dir, output_dir));
-end
+% % Check for existence of directory 'SMB_results' in data folder, and create
+% % one if missing
+% output_dir = 'SMB_results';
+% if ~exist(fullfile(radar_dir, output_dir), 'dir')
+%     mkdir(fullfile(radar_dir, output_dir));
+% end
 
 % Parellel for loop to process all data segments
 parfor i = 1:length(radar_ALL)
@@ -127,9 +120,48 @@ parfor i = 1:length(radar_ALL)
     
     % Generate file names and paths under which to save data
     filename = sprintf('%s%d%s','radar_out',i, '.mat');
-    output = fullfile(radar_dir, output_dir, filename);
+    output = fullfile(output_dir, filename);
     
     % Save output structures to disk
-    [save_success] = parsave(radar, output)
+    [save_success1] = parsave(radar, output)
+    
+    %% Output overlapping data for comparisons of neighboring echograms
+    
+    % Check for existence of directory for clipped results in output_dir,
+    % and create it if it does not exist
+    clip_dir = "result_clips";
+    if ~exist(fullfile(output_dir, clip_dir), 'dir')
+        mkdir(fullfile(output_dir, "result_clips"));
+    end
+    
+    % Keep relevant clipped variables from start of echogram for comparions 
+    % of overlapping results
+    clip_start = struct('Easting', radar_tmp.Easting(1:2*clip), ...
+        'Northing', radar_tmp.Northing(1:2*clip), ...
+        'groups', radar_tmp.groups(:,1:2*clip),...
+        'likelihood', radar_tmp.likelihood(:,1:2*clip), ...
+        'depth',radar_tmp.depth, 'ages',radar_tmp.ages(:,1:2*clip,:));
+    clip_start.SMB_yr = radar_tmp.SMB_yr(1:2*clip);
+    clip_start.SMB = radar_tmp.SMB(1:2*clip);
+    
+    % Generate file names/paths for starting clip output and save
+    fn_start = sprintf('%s%d%s','clip_start',i, '.mat');
+    start_path = fullfile(output_dir, clip_dir, fn_start);
+    [save_success2] = parsave(clip_start, start_path)
+    
+    % Keep relevant clipped variables from end of echogram for comparions 
+    % of overlapping results
+    clip_end = struct('Easting', radar_tmp.Easting(end-2*clip+1:end), ...
+        'Northing', radar_tmp.Northing(end-2*clip+1:end), ...
+        'groups', radar_tmp.groups(:,end-2*clip+1:end),...
+        'likelihood', radar_tmp.likelihood(:,end-2*clip+1:end), ...
+        'depth',radar_tmp.depth, 'ages',radar_tmp.ages(:,end-2*clip+1:end,:));
+    clip_end.SMB_yr = radar_tmp.SMB_yr(end-2*clip+1:end);
+    clip_end.SMB = radar_tmp.SMB(end-2*clip+1:end);
+    
+    % Generate file names/paths for end clip output and save
+    fn_end = sprintf('%s%d%s','clip_end',i, '.mat');
+    end_path = fullfile(output_dir, clip_dir, fn_end);
+    [save_success3] = parsave(clip_end, end_path)
     
 end

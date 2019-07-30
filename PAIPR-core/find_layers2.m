@@ -55,20 +55,21 @@ while search_new == true
     layer_i = matrix_idx(peak_group==group_num);
     search_R = true;
     
+    threshold = 3;
     
     while search_R == true
         
-        % Get nearest 10 group members
-        group_idx = layer_i(end-min([10 length(layer_i)])+1:end);
+        % Get nearest 20 group members
+        group_idx = layer_i(end-min([20 length(layer_i)])+1:end);
         
         % Get median magnitude and median peak width of 10 nearest group
         % members
-        mag_i = median(peaks_raw(group_idx));
-        width_i = median(peak_width(group_idx));
+        mag_i = mean(peaks_raw(group_idx));
+        Hwidth_i = 0.5*mean(peak_width(group_idx));
         
-        % Get subscripts of farthest right 10 group members
+        % Get subscripts of farthest right 20 group members
         [row_i, col_i] = ind2sub(size(peaks_raw), group_idx(end - ...
-            min([10 length(layer_i)])+1:end));
+            min([20 length(layer_i)])+1:end));
         
         % Get col and row subscripts of farthest right position of layer_i
         col_n = max(col_i);
@@ -110,9 +111,30 @@ while search_new == true
         
         % Calculate distance between peaks in the local search window and
         % the estimated layer streamline
-        dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
-            (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
-            (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
+        w_x = (1/std(col_local))^2;
+        w_y = (1/(Hwidth_i))^2;
+        if length(group_idx) <= 5
+            mag_i_std = 0.10*mean(peaks_raw(group_idx));
+        else
+            mag_i_std = std(peaks_raw(group_idx));
+        end
+        w_m = (1/mag_i_std)^2;
+%         w_x = (3/std(col_local))^2;
+%         w_y = (1/(0.5*width_i))^2;
+%         if length(mag_i) <= 5
+%             w_m = 0;
+%         else
+%             w_m = (3/std(mag_i))^2;
+%         end
+%         w_x = 1;
+%         w_m = 1;
+        dist_n = sqrt(w_x*(data_local(:,2)-(data_stream(:,2))').^2 + ...
+            w_y*(data_local(:,1)-(data_stream(:,1))').^2 + ...
+            w_m*repmat(mag_local-mag_i, 1, size(data_stream,1)).^2);
+        
+%         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
+%             (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
+%             (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
 %         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
 %             (0.5*width_i)).^2 + ...
 %             ((data_local(:,2)-(data_stream(:,2))')./(50/horz_res)).^2 + ...
@@ -120,7 +142,7 @@ while search_new == true
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-        threshold = 3;
+%         threshold = 3;
 %         threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
@@ -155,17 +177,17 @@ while search_new == true
     
     while search_L == true
         
-        % Get nearest 10 group members
-        group_idx = layer_i(1: min([10 length(layer_i)]));
+        % Get nearest 20 group members
+        group_idx = layer_i(1: min([20 length(layer_i)]));
         
         % Get median magnitude and median peak width of 10 nearest group
         % members
-        mag_i = median(peaks_raw(group_idx));
-        width_i = median(peak_width(group_idx));
+        mag_i = mean(peaks_raw(group_idx));
+        Hwidth_i = 0.5*mean(peak_width(group_idx));
         
-        % Get subscripts of farthest left 10 group members
+        % Get subscripts of farthest left 20 group members
         [row_i, col_i] = ind2sub(size(peaks_raw), ...
-            group_idx(1:min([10 length(layer_i)])));
+            group_idx(1:min([20 length(layer_i)])));
         
         % Get col and row subscripts of farthest left position of layer_i
         col_n = min(col_i);
@@ -207,9 +229,30 @@ while search_new == true
         
         % Calculate distance between peaks in the local search window and
         % the estimated layer streamline
-        dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
-            (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
-            (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
+        w_x = (1/std(col_local))^2;
+        w_y = (1/(Hwidth_i))^2;
+        if length(group_idx) <= 5
+            mag_i_std = 0.10*mean(peaks_raw(group_idx));
+        else
+            mag_i_std = std(peaks_raw(group_idx));
+        end
+        w_m = (1/mag_i_std)^2;
+%         w_x = (3/std(col_local))^2;
+%         w_y = (1/(0.5*width_i))^2;
+%         if length(mag_i) <= 5
+%             w_m = 0;
+%         else
+%             w_m = (3/std(mag_i))^2;
+%         end
+%         w_x = 1;
+%         w_m = 1;
+        dist_n = sqrt(w_x*(data_local(:,2)-(data_stream(:,2))').^2 + ...
+            w_y*(data_local(:,1)-(data_stream(:,1))').^2 + ...
+            w_m*repmat(mag_local-mag_i, 1, size(data_stream,1)).^2);
+        
+%         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
+%             (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
+%             (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
 %         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
 %             (0.5*width_i)).^2 + ...
 %             ((data_local(:,2)-(data_stream(:,2))')./(50/horz_res)).^2 + ...
@@ -217,8 +260,6 @@ while search_new == true
         
         % Set distance threshold and find all peaks within tolerance to the
         % layer streamline
-        threshold = 3;
-%         threshold = 2.5;
         dist_idx = min(dist_n, [], 2) <= threshold;
         
         % Get matrix index of nearest neighbors
@@ -264,8 +305,8 @@ while search_new == true
         
         % Find local mean peak magnitude and width from the nearby layer
         % members
-        mag_j = median(peaks_raw(group_idx));
-        width_j = median(peak_width(group_idx));
+        mag_j = mean(peaks_raw(group_idx));
+        Hwidth_j = 0.5*mean(peak_width(group_idx));
         
         % Define local search window as 0.50 m above and below jth member
         % and 250 m to left and right of jth member
@@ -284,15 +325,36 @@ while search_new == true
         
         % Calculate distance between jth layer member and peaks within the
         % local search window
-        dist_j = sqrt(((data_local(:,1)-row_mean(j))./(0.5*width_j)).^2 + ...
-            ((data_local(:,2)-col(j))./(50/horz_res)).^2 + ...
-            (0.5*(mag_local-mag_j)).^2);
+        w_x = (1/std(col_local))^2;
+        w_y = (1/(Hwidth_j))^2;
+        if length(group_idx) <= 5
+            mag_j_std = 0.10*mean(peaks_raw(group_idx));
+        else
+            mag_j_std = std(peaks_raw(group_idx));
+        end
+        w_m = (1/mag_j_std)^2;
+        w_m = 0;
+%         w_x = (1/std(col_local))^2;
+%         w_y = (1/(0.5*width_j))^2;
+%         if length(mag_j) <= 5
+%             w_m = (1/(0.10*mean(mag_j)))^2;
+%         else
+%             w_m = (1/std(mag_j))^2;
+%         end
+%         w_x = 1/4;
+%         w_m = 1/4;
+        dist_j = sqrt(w_x*(data_local(:,2)-col(j)).^2 + ...
+            w_y*(data_local(:,1)-row_mean(j)).^2 + ...
+            w_m*(mag_local-mag_j).^2);
+        
+%         dist_j = sqrt(((data_local(:,1)-row_mean(j))./(0.5*width_j)).^2 + ...
+%             ((data_local(:,2)-col(j))./(50/horz_res)).^2 + ...
+%             (0.5*(mag_local-mag_j)).^2);
 %         dist_j = sqrt(((data_local(:,1)-row_mean(j))/(0.5*width_j)).^2 + ...
 %             (data_local(:,2)-col(j)).^2 + (0.5*(mag_local - mag_j)).^2);
         
         % Set distance threshold
-        threshold = 3;
-%         threshold = 2.5;
+        threshold = 2.5;
         
         % Assign all peaks within tolerance to the current layer group and
         % remove those peaks from the pool of available peaks to search
