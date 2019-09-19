@@ -84,7 +84,7 @@ clearvars -except file cores Ndraw radar horz_res core_res
 [IM_gradients] = radar_radon(radar, core_res, horz_res);
 
 % Find radar peaks in echogram
-[peaks_raw, peak_width] = radar_peaks(radar);
+[peaks_raw, peak_width] = radar_peaks(radar, core_res);
 
 % Find continuous layers within radargram based on peaks and layer stream
 % field

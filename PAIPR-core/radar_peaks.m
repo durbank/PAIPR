@@ -1,6 +1,6 @@
 
 
-function [peak_prom, peak_width] = radar_peaks(radar)
+function [peak_prom, peak_width] = radar_peaks(radar, vert_res)
 
 %% Find depth, width, and prominence of peaks for each radar trace
 
@@ -24,7 +24,7 @@ for i = 1:size(radar.data_smooth, 2)
     % Find peak statistics in each trace based on criteria
     [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...
         'MinPeakProminence', minProm, ...
-        'MinPeakDistance', minDist/core_res, 'WidthReference', 'halfprom');
+        'MinPeakDistance', minDist/vert_res, 'WidthReference', 'halfprom');
 
     % Add peak prominence and width values to relevent matrices
     peak_prom(peaks_idx_i,i) = Prom_i;

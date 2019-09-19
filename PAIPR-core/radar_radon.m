@@ -72,16 +72,10 @@ ss = s_matrix(y,x);
 IM_gradients = interp2(X, Y, ss, Vx, Vy);
 
 
-% % Apply 2D Gaussian smoothing filter to the layer gradients (to be used in
-% % layer stream field)
-% grad_smooth = imgaussfilt(Vq, 5);
-
-
-
 % % Diagnostic plot
-% ystart = 1:25:size(grad_smooth,1);
+% ystart = 1:25:size(IM_gradients,1);
 % xstart = ones(1, length(ystart));
-% XY_raw = stream2(ones(size(grad_smooth)), grad_smooth, xstart, ystart, 1);
+% XY_raw = stream2(ones(size(IM_gradients)), IM_gradients, xstart, ystart, 1);
 % XY = XY_raw;
 % for k = 1:length(XY)
 %     XY{k}(:,1) = XY_raw{k}(:,1)*mean(diff(radar.dist));
