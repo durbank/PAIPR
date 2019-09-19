@@ -8,6 +8,8 @@ function [radar] = radar_RT(radar_struct, cores, Ndraw)
 horz_res = 25;
 [radar] = radar_stack(radar, horz_res);
 
+%%
+
 % Stationarize the radar response by differencing traces with a smoothing 
 % spline
 s = zeros(size(radar.data_stack));
@@ -51,81 +53,47 @@ for i = 1:size(radar.data_stack, 2)
     radarZ_interp(:,i) = radarZ_i(1:size(radarZ_interp, 1));
 end
 
-% If manual layer picks are present, transform them to same depth and
-% vertical scale as the interpolated radar data
-if isfield(radar, 'man_layers')
-    man_interp = zeros(size(radarZ_interp));
-    for i = 1:size(radar.data_stack, 2)
-%         depth_interp = (0:core_res:radar.depth(end,i))';
-        layer_idx = logical(radar.man_layers(:,i));
-        layer_num = radar.man_layers(layer_idx,i);
-        man_depth_i = radar.depth(layer_idx,i);
-        depth_idx = round(man_depth_i/core_res) + 1;
-        man_interp(depth_idx(man_depth_i<=cutoff),i) = layer_num(man_depth_i<=cutoff);
-    end
-    radar.man_layers = man_interp;
-end
+% % If manual layer picks are present, transform them to same depth and
+% % vertical scale as the interpolated radar data
+% if isfield(radar, 'man_layers')
+%     man_interp = zeros(size(radarZ_interp));
+%     for i = 1:size(radar.data_stack, 2)
+% %         depth_interp = (0:core_res:radar.depth(end,i))';
+%         layer_idx = logical(radar.man_layers(:,i));
+%         layer_num = radar.man_layers(layer_idx,i);
+%         man_depth_i = radar.depth(layer_idx,i);
+%         depth_idx = round(man_depth_i/core_res) + 1;
+%         man_interp(depth_idx(man_depth_i<=cutoff),i) = layer_num(man_depth_i<=cutoff);
+%     end
+%     radar.man_layers = man_interp;
+% end
 
 % Assign structure output depth to interpolated depths
 radar.depth = (0:core_res:depth_bott)';
 
 % Smooth the laterally averaged radar traces with depth based on a 3rd
-% order Savitzky-Golay filter with a window of 9 frames (~20 cm)
-% radar.data_smooth = radarZ_interp;
-% radar.data_smooth = smoothdata(radarZ_interp,'movmean',7); 
-% radar.data_smooth = sgolayfilt(radarZ_interp, 3, 7);
+% order Savitzky-Golay filter with a window of 9 frames (~18 cm)
 radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
 % Clear unnecessary variables
 clearvars -except file cores Ndraw radar horz_res core_res
 
-
+%%
 
 % Iterative radon transforms
 [IM_gradients] = radar_radon(radar, core_res, horz_res);
 
-%% Find depth, width, and prominence of peaks for each radar trace
-
-% Preallocate arrays for various components
-peaks_raw = zeros(size(radar.data_smooth));
-peak_width = zeros(size(radar.data_smooth));
-Proms = cell(1, size(radar.data_smooth, 2));
-widths = cell(1,size(radar.data_smooth, 2));
-depths = cell(1, size(radar.data_smooth, 2));
-depth_idx = cell(1, size(radar.data_smooth, 2));
-
-for i = 1:size(radar.data_smooth, 2)
-    data_i = radar.data_smooth(:,i);
-    
-    % Prominence threshold for peaks
-    minProm = 0.25;
-    
-    % Min distance between peaks (in meters)
-    minDist = 0.08;
-    
-    % Find peak statistics in each trace based on criteria
-    [~, peaks_idx_i, widths_i, Prom_i] = findpeaks(data_i, ...
-        'MinPeakProminence', minProm, ...
-        'MinPeakDistance', minDist/core_res, 'WidthReference', 'halfprom');
-
-    % Add peak prominence and width values to relevent matrices
-    peaks_raw(peaks_idx_i,i) = Prom_i;
-    peak_width(peaks_idx_i,i) = widths_i;
-    
-    % Add values to relevent cell arrays
-    Proms{i} = Prom_i;
-    widths{i} = widths_i;
-    depths{i} = radar.depth(peaks_idx_i);
-    depth_idx{i} = peaks_idx_i;
-end
-
-
-%%
+% Find radar peaks in echogram
+[peaks_raw, peak_width] = radar_peaks(radar);
 
 % Find continuous layers within radargram based on peaks and layer stream
 % field
 [~, layers] = find_layers2(peaks_raw, peak_width, ...
     IM_gradients, core_res, horz_res);
+
+
+
+%%
 
 % Preallocate arrays for the matrix indices of members of each layer
 layers_idx = cell(1,length(layers));
