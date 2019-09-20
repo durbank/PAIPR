@@ -156,6 +156,12 @@ if isfield(radar, 'elev')
 end
 radar = radar_new;
 
+% Find layer member indices based on new clipped record
+layers = cell(1, max(radar.groups(:)));
+for j = 1:length(layers)
+    layers{j} = find(radar.groups == j);
+end
+radar.layers = layers(~cellfun(@isempty, layers));
 
 % Eventually will move the gamma-fitting process to here? In this way, we
 % can significantly reduce the necessary storage space once we increase MC
