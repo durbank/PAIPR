@@ -1,7 +1,10 @@
-% Wrapper function to import and process an arbitrary number of radargram
+% Function to import and process an arbitrary number of radar echogram
 % files within a single directory
+% File formats may either be in NASA Operation IceBridge Snow radar
+% standard format (.nc) or in SEAT Ku-band radar echogram standard format
+% (.mat)
 
-function [radar_ALL] = radar_format(radar_dir)
+function [radar_ALL] = echo_format(radar_dir)
 
 % List all files matching 'wild' within radar directory
 wild = '*.mat';
@@ -181,25 +184,15 @@ for i = 1:length(breaks_new)
     % Find the file index at start of ith continuous radargram using the
     % previously calculated breakpoint indices
     files_i(i,1) = find(file_end_idx>=breaks_new{i}(1), 1) - 1;
-%     files_i(i,1) = find(file_end_idx>=breaks_new{i}(1), 1);
     
     % Find the file index at the end of ith continuous radargram using the
     % previously calculated breakpoint indices
     files_i(i,2) = find(file_end_idx>=breaks_new{i}(2), 1) - 1;
-%     files_i(i,2) = find(file_end_idx>=breaks_new{i}(2), 1);
     
     % Find the trace indices within the first and last file corresponding
     % to the intra-file breakpoints of the ith continuous radargram
     position_i(i,1) = breaks_new{i}(1) - file_end_idx(files_i(i,1));
     position_i(i,2) = breaks_new{i}(2) - file_end_idx(files_i(i,2));
-%     position_i(i,1) = breaks_new{i}(1) - ...
-%         (file_end_idx(files_i(i,1)) - file_end_idx(1));
-%     position_i(i,2) = breaks_new{i}(2) - (file_end_idx(files_i(i,2)-1));
-    
-%     check1_idx = file_end_idx(files_i(i,1)) - file_end_idx(1) + position_i(i,1)
-%     d(check1_idx)
-%     check2_idx = file_end_idx(files_i(i,2)-1) + position_i(i,2)
-%     d(check2_idx)
 end
 
 %%

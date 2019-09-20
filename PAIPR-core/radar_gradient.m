@@ -2,7 +2,7 @@
 % Output is a matrix (same dimensions as input image) with the estimated
 % layer slope at each bin location in the image.
 
-function [IM_gradients] = radar_radon(radar, vert_res, horz_res)
+function [IM_gradients] = radar_gradient(radar, vert_res, horz_res)
 
 % Define depth/distance intervals over which to perform radon transforms
 % (in meters), and calculate data matrix window size (in data bins)

@@ -1,4 +1,4 @@
-function [radar] = radar_RT(radar_struct, cores, Ndraw)
+function [radar] = calc_age(radar_struct, cores, Ndraw)
 
 % Convert to depth
 [radar] = radar_depth(radar_struct, cores);
@@ -81,14 +81,14 @@ clearvars -except file cores Ndraw radar horz_res core_res
 %%
 
 % Iterative radon transforms
-[IM_gradients] = radar_radon(radar, core_res, horz_res);
+[IM_gradients] = radar_gradient(radar, core_res, horz_res);
 
 % Find radar peaks in echogram
 [peaks_raw, peak_width] = radar_peaks(radar, core_res);
 
 % Find continuous layers within radargram based on peaks and layer stream
 % field
-[~, layers] = find_layers2(peaks_raw, peak_width, ...
+[~, layers] = radar_trace(peaks_raw, peak_width, ...
     IM_gradients, core_res, horz_res);
 
 

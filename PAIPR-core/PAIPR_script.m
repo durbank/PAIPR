@@ -46,9 +46,9 @@ output_dir = uigetdir(data_path, ...
 
 %%
 
-% Find the breakpoints for radar processing, and divide data into
-% corresponding struct variables
-radar_ALL = radar_format(radar_dir);
+% Combine all input echograms and decompose into echogram subdomains of
+% desired length
+radar_ALL = echo_format(radar_dir);
 
 % Define overlap distance and the final horizontal resolution of the output
 % data
@@ -67,27 +67,25 @@ end
 % Only keep data segments of sufficient length
 radar_ALL = radar_ALL(keep_idx);
 
-% % Check for existence of directory 'SMB_results' in data folder, and create
-% % one if missing
-% output_dir = 'SMB_results';
-% if ~exist(fullfile(radar_dir, output_dir), 'dir')
-%     mkdir(fullfile(radar_dir, output_dir));
-% end
-
-% Parellel for loop to process all data segments
+% Parellel for loop to process all decomposed echograms
 parfor i = 1:length(radar_ALL)
     
-    % Calculate radar age-depth scales
-    [radar_tmp] = radar_RT(radar_ALL(i).segment, cores, Ndraw);
+    % Calculate radar age-depth profile distributions (includes processing
+    % steps for depth, signal-noise, radon transforms, layer tracing,
+    % likelihood assignments, and age calculations)
+    [radar_tmp] = calc_age(radar_ALL(i).segment, cores, Ndraw);
     
     % Calculate radar annual SMB
     [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
     
-    % May be used in future versions of code
-    fld_nm = fieldnames(radar_tmp);
-    fld_want = {'collect_date', 'Easting', 'Northing', 'dist', 'depth', ...
-        'rho_coeff', 'rho_var', 'data_smooth', 'peaks', 'groups', 'ages', ...
-        'SMB_yr', 'SMB'};
+    
+    %%
+    
+%     % May be used in future versions of code
+%     fld_nm = fieldnames(radar_tmp);
+%     fld_want = {'collect_date', 'Easting', 'Northing', 'dist', 'depth', ...
+%         'rho_coeff', 'rho_var', 'data_smooth', 'peaks', 'groups', 'ages', ...
+%         'SMB_yr', 'SMB'};
     
     % Clip radar data structure variables based on the desired radargram
     % overlap, and combine desired clipped variables into new data
