@@ -4,7 +4,7 @@
 % the position of the nearest neighbors rather than relying on the position
 % of the last member found
 
-function [peak_group, layers] = find_layers2(peaks_raw, peak_width, ...
+function [peak_group, layers] = radar_trace(peaks_raw, peak_width, ...
     grad_matrix, core_res, horz_res)
 
 % Preallocate layer group matrix and cell array
