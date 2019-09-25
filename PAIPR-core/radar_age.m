@@ -10,11 +10,17 @@ horz_res = mean(diff(radar.dist));
 % lateral size of stacked radar trace bins)
 layers_dist = cellfun(@(x) numel(x)*horz_res, radar.layers);
 
+% Find the mean peak prominence (used to scale the prominence-distance
+% results)
+peak_w = 1/mean(radar.peaks(radar.peaks>0));
+dist_w = 1/(size(radar.data_smooth,2)*horz_res);
+
 % Map layer prominence-distance values to the location within the radar
 % matrix of the ith layer
 layer_peaks = zeros(size(radar.peaks));
 for i = 1:length(radar.layers)
-    layer_peaks(radar.layers{i}) = radar.peaks(radar.layers{i}).*layers_dist(i);
+    layer_peaks(radar.layers{i}) = peak_w*dist_w*...
+        radar.peaks(radar.layers{i}).*layers_dist(i);
 end
 
 

@@ -63,7 +63,7 @@ horz_res = 25;
 
 % Select directory containing PAIPR-results and manual layers (picked using
 % the `draw_manual.m` file)
-input_dir = uigetdir(fullfile(data_path, "PAIPR-results/v-WIP", ...
+input_dir = uigetdir(fullfile(data_path, "PAIPR-results/v1.1", ...
     "TGRS_2019_edits_v1/manual_layers"), ...
     "Select directory containing input files");
 
@@ -79,6 +79,11 @@ range_res = round(mean(diff(radar.depth)),2);
 
 %%
 
+% Find the mean peak prominence (used to scale the prominence-distance
+% results)
+peak_w = 1/mean(radar.peaks(radar.peaks>0));
+dist_w = 1/(size(radar.data_smooth,2)*horz_res);
+
 %Preallocate cell array for auto layer position subscripts
 layers_raw = cell(1, max(radar.groups(:)));
 for i = 1:length(layers_raw)
@@ -89,9 +94,10 @@ for i = 1:length(layers_raw)
     
     % Calculate peak power-distances for each peak in ith group, scaled by
     % the median peak prominence of the radargram
-    d = diff([c(:) r(:)]);
+    peak_dist = peak_w*dist_w*radar.peaks(group_idx)*length(c)*horz_res;
+%     peak_dist = horz_res*length(c)*radar.peaks(group_idx);
+%     d = diff([c(:) r(:)]);
 %     peak_dist = horz_res*sum(sqrt(sum(d.*d,2)))*radar.peaks(group_idx);
-    peak_dist = horz_res*length(c)*radar.peaks(group_idx);
 %     peak_dist = length(c)*radar.peaks(group_idx)/...
 %         median(radar.peaks(radar.peaks>0));
     
@@ -104,22 +110,18 @@ end
 % Remove empty cells from layer array
 layers_raw = layers_raw(~cellfun(@isempty,layers_raw));
 
-% Sort layers by mean peak power-distance (descending order), so that in
+% Sort layers by total power-distance (descending order), so that in
 % future calculations operations are performed on brightest/longest 
 % layers first
-layer_L = cellfun(@(x) size(x,1), layers_raw);
-layer_P = cellfun(@(x) mean(x(:,3)), layers_raw);
-[~,layer_idx] = sort(layer_L.*layer_P, 'descend');
+[~, layer_idx] = sort(cellfun(@(x) sum(x(:,3)), layers_raw), 'descend');
 layers = layers_raw(layer_idx);
-
-
 
 % Allocate array of manual layers with which to search for matching auto
 % layers
 man_search = man_layers;
 
 % % Remove manual layers that do not extend across at least 50% of the
-% % radargram (typically ~10 km)
+% % radargram (typically ~15 km)
 % max_length = max(cellfun(@length, man_search));
 % long_idx = cellfun(@(x) length(x) >= 0.50*max_length, man_search);
 % man_search = man_search(long_idx);
@@ -172,9 +174,10 @@ is_layer = vertcat(log_tmp{:});
 
 [~, dev, stats] = mnrfit(peak_dist, categorical(is_layer));
 
-peaks_plot = (0:max(peak_dist))';
+peaks_plot = (0:0.01:max(peak_dist))';
 likelihood = 1./(1 + exp(stats.beta(2)*peaks_plot+stats.beta(1)));
 
+% Diagnostic regression plot
 figure
 plot(peak_dist, is_layer, '.')
 hold on
