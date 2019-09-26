@@ -15,66 +15,44 @@ end
 
 % Addons needed for analysis
 % Add Antarctic Mapping Toolbox (AMT) to path
-addon_folder = fullfile(addon_path, 'AntarcticMappingTools_v5.03/');
+addon_folder = fullfile(addon_path, 'AntarcticMappingTools_*');
 addpath(genpath(addon_folder))
 % Add export_fig to path
-addon_folder = fullfile(addon_path, 'altmany-export_fig-cafc7c5/');
+addon_folder = fullfile(addon_path, 'altmany-export_fig*');
 addpath(genpath(addon_folder))
 % Add CReSIS OIB MATLAB reader functions to path
 addon_folder = fullfile(addon_path, 'cresis-L1B-matlab-readers/');
 addpath(genpath(addon_folder))
+
+%% Process raw OIB echograms for PAIPR results and save output
+
+% Define number of Monte Carlo simulations to perform
+Ndraw = 100;
 
 % Load core data from file (data used was previously generated using
 % import_cores.m)
 core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
 cores = load(core_file);
 
-% Define number of Monte Carlo simulations to perform
-Ndraw = 100;
+% Select radar directory for processing
+[input_dir] = uigetdir(data_path,...
+    "Select directory containing raw echograms to process");
 
-%%
+% Select output directory in which to save processed echogram
+[output_dir] = uigetdir(input_dir, ...
+    "Select directory to output processed echogram");
 
-% name = 'SEAT10_6';
-% input_dir = fullfile(data_path, 'IceBridge/manual_layers', name);
-% radar_ALL = radar_format(fullfile(input_dir, 'raw_data/'));
-% radar = radar_ALL(1).segment;
-% overlap = 10000;
-% horz_res = 25;
-% 
-% [radar_tmp] = radar_RT(radar, cores, Ndraw);
-% [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
-% 
-% clip = round(0.5*overlap/horz_res);
-% 
-% fld_nm = fieldnames(radar_tmp);
-% fld_want = {'collect_date', 'Easting', 'Northing', 'dist', 'depth', ...
-%     'data_smooth', 'peaks', 'groups', 'ages', 'SMB_yr', 'SMB'};
-% 
-% radar = struct('collect_date', radar_tmp.collect_date, ...
-%     'Easting', radar_tmp.Easting(clip:end-clip),...
-%     'Northing', radar_tmp.Northing(clip:end-clip), ...
-%     'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
-%     'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
-%     'peaks', radar_tmp.peaks(:,clip:end-clip), ...
-%     'groups', radar_tmp.groups(:,clip:end-clip),...
-%     'likelihood', radar_tmp.likelihood(:,clip:end-clip), ...
-%     'ages', radar_tmp.ages(:,clip:end-clip,:));
-% radar.dist = radar.dist - radar.dist(1);
-% if isfield(radar_tmp, 'elev')
-%     radar.elev = radar_tmp.elev(clip:end-clip);
-% end
-% radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
-% radar.SMB = radar_tmp.SMB(clip:end-clip);
-% 
+% Process OIB echogram with PAIPR
+[radar] = PAIPR_draw(input_dir, cores, Ndraw);
+
+% % Save processed radar structure for future use
 % fn = strcat('layers_', name, '.mat');
 % output_path = fullfile(input_dir, fn);
 % save(output_path, '-struct', 'radar', '-v7.3')
 
-%% 
+%% Load previously processed PAIPR echogram to manually trace layers
 
 % Load relevant radar data (previously generated using the above section)
-% radar_file = fullfile(data_path, 'IceBridge/manual_layers', name, ...
-%     strcat('layers_', name, '.mat'));
 [r_file, r_path] = uigetfile(data_path,...
     "Select radar file to use in manual picking");
 radar_file = fullfile(r_path, r_file);
@@ -130,12 +108,16 @@ while draw==true
         draw = false;
     end
     
-    
-    
 end
 
+% Remove empty cells
 man_layers = man_layers(~cellfun(@isempty,man_layers));
 
+% Keep only traced layer data inside the boundaries of the echogram
 keep_idx = cellfun(@(x) round(x(:,2))<=size(radar.data_smooth,1), ...
     man_layers, 'UniformOutput', false);
 man_layers = cellfun(@(x,y) x(y,:), man_layers, keep_idx, 'UniformOutput', false);
+
+
+%% Save manual layer output to disk for later use
+
