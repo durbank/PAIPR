@@ -4,7 +4,7 @@
 function [radar] = PAIPR_draw(input_dir, cores, Ndraw)
 
 % Prep and format echograms prior to PAIPR processing
-radar_ALL = echo_format(fullfile(input_dir, 'raw_data/'));
+radar_ALL = echo_format(input_dir);
 radar_init = radar_ALL(1).segment;
 
 %% PAIPR processing

@@ -15,14 +15,20 @@ end
 
 % Addons needed for analysis
 % Add Antarctic Mapping Toolbox (AMT) to path
-addon_folder = fullfile(addon_path, 'AntarcticMappingTools_*');
-addpath(genpath(addon_folder))
+addon_struct = dir(fullfile(addon_path, 'AntarcticMappingTools_*'));
+addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
 % Add export_fig to path
-addon_folder = fullfile(addon_path, 'altmany-export_fig*');
-addpath(genpath(addon_folder))
+addon_struct = dir(fullfile(addon_path, 'altmany-export_fig*'));
+addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
 % Add CReSIS OIB MATLAB reader functions to path
-addon_folder = fullfile(addon_path, 'cresis-L1B-matlab-readers/');
-addpath(genpath(addon_folder))
+addon_struct = dir(fullfile(addon_path, 'cresis-L1B-matlab-readers*'));
+addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
+
+% Add PAIPR-core functions to path
+% parent = cd;
+% parent = fullfile(parent,'..', 'PAIPR-core');
+PAIPR_path = fullfile(cd,'..', 'PAIPR-core');
+addpath(genpath(PAIPR_path))
 
 %% Process raw OIB echograms for PAIPR results and save output
 
@@ -38,17 +44,19 @@ cores = load(core_file);
 [input_dir] = uigetdir(data_path,...
     "Select directory containing raw echograms to process");
 
-% Select output directory in which to save processed echogram
+% Select output directory in which to save processed echogram and manual
+% layers
 [output_dir] = uigetdir(input_dir, ...
     "Select directory to output processed echogram");
 
 % Process OIB echogram with PAIPR
+tic
 [radar] = PAIPR_draw(input_dir, cores, Ndraw);
+toc
 
-% % Save processed radar structure for future use
-% fn = strcat('layers_', name, '.mat');
-% output_path = fullfile(input_dir, fn);
-% save(output_path, '-struct', 'radar', '-v7.3')
+% Save processed radar structure for future use
+output_path = fullfile(output_dir, "PAIPR_out.mat");
+save(output_path, '-struct', 'radar', '-v7.3')
 
 %% Load previously processed PAIPR echogram to manually trace layers
 
@@ -121,3 +129,6 @@ man_layers = cellfun(@(x,y) x(y,:), man_layers, keep_idx, 'UniformOutput', false
 
 %% Save manual layer output to disk for later use
 
+% Save processed radar structure for future use
+output_path = fullfile(output_dir, "manual_layers.mat");
+save(output_path, '-struct', 'man_layers.man_all', '-v7.3')
