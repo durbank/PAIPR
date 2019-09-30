@@ -88,7 +88,9 @@ radar.peaks = peaks;
 radar.layers = layers;
 radar.groups = group_num;
 
-% Calculate age-depth profile distributions for each echogram trace
-[radar] = radar_age(radar, Ndraw);
+radar = rmfield(radar, {'data_stack', 'rho_coeff', 'rho_var'}); 
+
+% % Calculate age-depth profile distributions for each echogram trace
+% [radar] = radar_age(radar, Ndraw);
 
 end

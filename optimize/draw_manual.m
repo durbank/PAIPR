@@ -32,31 +32,29 @@ addpath(genpath(PAIPR_path))
 
 %% Process raw OIB echograms for PAIPR results and save output
 
-% Define number of Monte Carlo simulations to perform
-Ndraw = 100;
-
-% Load core data from file (data used was previously generated using
-% import_cores.m)
-core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
-cores = load(core_file);
-
-% Select radar directory for processing
-[input_dir] = uigetdir(data_path,...
-    "Select directory containing raw echograms to process");
-
-% Select output directory in which to save processed echogram and manual
-% layers
-[output_dir] = uigetdir(input_dir, ...
-    "Select directory to output processed echogram");
-
-% Process OIB echogram with PAIPR
-tic
-[radar] = PAIPR_draw(input_dir, cores, Ndraw);
-toc
-
-% Save processed radar structure for future use
-output_path = fullfile(output_dir, "PAIPR_out.mat");
-save(output_path, '-struct', 'radar', '-v7.3')
+% % Define number of Monte Carlo simulations to perform
+% Ndraw = 100;
+% 
+% % Load core data from file (data used was previously generated using
+% % import_cores.m)
+% core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
+% cores = load(core_file);
+% 
+% % Select radar directory for processing
+% [input_dir] = uigetdir(data_path,...
+%     "Select directory containing raw echograms to process");
+% 
+% % Select output directory in which to save processed echogram and manual
+% % layers
+% [output_dir] = uigetdir(input_dir, ...
+%     "Select directory to output processed echogram");
+% 
+% % Process OIB echogram with PAIPR
+% [radar] = PAIPR_draw(input_dir, cores, Ndraw);
+% 
+% % Save processed radar structure for future use
+% output_path = fullfile(output_dir, "PAIPR_out.mat");
+% save(output_path, '-struct', 'radar', '-v7.3')
 
 %% Load previously processed PAIPR echogram to manually trace layers
 

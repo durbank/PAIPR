@@ -26,14 +26,14 @@ end
 
 % Addons needed for analysis
 % Add Antarctic Mapping Toolbox (AMT) to path
-addon_folder = fullfile(addon_path, 'AntarcticMappingTools_v5.03/');
-addpath(genpath(addon_folder))
+addon_struct = dir(fullfile(addon_path, 'AntarcticMappingTools_*'));
+addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
 % Add export_fig to path
-addon_folder = fullfile(addon_path, 'altmany-export_fig-cafc7c5/');
-addpath(genpath(addon_folder))
+addon_struct = dir(fullfile(addon_path, 'altmany-export_fig*'));
+addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
 % Add CReSIS OIB MATLAB reader functions to path
-addon_folder = fullfile(addon_path, 'cresis-L1B-matlab-readers/');
-addpath(genpath(addon_folder))
+addon_struct = dir(fullfile(addon_path, 'cresis-L1B-matlab-readers*'));
+addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
 
 % Load core data from file (data used was previously generated using
 % import_cores.m)
@@ -63,16 +63,17 @@ horz_res = 25;
 
 % Select directory containing PAIPR-results and manual layers (picked using
 % the `draw_manual.m` file)
-input_dir = uigetdir(fullfile(data_path, "PAIPR-results/v1.1", ...
-    "TGRS_2019_edits_v1/manual_layers"), ...
+input_dir = uigetdir(fullfile(data_path, "PAIPR-results/vWIP", ...
+    "coeffs_branch/manual_layers"), ...
     "Select directory containing input files");
 
 % Load PAIPR radar data
-radar = load(fullfile(input_dir, "PAIPR_output"));
+radar = load(fullfile(input_dir, "PAIPR_out"));
 
 % Load manually picked layer indices for above radar echogram
-tmp = load(fullfile(input_dir, "manual_layers"));
-man_layers = tmp.man_all;
+load(fullfile(input_dir, "manual_layers"))
+% man_layers = load(fullfile(input_dir, "manual_layers"));
+% man_layers = tmp.man_all;
 
 % Define range resolution
 range_res = round(mean(diff(radar.depth)),2);
