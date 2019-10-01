@@ -1,7 +1,7 @@
 % Function to calculate layer likelihood scores and age-depth profile
 % distributions (based on likelihood scores)
 
-function [radar] = radar_age(radar, Ndraw)
+function [radar] = radar_age(radar, r, k, Ndraw)
 
 % Find horizontal resolution of input radar echogram
 horz_res = mean(diff(radar.dist));
@@ -48,8 +48,9 @@ for i = 1:size(layer_peaks, 2)
     % (see `optimize/manual_layers.m`)
 %     r = -2.4333e-4; % [-3.18e-4 -1.55e-4]
 %     k = 4.4323;     % [3.25 4.8]
-    r = -3.06e-4;
-    k = 2.94;
+
+%     r = -3.06e-4;
+%     k = 2.94;
     
     likelihood = 1./(1+exp(r*peaks_i + k));
     radar.likelihood(peaks_idx,i) = likelihood;

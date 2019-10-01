@@ -139,7 +139,9 @@ radar.layers = layers;
 radar.groups = group_num;
 
 % Calculate age-depth profile distributions for each echogram trace
-[radar] = radar_age(radar, Ndraw);
+r = -3.06e-4;
+k = 2.94;
+[radar] = radar_age(radar, r, k, Ndraw);
 
 % Clip depth-related variables to final cutoff depth
 cutoff = 25;
