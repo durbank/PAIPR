@@ -33,27 +33,27 @@ addpath(genpath(PAIPR_path))
 
 % % Define number of Monte Carlo simulations to perform
 % Ndraw = 100;
-% 
+%
 % % Load core data from file (data used was previously generated using
 % % import_cores.m)
 % core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
 % cores = load(core_file);
-% 
+%
 % % Select directory containing raw OIB echograms to process
 % input_dir = uigetdir(fullfile(data_path, "PAIPR-results/vWIP", ...
 %     "coeffs_branch/manual_layers"), ...
 %     "Select directory containing input files");
-% 
+%
 % % Select output directory in which to save processed echogram and manual
 % % layers
 % [output_dir] = uigetdir(input_dir, ...
 %     "Select directory to output processed echogram");
-% 
+%
 % % Process OIB echogram with PAIPR
 % [radar] = PAIPR_draw(input_dir, cores, Ndraw);
-% 
+%
 % %%%
-% 
+%
 % % Clip depth-related variables to final cutoff depth
 % cutoff = 25;
 % core_res = 0.02;
@@ -63,7 +63,7 @@ addpath(genpath(PAIPR_path))
 %     'depth', radar.depth(1:cut_idx), ...
 %     'data_smooth', radar.data_smooth(1:cut_idx,:),...
 %     'peaks', radar.peaks(1:cut_idx,:), 'groups', radar.groups(1:cut_idx,:));
-% 
+%
 % % Clip 5 km off the start/end of the processed radargram (in order to
 % % properly match location and dimensions of manually traced layers
 % overlap = 10000;
@@ -76,19 +76,19 @@ addpath(genpath(PAIPR_path))
 %     'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
 %     'peaks', radar_tmp.peaks(:,clip:end-clip), ...
 %     'groups', radar_tmp.groups(:,clip:end-clip));
-% 
+%
 % % Redefine radargram distances based on clipped data
 % radar.dist = radar.dist - radar.dist(1);
-% 
+%
 % % Find layer member indices based on new clipped record
 % layers = cell(1, max(radar.groups(:)));
 % for j = 1:length(layers)
 %     layers{j} = find(radar.groups == j);
 % end
 % radar.layers = layers(~cellfun(@isempty, layers));
-% 
+%
 % %%%
-% 
+%
 % % Save processed radar structure for future use
 % output_path = fullfile(output_dir, "PAIPR_out.mat");
 % save(output_path, '-struct', 'radar', '-v7.3')
@@ -136,7 +136,20 @@ end
 
 %%
 
-i = 500;
+r_params = zeros(1, size(radar.data_smooth,2));
+k_params = zeros(1, size(radar.data_smooth,2));
+SSE = zeros(1, size(radar.data_smooth,2));
+depth = radar.depth;
 
-[r_param, k_param] = opt_param(man_peaks(:,i), DB(:,i), radar.depth);
+parfor i = 1:length(r_params)
+    
+    [r_params(i), k_params(i), SSE(i)] = opt_param(...
+        man_peaks(:,i), DB(:,i), depth);
+    
+end
 
+
+%%
+
+output_path = fullfile(input_dir, "params_output.mat");
+save(output_path, 'r_params', 'k_params', 'SSE')
