@@ -84,6 +84,8 @@ range_res = round(mean(diff(radar.depth)),2);
 % results)
 peak_w = 1/mean(radar.peaks(radar.peaks>0));
 dist_w = 1/(size(radar.data_smooth,2)*horz_res);
+peak_w = 1;
+dist_w = 1;
 
 %Preallocate cell array for auto layer position subscripts
 layers_raw = cell(1, max(radar.groups(:)));

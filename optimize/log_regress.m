@@ -113,6 +113,8 @@ load(fullfile(input_dir, "manual_layers"))
 % Weighting coefficients for mean brightness and echogram distance
 peak_w = 1/mean(radar.peaks(radar.peaks>0));
 dist_w = 1/radar.dist(end);
+peak_w = 1;
+dist_w = 1;
 
 horz_res = round(mean(diff(radar.dist)));
 lay_dist = horz_res*cellfun(@length, radar.layers);

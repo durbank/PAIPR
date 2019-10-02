@@ -16,13 +16,28 @@ for j = 1:length(depth)
 end
 
 
+% for j = 1:Ndraw
+%     depths_j = depth(logical(yr_idx(:,j)));
+%     yrs_j = (0:(length(depths_j)-1))';
+%     if length(depths_j) < 2
+%         ages(:,j) = interp1([0 depth(end)], [0 1], depth, ...
+%             'linear', 'extrap');
+%     else
+%         ages(:,j) = interp1(depths_j, yrs_j, depth, 'linear', 'extrap');
+%     end
+% end
+
 for j = 1:Ndraw
     depths_j = depth(logical(yr_idx(:,j)));
-    yrs_j = 0:(length(depths_j)-1);
-    ages(:,j) = interp1(depths_j, yrs_j, depth, 'linear', 'extrap');
+    yrs_j = (0:(length(depths_j)-1))';
+    try
+        ages(:,j) = interp1(depths_j, yrs_j, depth, 'linear', 'extrap');
+    catch
+        ages(:,j) = NaN;
+    end
 end
 
-age_out = interp1(depth, mean(ages,2), depth);
+age_out = interp1(depth, nanmean(ages,2), depth);
 
 
 f = sum((age_out - age_interp).^2);

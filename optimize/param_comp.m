@@ -26,6 +26,12 @@ addpath(genpath(PAIPR_path))
 input_dir = fullfile(data_path, "PAIPR-results/vWIP",...
     "coeffs_branch/manual_layers");
 
+% SEAT10_4 = load(fullfile(input_dir, "SEAT10_4", ...
+%     "params_scaled.mat"));
+% SEAT10_5 = load(fullfile(input_dir, "SEAT10_5", ...
+%     "params_scaled.mat"));
+% SEAT10_6 = load(fullfile(input_dir, "SEAT10_6", ...
+%     "params_scaled.mat"));
 SEAT10_4 = load(fullfile(input_dir, "SEAT10_4", ...
     "params_output.mat"));
 SEAT10_5 = load(fullfile(input_dir, "SEAT10_5", ...
@@ -41,9 +47,9 @@ ksdensity(SEAT10_4.r_params)
 ksdensity(SEAT10_5.r_params)
 ksdensity(SEAT10_6.r_params)
 legend("2010-4", "2010-5", "2010-6")
-xlim([-6.5 -3.5])
+% xlim([-6.5 -3.5])
 hold off
-sprintf("Median r parameters: %0.2f | %0.2f | %0.2f", ...
+sprintf("Median r parameters: %0.2e | %0.2e | %0.2e", ...
     median(SEAT10_4.r_params), median(SEAT10_5.r_params), ...
     median(SEAT10_6.r_params))
 
@@ -54,7 +60,7 @@ ksdensity(SEAT10_4.k_params)
 ksdensity(SEAT10_5.k_params)
 ksdensity(SEAT10_6.k_params)
 legend("2010-4", "2010-5", "2010-6")
-xlim([-2 3])
+% xlim([-2 3])
 hold off
 sprintf("Median k parameters: %0.2f | %0.2f | %0.2f", ...
     median(SEAT10_4.k_params), median(SEAT10_5.k_params), ...
@@ -67,7 +73,7 @@ ksdensity(SEAT10_4.SSE)
 ksdensity(SEAT10_5.SSE)
 ksdensity(SEAT10_6.SSE)
 legend("2010-4", "2010-5", "2010-6")
-xlim([0 50])
+% xlim([0 50])
 hold off
 sprintf("Median SSE values: %0.2f | %0.2f | %0.2f", ...
     median(SEAT10_4.SSE), median(SEAT10_5.SSE), ...
@@ -85,10 +91,12 @@ r = mean([median(SEAT10_4.r_params), median(SEAT10_5.r_params), ...
 k = mean([median(SEAT10_4.k_params), median(SEAT10_5.k_params), ...
     median(SEAT10_6.k_params)]);
 
-X = 0:0.01:3.5;
-Y = 1./(1+exp(r*X + k));
-figure
-plot(X,Y)
+% % max bounds
+% r = -2.33e-4;
+% k = 3.75;
+% % min bounds
+% r = -3.67e-4;
+% k = 2.25;
 
 % Calculate ages for validation sites
 radar4 = load(fullfile(input_dir, "SEAT10_4", "PAIPR_out.mat"));
@@ -97,6 +105,18 @@ radar5 = load(fullfile(input_dir, "SEAT10_5", "PAIPR_out.mat"));
 [radar5] = radar_age(radar5, r, k, 100);
 radar6 = load(fullfile(input_dir, "SEAT10_6", "PAIPR_out.mat"));
 [radar6] = radar_age(radar6, r, k, 100);
+
+
+X = 0:(25*length(radar4.Easting)*max(radar4.peaks(:)));
+% X = 0:0.01:3.5;
+Y = 1./(1+exp(r*X + k));
+Y_ub = 1./(1+exp(-2.33e-4*X + 3.75));
+Y_lb = 1./(1+exp(-3.67e-4*X + 2.25));
+figure
+hold on
+plot(X,Y, 'b')
+plot(X,Y_lb, 'r--')
+plot(X,Y_ub, 'r--')
 
 %%
 

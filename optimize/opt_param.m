@@ -24,9 +24,10 @@ DB_vals = DB_vals(keep_idx);
 DB_vals(DB_vals == null_val) = [];
 
 
-options = optimset('TolX',1e-2, 'MaxFunEvals', 30);
-% options = optimset('PlotFcns','optimplotfval','TolX',1e-2, 'MaxFunEvals', 25);
-x0 = [-3 3];
+options = optimset('TolX',1, 'MaxIter', 30);
+% options = optimset('PlotFcns','optimplotfval','TolX',1, 'MaxIter', 50);
+% x0 = [-3e-4 3];
+x0 = [-1e-4 4];
 [xmin, fval] = fminsearch(@(x) ...
     loss_fun(PAIPR_depth,age_interp,DB_vals,x(1),x(2), 1000), x0, options);
 
