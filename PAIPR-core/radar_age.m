@@ -25,6 +25,7 @@ for i = 1:length(radar.layers)
         radar.peaks(radar.layers{i}).*layers_dist(i);
 end
 
+radar.DB = layer_peaks;
 
 %% Assign layer likelihood scores and estimate age-depth scales
 

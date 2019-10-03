@@ -24,15 +24,21 @@ DB_vals = DB_vals(keep_idx);
 DB_vals(DB_vals == null_val) = [];
 
 
-options = optimset('TolX',1, 'MaxIter', 30);
-% options = optimset('PlotFcns','optimplotfval','TolX',1, 'MaxIter', 50);
+options = optimset('TolX',25, 'MaxIter', 30);
+% options = optimset('PlotFcns','optimplotfval','TolX',25, 'MaxIter', 50);
 % x0 = [-3e-4 3];
-x0 = [-1e-4 4];
+% x0 = [-1e-4 4];
+% [xmin, fval] = fminsearch(@(x) ...
+%     loss_fun(PAIPR_depth,age_interp,DB_vals,x(1),x(2), 1000), x0, options);
+k_param = 4.6;
+x0 = -30e-5;
 [xmin, fval] = fminsearch(@(x) ...
-    loss_fun(PAIPR_depth,age_interp,DB_vals,x(1),x(2), 1000), x0, options);
+    loss_fun(PAIPR_depth,age_interp,DB_vals,x,k_param, 500), x0, options);
+% sprintf("%0.3e | %0.3f", xmin)
+
 
 r_param = xmin(1);
-k_param = xmin(2);
+% k_param = xmin(2);
 SSE = fval;
 
 

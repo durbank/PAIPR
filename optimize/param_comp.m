@@ -49,22 +49,26 @@ ksdensity(SEAT10_6.r_params)
 legend("2010-4", "2010-5", "2010-6")
 % xlim([-6.5 -3.5])
 hold off
+
+% ksdensity()
+% findpeaks()
+
 sprintf("Median r parameters: %0.2e | %0.2e | %0.2e", ...
     median(SEAT10_4.r_params), median(SEAT10_5.r_params), ...
     median(SEAT10_6.r_params))
 
-figure
-title("Midpoint parameter (k)")
-hold on
-ksdensity(SEAT10_4.k_params)
-ksdensity(SEAT10_5.k_params)
-ksdensity(SEAT10_6.k_params)
-legend("2010-4", "2010-5", "2010-6")
-% xlim([-2 3])
-hold off
-sprintf("Median k parameters: %0.2f | %0.2f | %0.2f", ...
-    median(SEAT10_4.k_params), median(SEAT10_5.k_params), ...
-    median(SEAT10_6.k_params))
+% figure
+% title("Midpoint parameter (k)")
+% hold on
+% ksdensity(SEAT10_4.k_params)
+% ksdensity(SEAT10_5.k_params)
+% ksdensity(SEAT10_6.k_params)
+% legend("2010-4", "2010-5", "2010-6")
+% % xlim([-2 3])
+% hold off
+% sprintf("Median k parameters: %0.2f | %0.2f | %0.2f", ...
+%     median(SEAT10_4.k_params), median(SEAT10_5.k_params), ...
+%     median(SEAT10_6.k_params))
 
 figure
 title("SSE")
@@ -112,11 +116,17 @@ X = 0:(25*length(radar4.Easting)*max(radar4.peaks(:)));
 Y = 1./(1+exp(r*X + k));
 Y_ub = 1./(1+exp(-2.33e-4*X + 3.75));
 Y_lb = 1./(1+exp(-3.67e-4*X + 2.25));
+
 figure
 hold on
-plot(X,Y, 'b')
+plot(radar4.DB(radar4.DB>0), radar4.likelihood(radar4.DB>0), 'o')
+plot(radar5.DB(radar5.DB>0), radar5.likelihood(radar5.DB>0), 'o')
+plot(radar6.DB(radar6.DB>0), radar6.likelihood(radar6.DB>0), 'o')
+plot(X,Y, 'b--')
 plot(X,Y_lb, 'r--')
 plot(X,Y_ub, 'r--')
+plot(radar4.DB(radar4.DB>0), radar4.likelihood(radar4.DB>0), 'o')
+
 
 %%
 
