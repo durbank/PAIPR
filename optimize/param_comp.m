@@ -47,11 +47,8 @@ ksdensity(SEAT10_4.r_params)
 ksdensity(SEAT10_5.r_params)
 ksdensity(SEAT10_6.r_params)
 legend("2010-4", "2010-5", "2010-6")
-% xlim([-6.5 -3.5])
+xlim([-2e-3 0])
 hold off
-
-% ksdensity()
-% findpeaks()
 
 sprintf("Median r parameters: %0.2e | %0.2e | %0.2e", ...
     median(SEAT10_4.r_params), median(SEAT10_5.r_params), ...
@@ -77,7 +74,7 @@ ksdensity(SEAT10_4.SSE)
 ksdensity(SEAT10_5.SSE)
 ksdensity(SEAT10_6.SSE)
 legend("2010-4", "2010-5", "2010-6")
-% xlim([0 50])
+xlim([0 100])
 hold off
 sprintf("Median SSE values: %0.2f | %0.2f | %0.2f", ...
     median(SEAT10_4.SSE), median(SEAT10_5.SSE), ...
@@ -90,8 +87,27 @@ sprintf("Median SSE values: %0.2f | %0.2f | %0.2f", ...
 core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
 cores = load(core_file);
 
-r = mean([median(SEAT10_4.r_params), median(SEAT10_5.r_params), ...
-    median(SEAT10_6.r_params)]);
+
+[f, xi] = ksdensity(SEAT10_4.r_params(SEAT10_4.r_params < ...
+    quantile(SEAT10_4.r_params, 0.99) & SEAT10_4.r_params > ...
+    quantile(SEAT10_4.r_params, 0.01)));
+[~, f_idx] = max(f);
+r4 = xi(f_idx);
+
+[f, xi] = ksdensity(SEAT10_5.r_params(SEAT10_5.r_params < ...
+    quantile(SEAT10_5.r_params, 0.95) & SEAT10_5.r_params > ...
+    quantile(SEAT10_5.r_params, 0.05)));
+[~, f_idx] = max(f);
+r5 = xi(f_idx);
+
+[f, xi] = ksdensity(SEAT10_6.r_params(SEAT10_6.r_params < ...
+    quantile(SEAT10_6.r_params, 0.99) & SEAT10_6.r_params > ...
+    quantile(SEAT10_6.r_params, 0.01)));
+[~, f_idx] = max(f);
+r6 = xi(f_idx);
+
+
+r = mean([r4 r5 r6]);
 k = mean([median(SEAT10_4.k_params), median(SEAT10_5.k_params), ...
     median(SEAT10_6.k_params)]);
 
@@ -111,21 +127,20 @@ radar6 = load(fullfile(input_dir, "SEAT10_6", "PAIPR_out.mat"));
 [radar6] = radar_age(radar6, r, k, 100);
 
 
-X = 0:(25*length(radar4.Easting)*max(radar4.peaks(:)));
+X = 0:max(radar4.DB(:));
 % X = 0:0.01:3.5;
 Y = 1./(1+exp(r*X + k));
-Y_ub = 1./(1+exp(-2.33e-4*X + 3.75));
-Y_lb = 1./(1+exp(-3.67e-4*X + 2.25));
+Y_ub = 1./(1+exp((r+2.75e-4)*X + k));
+Y_lb = 1./(1+exp((r-2.75e-4)*X + k));
 
 figure
 hold on
-plot(radar4.DB(radar4.DB>0), radar4.likelihood(radar4.DB>0), 'o')
-plot(radar5.DB(radar5.DB>0), radar5.likelihood(radar5.DB>0), 'o')
-plot(radar6.DB(radar6.DB>0), radar6.likelihood(radar6.DB>0), 'o')
-plot(X,Y, 'b--')
+% plot(radar4.DB(radar4.DB>0), radar4.likelihood(radar4.DB>0), 'o')
+% plot(radar5.DB(radar5.DB>0), radar5.likelihood(radar5.DB>0), 'o')
+% plot(radar6.DB(radar6.DB>0), radar6.likelihood(radar6.DB>0), 'o')
+plot(X,Y, 'b')
 plot(X,Y_lb, 'r--')
 plot(X,Y_ub, 'r--')
-plot(radar4.DB(radar4.DB>0), radar4.likelihood(radar4.DB>0), 'o')
 
 
 %%

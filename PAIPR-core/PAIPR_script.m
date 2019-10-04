@@ -76,7 +76,9 @@ parfor i = 1:length(radar_ALL)
     [radar_tmp] = calc_age(radar_ALL(i).segment, cores, Ndraw);
     
     % Calculate radar annual SMB
-    [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
+    r = -4.3491e-4;
+    k = 4.600
+    [radar_tmp] = calc_SWE(radar_tmp, r, k, Ndraw);
     
     
     %%

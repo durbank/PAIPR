@@ -12,8 +12,8 @@ layers_dist = cellfun(@(x) numel(x)*horz_res, radar.layers);
 
 % Find the mean peak prominence (used to scale the prominence-distance
 % results)
-peak_w = 1/mean(radar.peaks(radar.peaks>0));
-dist_w = 1/(size(radar.data_smooth,2)*horz_res);
+% peak_w = 1/mean(radar.peaks(radar.peaks>0));
+% dist_w = 1/(size(radar.data_smooth,2)*horz_res);
 peak_w = 1;
 dist_w = 1;
 
