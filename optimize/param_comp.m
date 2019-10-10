@@ -88,23 +88,30 @@ core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
 cores = load(core_file);
 
 
-[f, xi] = ksdensity(SEAT10_4.r_params(SEAT10_4.r_params < ...
+[f4, xi4] = ksdensity(SEAT10_4.r_params(SEAT10_4.r_params < ...
     quantile(SEAT10_4.r_params, 0.99) & SEAT10_4.r_params > ...
     quantile(SEAT10_4.r_params, 0.01)));
-[~, f_idx] = max(f);
-r4 = xi(f_idx);
+[~, f_idx] = max(f4);
+r4 = xi4(f_idx);
 
-[f, xi] = ksdensity(SEAT10_5.r_params(SEAT10_5.r_params < ...
+[f5, xi5] = ksdensity(SEAT10_5.r_params(SEAT10_5.r_params < ...
     quantile(SEAT10_5.r_params, 0.95) & SEAT10_5.r_params > ...
-    quantile(SEAT10_5.r_params, 0.05)));
-[~, f_idx] = max(f);
-r5 = xi(f_idx);
+    quantile(SEAT10_5.r_params, 0.25)));
+[~, f_idx] = max(f5);
+r5 = xi5(f_idx);
 
-[f, xi] = ksdensity(SEAT10_6.r_params(SEAT10_6.r_params < ...
+[f6, xi6] = ksdensity(SEAT10_6.r_params(SEAT10_6.r_params < ...
     quantile(SEAT10_6.r_params, 0.99) & SEAT10_6.r_params > ...
     quantile(SEAT10_6.r_params, 0.01)));
-[~, f_idx] = max(f);
-r6 = xi(f_idx);
+[~, f_idx] = max(f6);
+r6 = xi6(f_idx);
+
+
+figure
+hold on
+plot(xi4, f4)
+plot(xi5, f5)
+plot(xi6, f6)
 
 
 r = mean([r4 r5 r6]);
