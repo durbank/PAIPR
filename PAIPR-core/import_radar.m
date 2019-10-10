@@ -32,7 +32,7 @@ else
 end
 
 % % Calucate distance along traverse (in meters)
-% distances = pathdist(mdata.lat, mdata.lon);
+% distances = pathdistps(mdata.lat, mdata.lon);
 %         
 % bounds_idx = 1:length(mdata.lat) < start_idx | 1:length(mdata.lat) > end_idx;
 % loc_idx = mdata.lat >= -65;
@@ -62,7 +62,7 @@ mdata.data_out(:,rm_idx) = [];
 
 try
     % Calucate distance along traverse (in meters)
-    distances = pathdist(mdata.lat, mdata.lon);
+    distances = pathdistps(mdata.lat, mdata.lon);
     dist_idx = ~logical([1 diff(distances)]);
     
     mdata.lat(dist_idx) = [];
@@ -107,10 +107,10 @@ mdata.data_out = fillmissing(mdata.data_out, 'pchip');
 
 % Calucate path distance along traverse (in meters)
 try
-    mdata.dist = pathdist(mdata.lat, mdata.lon);
+    mdata.dist = pathdistps(mdata.lat, mdata.lon);
 catch
     mdata.dist = [];
-    disp(strcat("Warning: Error on pathdist (Line 81 of import_radar.m);", ...
+    disp(strcat("Warning: Error on pathdistps (Line 81 of import_radar.m);", ...
         sprintf(" %i elements in array", length(mdata.lat))));
 end
 

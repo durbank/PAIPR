@@ -85,7 +85,7 @@ lat = fillmissing(lat, 'previous');
 lon = fillmissing(lon, 'previous');
 
 % Calucate distance along traverse (in meters)
-d = pathdist(lat, lon);
+d = pathdistps(lat, lon);
 
 % Find indices to break radargrams based on absence of data across an
 % extended distance (greater than 500 m)
@@ -108,7 +108,7 @@ for i = 1:length(break_idx)-1
     % Determine lat/lon and distance along the ith section radar data
     lat_i = lat(break_idx(i)+1:break_idx(i+1));
     lon_i = lon(break_idx(i)+1:break_idx(i+1));
-    dist_i = pathdist(lat_i, lon_i);
+    dist_i = pathdistps(lat_i, lon_i);
     
     % Initialize while loop for current radar segment
     search = true;
@@ -304,7 +304,7 @@ for i = 1:size(files_i,1)
     
     % Recalculate continuous path distance along the concatenated ith
     % radargram
-    radar_tmp.dist = pathdist(radar_tmp.lat, radar_tmp.lon);
+    radar_tmp.dist = pathdistps(radar_tmp.lat, radar_tmp.lon);
     
     radar_ALL(i).segment = radar_tmp;
 end

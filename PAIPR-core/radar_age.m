@@ -1,7 +1,7 @@
 % Function to calculate layer likelihood scores and age-depth profile
 % distributions (based on likelihood scores)
 
-function [radar] = radar_age(radar, Ndraw)
+function [radar] = radar_age(radar, r, k, Ndraw)
 
 % Find horizontal resolution of input radar echogram
 horz_res = mean(diff(radar.dist));
@@ -10,13 +10,22 @@ horz_res = mean(diff(radar.dist));
 % lateral size of stacked radar trace bins)
 layers_dist = cellfun(@(x) numel(x)*horz_res, radar.layers);
 
+% Find the mean peak prominence (used to scale the prominence-distance
+% results)
+% peak_w = 1/mean(radar.peaks(radar.peaks>0));
+% dist_w = 1/(size(radar.data_smooth,2)*horz_res);
+peak_w = 1;
+dist_w = 1;
+
 % Map layer prominence-distance values to the location within the radar
 % matrix of the ith layer
 layer_peaks = zeros(size(radar.peaks));
 for i = 1:length(radar.layers)
-    layer_peaks(radar.layers{i}) = radar.peaks(radar.layers{i}).*layers_dist(i);
+    layer_peaks(radar.layers{i}) = peak_w*dist_w*...
+        radar.peaks(radar.layers{i}).*layers_dist(i);
 end
 
+radar.DB = layer_peaks;
 
 %% Assign layer likelihood scores and estimate age-depth scales
 
@@ -42,8 +51,9 @@ for i = 1:size(layer_peaks, 2)
     % (see `optimize/manual_layers.m`)
 %     r = -2.4333e-4; % [-3.18e-4 -1.55e-4]
 %     k = 4.4323;     % [3.25 4.8]
-    r = -3.06e-4;
-    k = 2.94;
+
+%     r = -3.06e-4;
+%     k = 2.94;
     
     likelihood = 1./(1+exp(r*peaks_i + k));
     radar.likelihood(peaks_idx,i) = likelihood;

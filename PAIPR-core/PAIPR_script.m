@@ -73,7 +73,9 @@ parfor i = 1:length(radar_ALL)
     % Calculate radar age-depth profile distributions (includes processing
     % steps for depth, signal-noise, radon transforms, layer tracing,
     % likelihood assignments, and age calculations)
-    [radar_tmp] = calc_age(radar_ALL(i).segment, cores, Ndraw);
+    r = -4.3491e-4;
+    k = 4.600;
+    [radar_tmp] = calc_age(radar_ALL(i).segment, cores, r, k, Ndraw);
     
     % Calculate radar annual SMB
     [radar_tmp] = calc_SWE(radar_tmp, Ndraw);

@@ -4,7 +4,7 @@
 % the position of the nearest neighbors rather than relying on the position
 % of the last member found
 
-function [peak_group, layers] = radar_trace(peaks_raw, peak_width, ...
+function [peaks, group_num, layers] = radar_trace(peaks_raw, peak_width, ...
     grad_matrix, core_res, horz_res)
 
 % Preallocate layer group matrix and cell array
@@ -333,7 +333,8 @@ while search_new == true
             mag_j_std = std(peaks_raw(group_idx));
         end
         w_m = (1/mag_j_std)^2;
-        w_m = 0;
+        w_m = 0;    % Set to zero so all peaks within distance are added
+                    % regardless of magnitude differences
 %         w_x = (1/std(col_local))^2;
 %         w_y = (1/(0.5*width_j))^2;
 %         if length(mag_j) <= 5
@@ -353,7 +354,7 @@ while search_new == true
 %         dist_j = sqrt(((data_local(:,1)-row_mean(j))/(0.5*width_j)).^2 + ...
 %             (data_local(:,2)-col(j)).^2 + (0.5*(mag_local - mag_j)).^2);
         
-        % Set distance threshold
+        % Set distance threshold for secondary recovery search
         threshold = 2.5;
         
         % Assign all peaks within tolerance to the current layer group and
@@ -386,8 +387,52 @@ while search_new == true
     
 end
 
-% Remove empty cells and layers shorter than 250 m
-% layers = layers(cellfun(@(x) length(x) >= round(250/horz_res), layers));
+
+%% Clean final layer picks
+
+% Remove empty cells and layers shorter than 500 m
 layers = layers(cellfun(@(x) length(x) >= round(500/horz_res), layers));
+
+% Preallocate arrays for the matrix indices of members of each layer
+layers_idx = cell(1,length(layers));
+peaks = zeros(size(peaks_raw));
+
+% For loop to coerce layers to have one row position for each trace
+for i = 1:length(layers_idx)
+    
+    % Find matrix indices of all members of ith layer
+    layer_i = layers{i};
+    
+    % Find row and col indices of members of ith layer
+    [row, col] = ind2sub(size(peaks), layer_i);
+    mag = peaks_raw(layer_i);
+    
+    % Interpolate data to all column positions within the range of the
+    % layer
+    col_interp = min(col):max(col);
+    
+    % Interpolate row positions using a cubic smoothing spline
+    row_interp = round(fnval(csaps(col, row), col_interp));
+    row_interp(row_interp < 1) = 1;
+    row_interp(row_interp > size(peaks,1)) = size(peaks,1);
+    
+    % Interpolate peak prominence magnitudes to all columns in range using
+    % a cubic smoothing spline
+    mag_interp = csaps(col, mag, 1/length(col_interp), col_interp);
+    
+    % Assign interpolated layer to output
+    layer_interp = sub2ind(size(peaks), row_interp, col_interp);
+    peaks(layer_interp) = mag_interp;
+    layers_idx{i} = layer_interp';
+end
+
+% Create matrix of layer group assignments
+group_num = zeros(size(peaks));
+for i = 1:length(layers_idx)
+    group_num(layers_idx{i}) = i;
+end
+
+% Rename layer cell array for output
+layers = layers_idx;
 
 end
