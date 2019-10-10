@@ -1,4 +1,4 @@
-function [radar] = calc_age(radar_struct, cores, Ndraw)
+function [radar] = calc_age(radar_struct, cores, r, k, Ndraw)
 
 % Convert to depth
 [radar] = radar_depth(radar_struct, cores);
@@ -139,8 +139,6 @@ radar.layers = layers;
 radar.groups = group_num;
 
 % Calculate age-depth profile distributions for each echogram trace
-r = -4.3491e-4;
-k = 4.6000;
 [radar] = radar_age(radar, r, k, Ndraw);
 
 % Clip depth-related variables to final cutoff depth
