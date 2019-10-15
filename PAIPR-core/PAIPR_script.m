@@ -67,26 +67,31 @@ end
 radar_ALL = radar_ALL(keep_idx);
 
 % Parellel for loop to process all decomposed echograms
-parfor i = 1:length(radar_ALL)
+for i = 1:length(radar_ALL)
+    
+    % Find the mean response with depth in the radar data attributes across a
+    % given horizontal resolution (in meters)
+    [radar_tmp] = radar_stack(radar_ALL(i).segment, horz_res);
+    
+    % Load modeled depth-density data from stats model output at specified
+    % Easting/Northing coordinates
+    [rho_data] = load_rho(rho_file, radar_tmp.Easting, radar_tmp.Northing);
+    
+    % Convert to depth
+    [radar_tmp] = radar_depth(radar_tmp, rho_data);
     
     % Calculate radar age-depth profile distributions (includes processing
-    % steps for depth, signal-noise, radon transforms, layer tracing,
-    % likelihood assignments, and age calculations)
+    %signal-noise, radon transforms, layer tracing, likelihood assignments,
+    % and age calculations)
     r = -4.3491e-4;
     k = 4.600;
-    [radar_tmp] = calc_age(radar_ALL(i).segment, cores, r, k, Ndraw);
+    [radar_tmp] = calc_age(radar_tmp, r, k, Ndraw);
     
     % Calculate radar annual SMB
-    [radar_tmp] = calc_SWE(radar_tmp, Ndraw);
+    [radar_tmp] = calc_SWE(radar_tmp, rho_data, Ndraw);
     
     
     %%
-    
-    %     % May be used in future versions of code
-    %     fld_nm = fieldnames(radar_tmp);
-    %     fld_want = {'collect_date', 'Easting', 'Northing', 'dist', ...
-    %         'depth', 'rho_coeff', 'rho_var', 'data_smooth', 'peaks',...
-    %         'groups', 'ages', 'SMB_yr', 'SMB'};
     
     % Clip radar data structure variables based on the desired radargram
     % overlap, and combine desired clipped variables into new data
@@ -95,10 +100,7 @@ parfor i = 1:length(radar_ALL)
     radar = struct('collect_time',radar_tmp.collect_time(clip:end-clip),...
         'Easting', radar_tmp.Easting(clip:end-clip),...
         'Northing', radar_tmp.Northing(clip:end-clip), ...
-        'dist', radar_tmp.dist(clip:end-clip), ...
-        'depth', radar_tmp.depth, ...
-        'rho_coeff', radar_tmp.rho_coeff(:,clip:end-clip), ...
-        'rho_var', radar_tmp.rho_var(:,clip:end-clip),...
+        'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
         'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
         'peaks', radar_tmp.peaks(:,clip:end-clip), ...
         'groups', radar_tmp.groups(:,clip:end-clip),...
@@ -131,46 +133,45 @@ parfor i = 1:length(radar_ALL)
     csv_output = fullfile(gamma_dir, strcat(filename, '.csv'));
     
     % Save output structures to disk
-    [save_success1] = parsave_all(radar, mat_output, csv_output)
+    [save_success1] = parsave_all(radar, mat_output, csv_output);
     
     %% Output overlapping data for comparisons of neighboring echograms
     
-%     % Check for existence of directory for clipped results in output_dir,
-%     % and create it if it does not exist
-%     clip_dir = "result_clips";
-%     if ~exist(fullfile(output_dir, clip_dir), 'dir')
-%         mkdir(fullfile(output_dir, "result_clips"));
-%     end
-%     
-%     % Keep relevant clipped variables from start of echogram for comparions
-%     % of overlapping results
-%     clip_start = struct('Easting', radar_tmp.Easting(1:2*clip), ...
-%         'Northing', radar_tmp.Northing(1:2*clip), ...
-%         'groups', radar_tmp.groups(:,1:2*clip),...
-%         'likelihood', radar_tmp.likelihood(:,1:2*clip), ...
-%         'depth',radar_tmp.depth, 'ages',radar_tmp.ages(:,1:2*clip,:));
-%     clip_start.SMB_yr = radar_tmp.SMB_yr(1:2*clip);
-%     clip_start.SMB = radar_tmp.SMB(1:2*clip);
-%     
-%     % Generate file names/paths for starting clip output and save
-%     fn_start = sprintf('%s%d%s','clip_start',i, '.mat');
-%     start_path = fullfile(output_dir, clip_dir, fn_start);
-%     [save_success2] = parsave(clip_start, start_path)
-%     
-%     % Keep relevant clipped variables from end of echogram for comparions
-%     % of overlapping results
-%     clip_end = struct('Easting', radar_tmp.Easting(end-2*clip+1:end), ...
-%         'Northing', radar_tmp.Northing(end-2*clip+1:end), ...
-%         'groups', radar_tmp.groups(:,end-2*clip+1:end),...
-%         'likelihood', radar_tmp.likelihood(:,end-2*clip+1:end), ...
-%         'depth',radar_tmp.depth, ...
-%         'ages',radar_tmp.ages(:,end-2*clip+1:end,:));
-%     clip_end.SMB_yr = radar_tmp.SMB_yr(end-2*clip+1:end);
-%     clip_end.SMB = radar_tmp.SMB(end-2*clip+1:end);
-%     
-%     % Generate file names/paths for end clip output and save
-%     fn_end = sprintf('%s%d%s','clip_end',i, '.mat');
-%     end_path = fullfile(output_dir, clip_dir, fn_end);
-%     [save_success3] = parsave(clip_end, end_path)
+    % Check for existence of directory for clipped results in output_dir,
+    % and create it if it does not exist
+    clip_dir = "result_clips";
+    if ~exist(fullfile(output_dir, clip_dir), 'dir')
+        mkdir(fullfile(output_dir, "result_clips"));
+    end
+    
+    % Keep relevant clipped variables from start of echogram for comparions
+    % of overlapping results
+    clip_start = struct('Easting', radar_tmp.Easting(1:2*clip), ...
+        'Northing', radar_tmp.Northing(1:2*clip), ...
+        'groups', radar_tmp.groups(:,1:2*clip),...
+        'likelihood', radar_tmp.likelihood(:,1:2*clip), ...
+        'depth',radar_tmp.depth, 'ages',radar_tmp.ages(:,1:2*clip,:));
+    clip_start.SMB_yr = radar_tmp.SMB_yr(1:2*clip);
+    clip_start.SMB = radar_tmp.SMB(1:2*clip);
+    
+    % Generate file names/paths for starting clip output and save
+    fn_start = sprintf('%s%d%s','clip_start',i, '.mat');
+    start_path = fullfile(output_dir, clip_dir, fn_start);
+    [save_success2] = parsave(clip_start, start_path);
+    
+    % Keep relevant clipped variables from end of echogram for comparions
+    % of overlapping results
+    clip_end = struct('Easting', radar_tmp.Easting(end-2*clip+1:end), ...
+        'Northing', radar_tmp.Northing(end-2*clip+1:end), 'groups', ...
+        radar_tmp.groups(:,end-2*clip+1:end), 'likelihood', ...
+        radar_tmp.likelihood(:,end-2*clip+1:end), 'depth', ...
+        radar_tmp.depth, 'ages', radar_tmp.ages(:,end-2*clip+1:end,:));
+    clip_end.SMB_yr = radar_tmp.SMB_yr(end-2*clip+1:end);
+    clip_end.SMB = radar_tmp.SMB(end-2*clip+1:end);
+    
+    % Generate file names/paths for end clip output and save
+    fn_end = sprintf('%s%d%s','clip_end',i, '.mat');
+    end_path = fullfile(output_dir, clip_dir, fn_end);
+    [save_success3] = parsave(clip_end, end_path);
     
 end

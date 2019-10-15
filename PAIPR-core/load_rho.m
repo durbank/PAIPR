@@ -4,7 +4,7 @@
 % requisite R script to extract the density curves at the specified
 % echogram locations using the previously-optimized stats model)
 
-function [trace_rho] = load_rho(Easting, Northing, rho_file)
+function [trace_rho] = load_rho(rho_file, Easting, Northing)
 
 % Read in density data from external file
 rho_mod = readtable(rho_file);
