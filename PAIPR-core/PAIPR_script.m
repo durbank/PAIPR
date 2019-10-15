@@ -15,8 +15,8 @@ end
 
 % Addons needed for analysis
 % Add Antarctic Mapping Toolbox (AMT) to path
-addon_folder = fullfile(addon_path, 'AntarcticMappingTools_v5.03/');
-addpath(genpath(addon_folder))
+addon_struct = dir(fullfile(addon_path, 'AntarcticMappingTools_*'));
+addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
 % Add export_fig to path
 addon_folder = fullfile(addon_path, 'altmany-export_fig-cafc7c5/');
 addpath(genpath(addon_folder))
