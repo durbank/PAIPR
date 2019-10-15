@@ -74,6 +74,10 @@ for i = 1:length(comp_idx)
 %         '-pdf', '-q101', '-cmyk', '-a1')
 %     close(fig)
     
+
+
+
+
     % Calculate the real part of the relative permittivity of firn
     e_mod = (1 + 0.845*rho_mod).^2;  % Kovacs
 %     e_mod2 = ((rho_mod/rho_ice)*...
