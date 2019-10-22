@@ -1,6 +1,6 @@
 % Wrapper function to import and process an arbitrary number of radargram
 % files within a single directory
-
+tic
 % Directories to data of interest based on computer (eventually will be
 % replaced with GUI for data directory selection)
 PC_true = ispc;
@@ -68,13 +68,16 @@ radar_ALL = radar_ALL(keep_idx);
 
 % Parellel for loop to process all decomposed echograms
 for i = 1:length(radar_ALL)
-    
+    toc
     % Find the mean response with depth in the radar data attributes across a
     % given horizontal resolution (in meters)
     [radar_tmp] = radar_stack(radar_ALL(i).segment, horz_res);
     
     % Load modeled depth-density data from stats model output at specified
     % Easting/Northing coordinates
+    [rho_fn, rho_path] = uigetfile();
+    rho_file = fullfile(rho_path, rho_fn);
+    tic
     [rho_data] = load_rho(rho_file, radar_tmp.Easting, radar_tmp.Northing);
     
     % Convert to depth
@@ -126,7 +129,7 @@ for i = 1:length(radar_ALL)
     % Clip SMB cell array data and add to output struct
     radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
     radar.SMB = radar_tmp.SMB(clip:end-clip);
-    
+    toc
     % Generate file names and paths under which to save data
     filename = sprintf('%s%d','radar_out',i);
     mat_output = fullfile(output_dir, strcat(filename, '.mat'));
