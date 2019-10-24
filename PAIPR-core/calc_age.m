@@ -40,7 +40,6 @@ core_res = 0.02;
 
 % Define the cutoff depth for radar traces and find index of crossover
 % depth
-% cutoff = 25;
 cutoff = 30;
 depth_bott = floor(min([min(radar.depth(end,:)) cutoff]));
 
@@ -52,21 +51,6 @@ for i = 1:size(radar.data_stack, 2)
     radarZ_i = interp1(radar.depth(:,i), radar_Z(:,i), depth_interp, 'pchip');
     radarZ_interp(:,i) = radarZ_i(1:size(radarZ_interp, 1));
 end
-
-% % If manual layer picks are present, transform them to same depth and
-% % vertical scale as the interpolated radar data
-% if isfield(radar, 'man_layers')
-%     man_interp = zeros(size(radarZ_interp));
-%     for i = 1:size(radar.data_stack, 2)
-% %         depth_interp = (0:core_res:radar.depth(end,i))';
-%         layer_idx = logical(radar.man_layers(:,i));
-%         layer_num = radar.man_layers(layer_idx,i);
-%         man_depth_i = radar.depth(layer_idx,i);
-%         depth_idx = round(man_depth_i/core_res) + 1;
-%         man_interp(depth_idx(man_depth_i<=cutoff),i) = layer_num(man_depth_i<=cutoff);
-%     end
-%     radar.man_layers = man_interp;
-% end
 
 % Assign structure output depth to interpolated depths
 radar.depth = (0:core_res:depth_bott)';
@@ -90,48 +74,6 @@ clearvars -except file cores Ndraw radar horz_res core_res r k
 % field
 [peaks, group_num, layers] = radar_trace(peaks_raw, peak_width, ...
     IM_gradients, core_res, horz_res);
-
-
-% %% Clean layer picks
-% 
-% % Preallocate arrays for the matrix indices of members of each layer
-% layers_idx = cell(1,length(layers));
-% peaks = zeros(size(peaks_raw));
-% 
-% % For loop to coerce layers to have one row position for each trace
-% for i = 1:length(layers_idx)
-%     
-%     % Find matrix indices of all members of ith layer
-%     layer_i = layers{i};
-%     
-%     % Find row and col indices of members of ith layer
-%     [row, col] = ind2sub(size(radar.data_smooth), layer_i);
-%     mag = peaks_raw(layer_i);
-%     
-%     % Interpolate data to all column positions within the range of the
-%     % layer
-%     col_interp = min(col):max(col);
-%     
-%     % Interpolate row positions using a cubic smoothing spline
-%     row_interp = round(fnval(csaps(col, row), col_interp));
-%     row_interp(row_interp < 1) = 1;
-%     row_interp(row_interp > size(peaks,1)) = size(peaks,1);
-%     
-%     % Interpolate peak prominence magnitudes to all columns in range using
-%     % a cubic smoothing spline
-%     mag_interp = csaps(col, mag, 1/length(col_interp), col_interp);
-%     
-%     % Assign interpolated layer to output
-%     layer_interp = sub2ind(size(peaks), row_interp, col_interp);
-%     peaks(layer_interp) = mag_interp;
-%     layers_idx{i} = layer_interp';
-% end
-% 
-% % Create matrix of layer group assignments
-% group_num = zeros(size(peaks));
-% for i = 1:length(layers_idx)
-%     group_num(layers_idx{i}) = i;
-% end
 
 % Output layer arrays to radar structure
 radar.peaks = peaks;
