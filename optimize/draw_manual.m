@@ -81,6 +81,7 @@ while draw==true
     % across the entire radargram)
     f_draw = figure;
     imagesc(radar.data_smooth, [-2 2])
+    colormap('gray')
     hold on
 %     for j = 1:length(guides)
 %         plot(guides{j}(:,1), guides{j}(:,2), 'm')
@@ -123,6 +124,10 @@ man_layers = man_layers(~cellfun(@isempty,man_layers));
 keep_idx = cellfun(@(x) round(x(:,2))<=size(radar.data_smooth,1), ...
     man_layers, 'UniformOutput', false);
 man_layers = cellfun(@(x,y) x(y,:), man_layers, keep_idx, 'UniformOutput', false);
+
+
+%% Clip resulting data to 25 m depth
+
 
 
 %% Save manual layer output to disk for later use
