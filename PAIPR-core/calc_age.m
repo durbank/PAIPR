@@ -72,7 +72,7 @@ radar.depth = (0:vert_res:depth_bott)';
 radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
 % Clear unnecessary variables
-clearvars -except radar r k Ndraw horz_res vert_res
+clearvars -except radar r k Ndraw horz_res vert_res r k
 
 %%
 
