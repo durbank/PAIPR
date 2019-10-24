@@ -3,11 +3,12 @@
 
 function [radar] = PAIPR_draw(input_dir, cores, Ndraw)
 
+r = -4.3491e-4;
+k = 4.600;
+
 % Prep and format echograms prior to PAIPR processing
 radar_ALL = echo_format(input_dir);
 radar_init = radar_ALL(1).segment;
-
-%% PAIPR processing
 
 % Convert to depth
 [radar] = radar_depth(radar_init, cores);
@@ -16,6 +17,8 @@ radar_init = radar_ALL(1).segment;
 % given horizontal resolution (in meters)
 horz_res = 25;
 [radar] = radar_stack(radar, horz_res);
+
+%% Signal-noise processing
 
 % Stationarize the radar response by differencing traces with a smoothing 
 % spline
@@ -67,10 +70,8 @@ radar.depth = (0:core_res:depth_bott)';
 radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 
 % Clear unnecessary variables
-clearvars -except input_dir cores Ndraw radar horz_res core_res
-
-
-
+clearvars -except file cores Ndraw radar horz_res core_res r k
+%%
 
 % Iterative radon transforms
 [IM_gradients] = radar_gradient(radar, core_res, horz_res);
@@ -88,9 +89,9 @@ radar.peaks = peaks;
 radar.layers = layers;
 radar.groups = group_num;
 
-radar = rmfield(radar, {'data_stack', 'rho_coeff', 'rho_var'}); 
+% Calculate age-depth profile distributions for each echogram trace
+[radar] = radar_age(radar, r, k, Ndraw);
 
-% % Calculate age-depth profile distributions for each echogram trace
-% [radar] = radar_age(radar, Ndraw);
+radar = rmfield(radar, {'data_stack', 'rho_coeff', 'rho_var'}); 
 
 end
