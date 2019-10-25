@@ -30,11 +30,16 @@ if size(mdata.depth, 2) > 1
     for i = 1:length(stack_idx)-1
         E_stack(i) = mean(mdata.Easting(stack_idx(i):stack_idx(i+1)));
         N_stack(i) = mean(mdata.Northing(stack_idx(i):stack_idx(i+1)));
-        dist_stack(i) = round(mean(mdata.dist(stack_idx(i):stack_idx(i+1))));
-        data_stack(:,i) = mean(mdata.data_out(:,stack_idx(i):stack_idx(i+1)), 2);
-        rho_stack(:,i) = mean(mdata.rho_coeff(:,stack_idx(i):stack_idx(i+1)), 2);
-        var_stack(:,i) = mean(mdata.rho_var(:,stack_idx(i):stack_idx(i+1)), 2);
-        depth_stack(:,i) = mean(mdata.depth(:,stack_idx(i):stack_idx(i+1)), 2);
+        dist_stack(i) = round(mean(mdata.dist(stack_idx(i):...
+            stack_idx(i+1))));
+        data_stack(:,i) = mean(mdata.data_out(:,stack_idx(i):...
+            stack_idx(i+1)), 2);
+        rho_stack(:,i) = mean(mdata.rho_coeff(:,stack_idx(i):...
+            stack_idx(i+1)), 2);
+        var_stack(:,i) = mean(mdata.rho_var(:,stack_idx(i):...
+            stack_idx(i+1)), 2);
+        depth_stack(:,i) = mean(mdata.depth(:,stack_idx(i):...
+            stack_idx(i+1)), 2);
     end
     
 else

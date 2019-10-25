@@ -55,7 +55,7 @@ horz_res = 25;
 % Determine if all data break segments are sufficiently long to process
 keep_idx = false(length(radar_ALL), 1);
 for i = 1:length(radar_ALL)
-   
+    
     if radar_ALL(i).segment.dist(end) >= 1.5*overlap
         keep_idx(i) = true;
     end
@@ -80,11 +80,11 @@ parfor i = 1:length(radar_ALL)
     
     %%
     
-%     % May be used in future versions of code
-%     fld_nm = fieldnames(radar_tmp);
-%     fld_want = {'collect_date', 'Easting', 'Northing', 'dist', ...
-%         'depth', 'rho_coeff', 'rho_var', 'data_smooth', 'peaks',...
-%         'groups', 'ages', 'SMB_yr', 'SMB'};
+    %     % May be used in future versions of code
+    %     fld_nm = fieldnames(radar_tmp);
+    %     fld_want = {'collect_date', 'Easting', 'Northing', 'dist', ...
+    %         'depth', 'rho_coeff', 'rho_var', 'data_smooth', 'peaks',...
+    %         'groups', 'ages', 'SMB_yr', 'SMB'};
     
     % Clip radar data structure variables based on the desired radargram
     % overlap, and combine desired clipped variables into new data
@@ -130,6 +130,10 @@ parfor i = 1:length(radar_ALL)
     % Save output structures to disk
     [save_success1] = parsave(radar, output)
     
+    % Eventually will move the gamma-fitting process to here? In this way,
+    % we can significantly reduce the necessary storage space once we 
+    % increase MC simulations
+    
     %% Output overlapping data for comparisons of neighboring echograms
     
     % Check for existence of directory for clipped results in output_dir,
@@ -139,7 +143,7 @@ parfor i = 1:length(radar_ALL)
         mkdir(fullfile(output_dir, "result_clips"));
     end
     
-    % Keep relevant clipped variables from start of echogram for comparions 
+    % Keep relevant clipped variables from start of echogram for comparions
     % of overlapping results
     clip_start = struct('Easting', radar_tmp.Easting(1:2*clip), ...
         'Northing', radar_tmp.Northing(1:2*clip), ...
@@ -154,7 +158,7 @@ parfor i = 1:length(radar_ALL)
     start_path = fullfile(output_dir, clip_dir, fn_start);
     [save_success2] = parsave(clip_start, start_path)
     
-    % Keep relevant clipped variables from end of echogram for comparions 
+    % Keep relevant clipped variables from end of echogram for comparions
     % of overlapping results
     clip_end = struct('Easting', radar_tmp.Easting(end-2*clip+1:end), ...
         'Northing', radar_tmp.Northing(end-2*clip+1:end), ...

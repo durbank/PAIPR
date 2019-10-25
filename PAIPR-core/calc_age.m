@@ -14,7 +14,8 @@ horz_res = 25;
 % spline
 s = zeros(size(radar.data_stack));
 for i = 1:size(s, 2)
-    s(:,i) = csaps(radar.depth(:,i), radar.data_stack(:,i), 0.95, radar.depth(:,i));
+    s(:,i) = csaps(radar.depth(:,i), radar.data_stack(:,i), 0.95, ...
+        radar.depth(:,i));
 end
 radar_stat = radar.data_stack - s;
 
@@ -48,7 +49,8 @@ depth_bott = floor(min([min(radar.depth(end,:)) cutoff]));
 radarZ_interp = zeros(depth_bott/core_res+1, size(radar.data_stack, 2));
 for i = 1:size(radar.data_stack, 2)
     depth_interp = (0:core_res:radar.depth(end,i));
-    radarZ_i = interp1(radar.depth(:,i), radar_Z(:,i), depth_interp, 'pchip');
+    radarZ_i = interp1(radar.depth(:,i), radar_Z(:,i), ...
+        depth_interp, 'pchip');
     radarZ_interp(:,i) = radarZ_i(1:size(radarZ_interp, 1));
 end
 
@@ -89,8 +91,9 @@ cut_idx = min([(round(cutoff/core_res)+1) length(radar.depth)]);
 radar_new = struct('collect_date', radar.collect_date, 'Easting', ...
     radar.Easting, 'Northing', radar.Northing, 'dist', radar.dist, ...
     'depth', radar.depth(1:cut_idx), 'rho_coeff', radar.rho_coeff, ...
-    'rho_var', radar.rho_var, 'data_smooth', radar.data_smooth(1:cut_idx,:),...
-    'peaks', radar.peaks(1:cut_idx,:), 'groups', radar.groups(1:cut_idx,:),...
+    'rho_var', radar.rho_var, 'data_smooth', ...
+    radar.data_smooth(1:cut_idx,:), 'peaks', radar.peaks(1:cut_idx,:), ...
+    'groups', radar.groups(1:cut_idx,:),...
     'likelihood', radar.likelihood(1:cut_idx,:), ...
     'ages', radar.ages(1:cut_idx,:,:));
 if isfield(radar, 'elev')
@@ -104,9 +107,5 @@ for j = 1:length(layers)
     layers{j} = find(radar.groups == j);
 end
 radar.layers = layers(~cellfun(@isempty, layers));
-
-% Eventually will move the gamma-fitting process to here? In this way, we
-% can significantly reduce the necessary storage space once we increase MC
-% simulations
 
 end

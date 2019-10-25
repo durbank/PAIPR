@@ -32,7 +32,8 @@ for i = 1:length(comp_idx)
     
     % Fit linear models to the two sections of log-transformed rho data
     X = core_composite.depth(1:depth_cut);
-    Y = log(core_composite.rho(1:depth_cut)./(rho_ice-core_composite.rho(1:depth_cut)));
+    Y = log(core_composite.rho(1:depth_cut)./...
+        (rho_ice-core_composite.rho(1:depth_cut)));
     p0 = polyfit(X(1:cutoff+25), Y(1:cutoff+25), 1);
     p1 = polyfit(X(cutoff-25:end), Y(cutoff-25:end), 1);
     
@@ -67,13 +68,16 @@ for i = 1:length(comp_idx)
 % 
 %     % Export figure
 %     fig_nm = 'rho-fit';
-%     output_dir = uigetdir('Select directory in which to output rho-fit image');
-%     export_fig(fig, fullfile(output_dir, fig_nm), '-pdf', '-q101', '-cmyk', '-a1')
+%     output_dir = uigetdir(...
+%         'Select directory in which to output rho-fit image');
+%     export_fig(fig, fullfile(output_dir, fig_nm), ...
+%         '-pdf', '-q101', '-cmyk', '-a1')
 %     close(fig)
     
     % Calculate the real part of the relative permittivity of firn
     e_mod = (1 + 0.845*rho_mod).^2;  % Kovacs
-    % e_mod2 = ((rho_mod/rho_ice)*(emiss_ice^(1/3)-1) + 1).^3; % Looyenga, 1965
+%     e_mod2 = ((rho_mod/rho_ice)*...
+%         (emiss_ice^(1/3)-1) + 1).^3; % Looyenga, 1965
     
     % Calculate radar propagation speed with depth from emissivity
     c0 = 2.9979E8;  % speed of light in a vacuum (m/s)
@@ -88,8 +92,8 @@ for i = 1:length(comp_idx)
     radar.TWTT = (0:2*radar.time_trace(1):2*radar.time_trace(1)*...
         (size(radar.data_out, 1)-1))';
     
-    % Convert recorded TWT time to depth by interpolating measured values to
-    % the modeled time-depth relationship
+    % Convert recorded TWT time to depth by interpolating measured values
+    % ton the modeled time-depth relationship
     depths(:,i) = interp1(time_mod, depth_mod, 0.5*radar.TWTT);
 end
 

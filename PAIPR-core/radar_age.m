@@ -70,7 +70,8 @@ for i = 1:size(layer_peaks, 2)
         depths_j = [0; depths_i(logical(yr_idx(:,j)))];
         yrs_j = ([age_top yr_pick1:-1:yr_pick1-length(depths_j)+2])';
         try
-            ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, 'linear', 'extrap');
+            ages(:,i,j) = interp1(depths_j, yrs_j, radar.depth, ...
+                'linear', 'extrap');
         catch
             sprintf('Error in age interpolation for trace %u, trial %u. Filling with mean ages.', i, j)
             err_out = [err_out j];

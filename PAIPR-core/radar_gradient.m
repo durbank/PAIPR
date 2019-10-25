@@ -75,7 +75,8 @@ IM_gradients = interp2(X, Y, ss, Vx, Vy);
 % % Diagnostic plot
 % ystart = 1:25:size(IM_gradients,1);
 % xstart = ones(1, length(ystart));
-% XY_raw = stream2(ones(size(IM_gradients)), IM_gradients, xstart, ystart, 1);
+% XY_raw = stream2(ones(size(IM_gradients)), IM_gradients, ...
+%     xstart, ystart, 1);
 % XY = XY_raw;
 % for k = 1:length(XY)
 %     XY{k}(:,1) = XY_raw{k}(:,1)*mean(diff(radar.dist));
