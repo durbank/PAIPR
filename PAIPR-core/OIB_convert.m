@@ -48,19 +48,33 @@ idx_end = ceil((depth_cut/u)/(0.5*TWTT(2)));
 data_out = data_out(1:idx_end,:);
 TWTT = TWTT(1:idx_end);
 
-% Define time (decimal calendar year) at the surface (the time of data 
-% collection with zero time for data defined as 1970 Jan 01 00:00:00)
-[~, name, ~] = fileparts(file);
-date_char = char(extractBetween(name,'_','_'));
-collect_date = datetime(str2double(date_char(1:4)), ...
-    str2double(date_char(5:6)), str2double(date_char(7:8)));
-collect_date = year(collect_date) + day(collect_date, 'dayofyear')/365;
+% Get collection time for each trace in echogram
+ncid = netcdf.open(file);
+time_id = netcdf.inqVarID(ncid, 'time');
+start_char = netcdf.getAtt(ncid, time_id, 'units');
+char_split = split(start_char, 'seconds since ');
+t_start = datetime(strcat(char_split{2}), ...
+    'InputFormat', 'yyyy-MM-dd HH:mm:ss');
+collect_time = t_start + seconds(mdata.GPS_time);
+netcdf.close(ncid);
+
+% % Define time (decimal calendar year) at the surface (the time of data 
+% % collection with zero time for data defined as 1970 Jan 01 00:00:00)
+% [~, name, ~] = fileparts(file);
+% date_char = char(extractBetween(name,'_','_'));
+% collect_date = datetime(str2double(date_char(1:4)), ...
+%     str2double(date_char(5:6)), str2double(date_char(7:8)));
+% collect_date = year(collect_date) + day(collect_date, 'dayofyear')/365;
 
 % Create new mdata structure from existing variables such that the naming
 % conventions match those from SEAT radar fieldnames
 mdata = struct('lat', mdata.Latitude', 'lon', mdata.Longitude', 'elev', ...
-    mdata.Elevation', 'data_out', 10*log10(data_out), 'time_gps', ...
-    mdata.GPS_time', 'time_trace', repmat(0.5*mode(diff(TWTT)), 1, ...
-    length(mdata.Latitude)), 'collect_date', collect_date);
+    mdata.Elevation', 'data_out', 10*log10(data_out), 'collect_time', ...
+    collect_time', 'time_trace', repmat(0.5*mode(diff(TWTT)), 1, ...
+    length(mdata.Latitude)));
+% mdata = struct('lat', mdata.Latitude', 'lon', mdata.Longitude', 'elev', ...
+%     mdata.Elevation', 'data_out', 10*log10(data_out), 'time_gps', ...
+%     mdata.GPS_time', 'time_trace', repmat(0.5*mode(diff(TWTT)), 1, ...
+%     length(mdata.Latitude)), 'collect_time', collect_time');
 
 end

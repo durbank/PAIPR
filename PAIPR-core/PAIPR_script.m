@@ -90,7 +90,7 @@ parfor i = 1:length(radar_ALL)
     % overlap, and combine desired clipped variables into new data
     % structure
     clip = round(0.5*overlap/horz_res);
-    radar = struct('collect_date', radar_tmp.collect_date, ...
+    radar = struct('collect_time',radar_tmp.collect_time(clip:end-clip),...
         'Easting', radar_tmp.Easting(clip:end-clip),...
         'Northing', radar_tmp.Northing(clip:end-clip), ...
         'dist', radar_tmp.dist(clip:end-clip), ...
@@ -122,6 +122,11 @@ parfor i = 1:length(radar_ALL)
     % Clip SMB cell array data and add to output struct
     radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
     radar.SMB = radar_tmp.SMB(clip:end-clip);
+    
+    
+    % Eventually add section here to fit gamma-distributions and save
+    % output as .csv long file format
+    
     
     % Generate file names and paths under which to save data
     filename = sprintf('%s%d%s','radar_out',i, '.mat');

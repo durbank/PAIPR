@@ -29,31 +29,23 @@ radar.DB = layer_peaks;
 
 %% Assign layer likelihood scores and estimate age-depth scales
 
-% Define surface age and the year associated with the first pick of the 
-% algorithm (move within for loop after addressing collect_date by trace)
-age_top = radar.collect_date;
-yr_pick1 = ceil(radar.collect_date - 1);
-
 % Preallocate arrays for layer likelihoods and anges
 ages = zeros([size(radar.data_smooth) Ndraw]);
 radar.likelihood = zeros(size(radar.data_smooth));
 err_out = [];
 for i = 1:size(layer_peaks, 2)
     
+    % Define surface age and the year associated with the first pick of the
+    % algorithm
+    yr_vec = datevec(radar.collect_time(i));
+    yr_pick1 = yr_vec(1);
+    age_top = yr_vec(1) + (30*yr_vec(2)+yr_vec(3))/365;
+    
     % Get layer prom-distance values and depths for layers in ith trace
     peaks_i = layer_peaks(:,i);
     peaks_idx = peaks_i>0;
     peaks_i = peaks_i(peaks_idx);
     depths_i = radar.depth(peaks_idx);
-    
-    % Likelihood of layer representing a year based on a logistic function
-    % with rate (r) and constant (k) optimized using manual layer picks
-    % (see `optimize/manual_layers.m`)
-%     r = -2.4333e-4; % [-3.18e-4 -1.55e-4]
-%     k = 4.4323;     % [3.25 4.8]
-
-%     r = -3.06e-4;
-%     k = 2.94;
     
     likelihood = 1./(1+exp(r*peaks_i + k));
     radar.likelihood(peaks_idx,i) = likelihood;

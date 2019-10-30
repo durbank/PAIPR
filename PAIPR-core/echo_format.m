@@ -227,10 +227,10 @@ for i = 1:size(files_i,1)
     
     % List of desired field names to search for and include in radar
     % processing
-    fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', ...
-        'Northing', 'time_gps', 'dist', 'data_out', 'time_trace'};
-%     fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', ...
-%         'Northing', 'dist', 'data_out', 'arr_layers', 'time_trace'};
+    fld_wanted = {'collect_time', 'lat', 'lon', 'elev', 'Easting', ...
+        'Northing', 'dist', 'data_out', 'time_trace'};
+%     fld_wanted = {'collect_time', 'lat', 'lon', 'elev', 'Easting', ...
+%         'Northing', 'time_gps', 'dist', 'data_out', 'time_trace'};
 
     % Preallocate logical array for field names to include
     fld_include = zeros(length(fld_names),1);
@@ -289,10 +289,10 @@ for i = 1:size(files_i,1)
     % Add data from the final cell array to the ith radargram data cells
     data_cells = cellfun(@horzcat, data_cells, data_j, 'UniformOutput', 0);
     
-    % Average values for collect_date for ith continuous radargram
-    date_idx = cellfun(@(x) strcmpi('collect_date', x), ...
-        fld_names(fld_include));
-    data_cells{date_idx} = median(data_cells{date_idx}, 2);
+%     % Average values for collect_date for ith continuous radargram
+%     date_idx = cellfun(@(x) strcmpi('collect_time', x), ...
+%         fld_names(fld_include));
+%     data_cells{date_idx} = median(data_cells{date_idx}, 2);
     
     % Average values for time_trace for ith continuous radargram
     time_idx = cellfun(@(x) strcmpi('time_trace', x), ...

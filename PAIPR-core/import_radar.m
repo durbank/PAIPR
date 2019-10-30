@@ -14,6 +14,17 @@ if isstruct(file)
     mdata = file;
 else
     mdata = load(file);
+    if ~isfield(mdata, 'collect_time')
+        
+        % Construct datetimes of data collection time from the file name
+        % and `time_gps` variable
+        [~,fname,~] = fileparts(file);
+        fn_parts = split(fname, "_");
+        t_string = strcat(fn_parts{4}(1:2), '/', fn_parts{4}(3:4), ...
+            '/', fn_parts{4}(5:end));
+        t_start = datetime(t_string, 'InputFormat', 'MM/dd/yyyy');
+        mdata.collect_time = t_start + seconds(mdata.time_gps);
+    end
 end
 
 % Determine trace starting and ending indices from varargin variable
@@ -48,7 +59,8 @@ end
 % mdata.data_out(:,rm_idx) = [];
 
         
-bounds_idx = 1:length(mdata.lat) < start_idx | 1:length(mdata.lat) > end_idx;
+bounds_idx = 1:length(mdata.lat) < start_idx | ...
+    1:length(mdata.lat) > end_idx;
 loc_idx = mdata.lat >= -65 | mdata.lat < -90;
 nan_idx = all(isnan(mdata.data_out));
 
@@ -56,7 +68,8 @@ rm_idx = logical(sum([bounds_idx; loc_idx; nan_idx]));
 
 mdata.lat(rm_idx) = [];
 mdata.lon(rm_idx) = [];
-mdata.time_gps(rm_idx) = [];
+% mdata.time_gps(rm_idx) = [];
+mdata.collect_time(rm_idx) = [];
 mdata.time_trace(rm_idx) = [];
 mdata.data_out(:,rm_idx) = [];
 
@@ -67,7 +80,8 @@ try
     
     mdata.lat(dist_idx) = [];
     mdata.lon(dist_idx) = [];
-    mdata.time_gps(dist_idx) = [];
+%     mdata.time_gps(dist_idx) = [];
+    mdata.collect_time(dist_idx) = [];
     mdata.time_trace(dist_idx) = [];
     mdata.data_out(:,dist_idx) = [];
     
@@ -96,8 +110,6 @@ if isfield(mdata, 'elev')
     mdata.elev(rm_idx) = [];
 end
 
-
-
 % Fill in missing radar data (missing/nan values) column-wise using a
 % piecewise shape-preserving spline
 mdata.data_out = fillmissing(mdata.data_out, 'pchip');
@@ -110,29 +122,32 @@ try
     mdata.dist = pathdistps(mdata.lat, mdata.lon);
 catch
     mdata.dist = [];
-    disp(strcat("Warning: Error on pathdistps (Line 81 of import_radar.m);", ...
+    disp(strcat(...
+        "Warning: Error on pathdistps (Line 110 of import_radar.m);", ...
         sprintf(" %i elements in array", length(mdata.lat))));
 end
 
-% Check to see if collection data is already present. If it is not, create
-% collect_date field
-if ~isfield(mdata, 'collect_date')
-    % Define the age of the top of the radar (the data collection date)
-    % (this will require modification when incorporating data beyond SEAT
-    % traverses)
-    if contains(file, '2011') == true
-        DateString = '15.12.2011';
-        vector = datevec(DateString, 'dd.mm.yyyy');
-        day_of_year = datenum(vector) - datenum(vector(1), 1, 1);
-        mdata.collect_date = vector(1) + day_of_year/365.25;
-    elseif contains(file, '2010') == true
-        DateString = '15.12.2010';
-        vector = datevec(DateString, 'dd.mm.yyyy');
-        day_of_year = datenum(vector) - datenum(vector(1), 1, 1);
-        mdata.collect_date = vector(1) + day_of_year/365.25;
-    else
-        disp('Check collection date')
-    end
-end
+
+
+% % Check to see if collection data is already present. If it is not, create
+% % collect_date field
+% if ~isfield(mdata, 'collect_date')
+%     % Define the age of the top of the radar (the data collection date)
+%     % (this will require modification when incorporating data beyond SEAT
+%     % traverses)
+%     if contains(file, '2011') == true
+%         DateString = '15.12.2011';
+%         vector = datevec(DateString, 'dd.mm.yyyy');
+%         day_of_year = datenum(vector) - datenum(vector(1), 1, 1);
+%         mdata.collect_date = vector(1) + day_of_year/365.25;
+%     elseif contains(file, '2010') == true
+%         DateString = '15.12.2010';
+%         vector = datevec(DateString, 'dd.mm.yyyy');
+%         day_of_year = datenum(vector) - datenum(vector(1), 1, 1);
+%         mdata.collect_date = vector(1) + day_of_year/365.25;
+%     else
+%         disp('Check collection date')
+%     end
+% end
 
 end
