@@ -4,7 +4,6 @@
 function [success] = parsave(mdata, output)
 
 save(output, '-struct', 'mdata', '-v7.3')
-
 success = true;
 
 end
