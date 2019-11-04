@@ -14,7 +14,7 @@ for i = 1:size(radar.data_stack,2)
     % Extract depth and predicted mean density from saved rho data
     depth_mod = rho_data.Data{i}.Depth;
     rho_mod = rho_data.Data{i}.pred_mean;
-    
+
     % Calculate the real part of the relative permittivity of firn
     e_mod = (1 + 0.845*rho_mod).^2;  % Kovacs
     %     e_mod2 = ((rho_mod/rho_ice)*...
@@ -41,6 +41,5 @@ end
 
 % Add depth variable to radar structure
 radar.depth = depths;
-
 
 end

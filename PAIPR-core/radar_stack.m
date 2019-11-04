@@ -54,7 +54,7 @@ end
 %     rho_stack = zeros(size(mdata.rho_coeff, 1), length(stack_idx)-1);
 %     var_stack = zeros(size(mdata.rho_var, 1), length(stack_idx)-1);
 %     depth_stack = zeros(size(mdata.data_out, 1), length(stack_idx)-1);
-%
+
 %     for i = 1:length(stack_idx)-1
 %         E_stack(i) = mean(mdata.Easting(stack_idx(i):stack_idx(i+1)));
 %         N_stack(i) = mean(mdata.Northing(stack_idx(i):stack_idx(i+1)));
@@ -64,7 +64,7 @@ end
 %         var_stack(:,i) = mean(mdata.rho_var(:,stack_idx(i):stack_idx(i+1)), 2);
 %         depth_stack(:,i) = mean(mdata.depth(:,stack_idx(i):stack_idx(i+1)), 2);
 %     end
-%
+
 % else
 % %     stack_idx = 1:window_sz:size(mdata.data_out, 2);
 %     E_stack = zeros(1, length(stack_idx)-1);
@@ -81,9 +81,7 @@ end
 %     var_stack = repmat(mdata.rho_var, 1, size(data_stack, 2));
 %     depth_stack = repmat(mdata.depth, 1, size(data_stack, 2));
 % end
-%
-% % dist_stack = 0:window_length:window_length*(length(stack_idx)-2);
-%
+
 % % Determine whether manual layers are present in data, and extract layers
 % % at same resolution of stacked data where present
 % if isfield(mdata, 'arr_layers')
@@ -98,7 +96,7 @@ end
 %         'Northing', N_stack, 'dist', dist_stack,  'depth', depth_stack, ...
 %         'data_stack', data_stack, 'rho_coeff', rho_stack, 'rho_var', var_stack);
 % end
-%
+
 % % Check for elevation data, and if present, stack similarly as other data
 % if isfield(mdata, 'elev')
 %     elev_stack = zeros(1, length(stack_idx)-1);
