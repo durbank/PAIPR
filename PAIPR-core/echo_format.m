@@ -52,9 +52,12 @@ switch format
         % Iteratively load lat/lon positions for each data file, and add
         % corresponding values to arrays
         for i = 1:length(files)
-            lat_i = ncread(fullfile(files(i).folder, files(i).name), 'lat');
-            lon_i = ncread(fullfile(files(i).folder, files(i).name), 'lon');
-            time_i = ncread(fullfile(files(i).folder, files(i).name), 'time');
+            lat_i = ncread(fullfile(files(i).folder, files(i).name), ...
+                'lat');
+            lon_i = ncread(fullfile(files(i).folder, files(i).name), ...
+                'lon');
+            time_i = ncread(fullfile(files(i).folder, files(i).name), ...
+                'time');
             file_length(i) = length(lat_i);
             lat = [lat lat_i'];
             lon = [lon lon_i'];
@@ -151,7 +154,8 @@ for i = 1:length(break_idx)-1
             
             % If remainder is too short, set starting breakpoint such that
             % desired length is achieved
-            j_start = find(dist_j>=dist_j(end)-length_min, 1) + break_idx(i);
+            j_start = find(dist_j>=dist_j(end)-length_min, 1) + ...
+                break_idx(i);
             
             % Set ending breakpoint to end of current data segment, and end
             % search for addtional breakpoints
@@ -211,7 +215,8 @@ for i = 1:size(files_i,1)
             % Initialize for loop with first file in directory
             OIB_data = OIB_convert(fullfile(files(files_i(i,1)).folder, ...
                 files(files_i(i,1)).name));
-            data_struct = orderfields(import_radar(OIB_data, position_i(i,1)));
+            data_struct = orderfields(import_radar(OIB_data, ...
+                position_i(i,1)));
     end
     
     % Convert first imported file to cell array
@@ -222,10 +227,10 @@ for i = 1:size(files_i,1)
     
     % List of desired field names to search for and include in radar
     % processing
-    fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', ...
-        'Northing', 'time_gps', 'dist', 'data_out', 'time_trace'};
-%     fld_wanted = {'collect_date', 'lat', 'lon', 'elev', 'Easting', 'Northing',...
-%         'dist', 'data_out', 'arr_layers', 'time_trace'};
+    fld_wanted = {'collect_time', 'lat', 'lon', 'elev', 'Easting', ...
+        'Northing', 'dist', 'data_out', 'time_trace'};
+%     fld_wanted = {'collect_time', 'lat', 'lon', 'elev', 'Easting', ...
+%         'Northing', 'time_gps', 'dist', 'data_out', 'time_trace'};
 
     % Preallocate logical array for field names to include
     fld_include = zeros(length(fld_names),1);
@@ -233,7 +238,8 @@ for i = 1:size(files_i,1)
     % Find the indices of field names in the data structure which match the
     % desired field names to include in processing
     for j = 1:length(fld_include)
-        fld_include(j) = any(cellfun(@(x) strcmpi(fld_names{j}, x), fld_wanted));
+        fld_include(j) = any(cellfun(@(x) strcmpi(fld_names{j}, x), ...
+            fld_wanted));
     end
     fld_include = logical(fld_include);
     data_cells = data2cells(fld_include);
@@ -249,14 +255,16 @@ for i = 1:size(files_i,1)
                 % Import and clean each radar file
                 OIB_data = OIB_convert(fullfile(files(j).folder, ...
                     files(j).name));
-                data_full = struct2cell(orderfields(import_radar(OIB_data)));
+                data_full = struct2cell(orderfields(...
+                    import_radar(OIB_data)));
         end
         
         % Select only the desired fields within current cells
         data_j = data_full(fld_include);
         
         % Add data from cells to the overall radargram data cells
-        data_cells = cellfun(@horzcat, data_cells, data_j, 'UniformOutput', 0);
+        data_cells = cellfun(@horzcat, data_cells, data_j, ...
+            'UniformOutput', 0);
     end
     
     
@@ -281,12 +289,14 @@ for i = 1:size(files_i,1)
     % Add data from the final cell array to the ith radargram data cells
     data_cells = cellfun(@horzcat, data_cells, data_j, 'UniformOutput', 0);
     
-    % Average values for collect_date for ith continuous radargram
-    date_idx = cellfun(@(x) strcmpi('collect_date', x), fld_names(fld_include));
-    data_cells{date_idx} = median(data_cells{date_idx}, 2);
+%     % Average values for collect_date for ith continuous radargram
+%     date_idx = cellfun(@(x) strcmpi('collect_time', x), ...
+%         fld_names(fld_include));
+%     data_cells{date_idx} = median(data_cells{date_idx}, 2);
     
     % Average values for time_trace for ith continuous radargram
-    time_idx = cellfun(@(x) strcmpi('time_trace', x), fld_names(fld_include));
+    time_idx = cellfun(@(x) strcmpi('time_trace', x), ...
+        fld_names(fld_include));
     data_cells{time_idx} = median(data_cells{time_idx}, 2);
     
 %     % Average values for TWTT for ith continuous radargram (should only

@@ -4,8 +4,8 @@
 % the position of the nearest neighbors rather than relying on the position
 % of the last member found
 
-function [peaks, group_num, layers] = radar_trace(peaks_raw, peak_width, ...
-    grad_matrix, core_res, horz_res)
+function [peaks, group_num, layers] = radar_trace(peaks_raw, ...
+    peak_width, grad_matrix, core_res, horz_res)
 
 % Preallocate layer group matrix and cell array
 peak_group = zeros(size(peaks_raw));
@@ -42,7 +42,8 @@ while search_new == true
     peak_local = peak_pool(r_idx(1):r_idx(2),c_idx(1):c_idx(2));
     [~, local_max] = max(peak_local(:));
     [r_max, c_max] = ind2sub(size(peak_local), local_max);
-    peak_max = sub2ind(size(peak_pool), r_idx(1)+r_max-1, c_idx(1)+c_max-1);
+    peak_max = sub2ind(size(peak_pool), ...
+        r_idx(1)+r_max-1, c_idx(1)+c_max-1);
     
     % Assign max peak to current group and remove from future peak searches
     %     [~, peak_max] = max(peak_pool(:));
@@ -81,11 +82,13 @@ while search_new == true
         % projected nearest neighbor
         row_idx = [max([row_n-round(0.50/core_res) 1]) ...
             min([row_n+round(0.50/core_res) size(peaks_raw, 1)])];
-        col_idx = [col_n min([col_n+round(250/horz_res) size(peaks_raw, 2)])];
+        col_idx = [col_n min([col_n+round(250/horz_res) ...
+            size(peaks_raw, 2)])];
         
         % Get matrix of peaks from avaiable pool within the local search
         % area, along with their indices, magnitudes, and subscript indices
-        peak_local = peak_pool(row_idx(1):row_idx(2),col_idx(1):col_idx(2));
+        peak_local = peak_pool(...
+            row_idx(1):row_idx(2),col_idx(1):col_idx(2));
         local_idx = find(peak_local);
         mag_local = peak_local(local_idx);
         [row_local, col_local] = ind2sub(size(peak_local), local_idx);
@@ -100,7 +103,8 @@ while search_new == true
         for k = 1:length(stream_n)
             for kk = 1:length(cols_stream)
                kk_start = find(stream_n{k}(:,1)>=cols_stream(kk), 1);
-               kk_end = find(stream_n{k}(:,1)<=cols_stream(kk)+1, 1, 'last');
+               kk_end = find(stream_n{k}(:,1)<=...
+                   cols_stream(kk)+1, 1, 'last');
                rows_stream(k,kk) = mean(stream_n{k}(kk_start:kk_end,2));
             end
         end
@@ -109,8 +113,8 @@ while search_new == true
         % the local search window
         data_stream = [mean(rows_stream, 1)' cols_stream'];
         
-        % Calculate distance between peaks in the local search window and
-        % the estimated layer streamline
+        % Calculate the weights to use on the indiviudual dissimilarity
+        % components
         w_x = (1/std(col_local))^2;
         w_y = (1/(Hwidth_i))^2;
         if length(group_idx) <= 5
@@ -119,31 +123,14 @@ while search_new == true
             mag_i_std = std(peaks_raw(group_idx));
         end
         w_m = (1/mag_i_std)^2;
-%         w_x = (3/std(col_local))^2;
-%         w_y = (1/(0.5*width_i))^2;
-%         if length(mag_i) <= 5
-%             w_m = 0;
-%         else
-%             w_m = (3/std(mag_i))^2;
-%         end
-%         w_x = 1;
-%         w_m = 1;
+
+        % Calculate the standardized dissmilarity values for each local
+        % peak
         dist_n = sqrt(w_x*(data_local(:,2)-(data_stream(:,2))').^2 + ...
             w_y*(data_local(:,1)-(data_stream(:,1))').^2 + ...
             w_m*repmat(mag_local-mag_i, 1, size(data_stream,1)).^2);
         
-%         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
-%             (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
-%             (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
-%         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
-%             (0.5*width_i)).^2 + ...
-%             ((data_local(:,2)-(data_stream(:,2))')./(50/horz_res)).^2 + ...
-%             repmat((mag_local-mag_i)./2, 1, size(data_stream,1)).^2);
-        
-        % Set distance threshold and find all peaks within tolerance to the
-        % layer streamline
-%         threshold = 3;
-%         threshold = 2.5;
+        % Find all peaks within tolerance to the layer streamline
         dist_idx = min(dist_n, [], 2) <= threshold;
         
         % Get matrix index of nearest neighbors
@@ -227,8 +214,8 @@ while search_new == true
         % the local search window
         data_stream = [mean(rows_stream, 1)' cols_stream'];
         
-        % Calculate distance between peaks in the local search window and
-        % the estimated layer streamline
+        % Calculate the weights to use on the indiviudual dissimilarity
+        % components
         w_x = (1/std(col_local))^2;
         w_y = (1/(Hwidth_i))^2;
         if length(group_idx) <= 5
@@ -237,29 +224,14 @@ while search_new == true
             mag_i_std = std(peaks_raw(group_idx));
         end
         w_m = (1/mag_i_std)^2;
-%         w_x = (3/std(col_local))^2;
-%         w_y = (1/(0.5*width_i))^2;
-%         if length(mag_i) <= 5
-%             w_m = 0;
-%         else
-%             w_m = (3/std(mag_i))^2;
-%         end
-%         w_x = 1;
-%         w_m = 1;
+
+        % Calculate the standardized dissmilarity values for each local
+        % peak
         dist_n = sqrt(w_x*(data_local(:,2)-(data_stream(:,2))').^2 + ...
             w_y*(data_local(:,1)-(data_stream(:,1))').^2 + ...
             w_m*repmat(mag_local-mag_i, 1, size(data_stream,1)).^2);
         
-%         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
-%             (0.5*width_i)).^2 + (data_local(:,2)-(data_stream(:,2))').^2 + ...
-%             (repmat(mag_local-mag_i, 1, size(data_stream,1))).^2);
-%         dist_n = sqrt(((data_local(:,1)-(data_stream(:,1))')./...
-%             (0.5*width_i)).^2 + ...
-%             ((data_local(:,2)-(data_stream(:,2))')./(50/horz_res)).^2 + ...
-%             repmat((mag_local-mag_i)./2, 1, size(data_stream,1)).^2);
-        
-        % Set distance threshold and find all peaks within tolerance to the
-        % layer streamline
+        % Find all peaks within tolerance to the layer streamline
         dist_idx = min(dist_n, [], 2) <= threshold;
         
         % Get matrix index of nearest neighbors
@@ -323,8 +295,8 @@ while search_new == true
         [row_local, col_local] = ind2sub(size(peak_local), local_idx);
         data_local = [(row_idx(1)+row_local-1) (col_idx(1)+col_local-1)];
         
-        % Calculate distance between jth layer member and peaks within the
-        % local search window
+        % Calculate the weights to use on the indiviudual dissimilarity
+        % components
         w_x = (1/std(col_local))^2;
         w_y = (1/(Hwidth_j))^2;
         if length(group_idx) <= 5
@@ -335,24 +307,12 @@ while search_new == true
         w_m = (1/mag_j_std)^2;
         w_m = 0;    % Set to zero so all peaks within distance are added
                     % regardless of magnitude differences
-%         w_x = (1/std(col_local))^2;
-%         w_y = (1/(0.5*width_j))^2;
-%         if length(mag_j) <= 5
-%             w_m = (1/(0.10*mean(mag_j)))^2;
-%         else
-%             w_m = (1/std(mag_j))^2;
-%         end
-%         w_x = 1/4;
-%         w_m = 1/4;
+
+        % Calculate the standardized dissmilarity values for each local
+        % peak
         dist_j = sqrt(w_x*(data_local(:,2)-col(j)).^2 + ...
             w_y*(data_local(:,1)-row_mean(j)).^2 + ...
             w_m*(mag_local-mag_j).^2);
-        
-%         dist_j = sqrt(((data_local(:,1)-row_mean(j))./(0.5*width_j)).^2 + ...
-%             ((data_local(:,2)-col(j))./(50/horz_res)).^2 + ...
-%             (0.5*(mag_local-mag_j)).^2);
-%         dist_j = sqrt(((data_local(:,1)-row_mean(j))/(0.5*width_j)).^2 + ...
-%             (data_local(:,2)-col(j)).^2 + (0.5*(mag_local - mag_j)).^2);
         
         % Set distance threshold for secondary recovery search
         threshold = 2.5;
