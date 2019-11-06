@@ -1,9 +1,6 @@
 % Wrapper function to import and process an arbitrary number of radargram
 % files within a single directory
 
-tic
-t = zeros(1,4);
-
 % Directories to data of interest based on computer (eventually will be
 % replaced with GUI for data directory selection)
 PC_true = ispc;
@@ -41,7 +38,6 @@ output_dir = uigetdir(data_path, ...
 gamma_dir = uigetdir(data_path, ...
     "Select folder to store output gamma-fitted .csv results");
 
-t(1) = toc;
 %%
 
 % % Load core data from file (data used was previously generated using
@@ -60,7 +56,7 @@ rho_raw = readtable(rho_file);
 T_locs = table(rho_E, rho_N,'VariableNames', {'Easting', 'Northing'});
 rho_full = [T_locs rho_raw(:,3:end)];
 clear rho_raw rho_E rho_N T_locs
-t(2) = toc;
+
 %%
 
 % Combine all input echograms and decompose into echogram subdomains of
@@ -84,7 +80,7 @@ end
 % Only keep data segments of sufficient length
 radar_ALL = radar_ALL(keep_idx);
 
-t(3) = toc();
+
 %%
 
 depth = 30;         % Depth of modeled density data
@@ -173,7 +169,7 @@ parfor i = 1:length(radar_ALL)
     % Clip SMB cell array data and add to output struct
     radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);
     radar.SMB = radar_tmp.SMB(clip:end-clip);
-    toc
+    
     % Generate file names and paths under which to save data
     filename = sprintf('%s%d','radar_out',i);
     mat_output = fullfile(output_dir, strcat(filename, '.mat'));
@@ -222,5 +218,3 @@ parfor i = 1:length(radar_ALL)
 %     [save_success3] = parsave(clip_end, end_path);
     
 end
-
-t(4) = toc;
