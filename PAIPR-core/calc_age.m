@@ -67,6 +67,13 @@ clearvars -except radar r k Ndraw horz_res vert_res
 % Find radar peaks in echogram
 [peaks_raw, peak_width] = radar_peaks(radar, vert_res);
 
+
+[stream_val, XY_stream] = stream_sum(radar, IM_gradients);
+% stream_scale = (1/radar.dist(end))*(1/std(stream_val))*stream_val;
+[~, p_idx, ~, Prom_val] = findpeaks(stream_scale, ...
+        'MinPeakProminence', std(stream_scale)/10);
+
+
 % Find continuous layers within radargram based on peaks and layer stream
 % field
 [peaks, group_num, layers] = radar_trace(peaks_raw, peak_width, ...

@@ -25,9 +25,9 @@ for i = 1:size(radar.data_stack,2)
     cZ_mod = c0./sqrt(e_mod);   % Speed of light with depth in firn (m/s)
     
     % Calculate modeled one way travel time (seconds)
-    time_discrete = mean(diff(depth_mod))./cZ_mod;
-    time_mod = cumsum([0; time_discrete(1:end-1)]);
-    % time_mod = cumsum([0; diff(depth_mod)]./cZ_mod);
+%     time_discrete = mean(diff(depth_mod))./cZ_mod;
+%     time_mod = cumsum([0; time_discrete(1:end-1)]);
+    time_mod = cumsum([0; diff(depth_mod)]./cZ_mod);
     
     % Calculate cumulative two-way travel time for radar data
     TWTT = (0:2*radar.time_trace(1):2*radar.time_trace(1)*...

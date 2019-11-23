@@ -40,22 +40,28 @@ gamma_dir = uigetdir(data_path, ...
 
 %%
 
-% % Load core data from file (data used was previously generated using
-% % import_cores.m)
-% core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
-% cores = load(core_file);
+% Select modeled density subset .mat file to use, and load to workspace
+[rho_fn, rho_path] = uigetfile([data_path '*.mat'], ...
+    "Select modeled density .mat subset");
+rho_subset = load(fullfile(rho_path, rho_fn));
+rho_subset = rho_subset.rho_subset;
 
-% Select modeled density file to use, and load in as a table
-[rho_fn, rho_path] = uigetfile([data_path '*.csv'], ...
-    "Select modeled density .csv file");
-rho_file = fullfile(rho_path, rho_fn);
-rho_raw = readtable(rho_file);
-
-% Convert modelled density lat/lon to Easting/Northing
-[rho_E, rho_N] = ll2ps(rho_raw{:,'Lat'}, rho_raw{:,'Lon'});
-T_locs = table(rho_E, rho_N,'VariableNames', {'Easting', 'Northing'});
-rho_full = [T_locs rho_raw(:,3:end)];
-clear rho_raw rho_E rho_N T_locs
+% % % Load core data from file (data used was previously generated using
+% % % import_cores.m)
+% % core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
+% % cores = load(core_file);
+% 
+% % Select modeled density file to use, and load in as a table
+% [rho_fn, rho_path] = uigetfile([data_path '*.csv'], ...
+%     "Select modeled density .csv file");
+% rho_file = fullfile(rho_path, rho_fn);
+% rho_raw = readtable(rho_file);
+% 
+% % Convert modelled density lat/lon to Easting/Northing
+% [rho_E, rho_N] = ll2ps(rho_raw{:,'Lat'}, rho_raw{:,'Lon'});
+% T_locs = table(rho_E, rho_N,'VariableNames', {'Easting', 'Northing'});
+% rho_full = [T_locs rho_raw(:,3:end)];
+% clear rho_raw rho_E rho_N T_locs
 
 %%
 
@@ -83,30 +89,31 @@ radar_ALL = radar_ALL(keep_idx);
 
 %%
 
-depth = 30;         % Depth of modeled density data
-depth_sz = 0.02;    % Vertical resolution of modeled data
-raw_res = 25;       % Horizontal resolution of modeled data
-new_res = 1000;     % Desired horizontal resolution of density data
-depth_num = round(depth/depth_sz);  % Num of observations at each point
+% depth = 30;         % Depth of modeled density data
+% depth_sz = 0.02;    % Vertical resolution of modeled data
+% raw_res = 25;       % Horizontal resolution of modeled data
+% new_res = 1000;     % Desired horizontal resolution of density data
+% depth_num = round(depth/depth_sz);  % Num of observations at each point
+% 
+% % Indices of starting (surface) locations to select
+% select_idx = 1:(new_res/raw_res)*(depth_num+1):size(rho_full,1);
+% 
+% % Preallocate table for density subset data
+% rho_subset = table(0, 0, 'VariableNames', {'Easting', 'Northing'});
+% rho_subset = repmat(rho_subset, length(select_idx), 1);
+% rho_subset.Data = cell(height(rho_subset),1);
+% 
+% for i = 1:height(rho_subset)
+%     
+%     % Add subset data to new table from original table
+%     rho_subset.Easting(i) = rho_full.Easting(select_idx(i));
+%     rho_subset.Northing(i) = rho_full.Northing(select_idx(i));
+%     rho_subset.Data{i} = rho_full(...
+%         select_idx(i):(select_idx(i)+depth_num),3:5); 
+% end
+% 
+% clear rho_full
 
-% Indices of starting (surface) locations to select
-select_idx = 1:(new_res/raw_res)*(depth_num+1):size(rho_full,1);
-
-% Preallocate table for density subset data
-rho_subset = table(0, 0, 'VariableNames', {'Easting', 'Northing'});
-rho_subset = repmat(rho_subset, length(select_idx), 1);
-rho_subset.Data = cell(height(rho_subset),1);
-
-for i = 1:height(rho_subset)
-    
-    % Add subset data to new table from original table
-    rho_subset.Easting(i) = rho_full.Easting(select_idx(i));
-    rho_subset.Northing(i) = rho_full.Northing(select_idx(i));
-    rho_subset.Data{i} = rho_full(...
-        select_idx(i):(select_idx(i)+depth_num),3:5); 
-end
-
-clear rho_full
 %%
 
 % Parellel for loop to process all decomposed echograms
@@ -128,7 +135,8 @@ parfor i = 1:length(radar_ALL)
     % and age calculations)
     r = -4.3491e-4;
     k = 4.600;
-    [radar_tmp] = calc_age(radar_tmp, r, k, Ndraw);
+%     [radar_tmp] = calc_age(radar_tmp, r, k, Ndraw);
+    [radar_tmp] = calc_age2(radar_tmp, -8.2298, 3, Ndraw);
     
     % Calculate radar annual SMB
     [radar_tmp] = calc_SWE(radar_tmp, rho_data, Ndraw);
@@ -145,10 +153,31 @@ parfor i = 1:length(radar_ALL)
         'Northing', radar_tmp.Northing(clip:end-clip), ...
         'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
         'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
-        'peaks', radar_tmp.peaks(:,clip:end-clip), ...
-        'groups', radar_tmp.groups(:,clip:end-clip),...
+        'DB', radar_tmp.DB(:,clip:end-clip), ...
         'likelihood', radar_tmp.likelihood(:,clip:end-clip), ...
         'ages', radar_tmp.ages(:,clip:end-clip,:));
+    
+    
+%     % Clip radar data structure variables based on the desired radargram
+%     % overlap, and combine desired clipped variables into new data
+%     % structure
+%     clip = round(0.5*overlap/horz_res);
+%     radar = struct('collect_time',radar_tmp.collect_time(clip:end-clip),...
+%         'Easting', radar_tmp.Easting(clip:end-clip),...
+%         'Northing', radar_tmp.Northing(clip:end-clip), ...
+%         'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
+%         'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
+%         'peaks', radar_tmp.peaks(:,clip:end-clip), ...
+%         'groups', radar_tmp.groups(:,clip:end-clip),...
+%         'likelihood', radar_tmp.likelihood(:,clip:end-clip), ...
+%         'ages', radar_tmp.ages(:,clip:end-clip,:));
+%     
+%     % Find layer member indices based on new clipped record
+%     layers = cell(1, max(radar.groups(:)));
+%     for j = 1:length(layers)
+%         layers{j} = find(radar.groups == j);
+%     end
+%     radar.layers = layers(~cellfun(@isempty, layers));
     
     % Redefine radargram distances based on clipped data
     radar.dist = radar.dist - radar.dist(1);
@@ -158,13 +187,6 @@ parfor i = 1:length(radar_ALL)
     if isfield(radar_tmp, 'elev')
         radar.elev = radar_tmp.elev(clip:end-clip);
     end
-    
-    % Find layer member indices based on new clipped record
-    layers = cell(1, max(radar.groups(:)));
-    for j = 1:length(layers)
-        layers{j} = find(radar.groups == j);
-    end
-    radar.layers = layers(~cellfun(@isempty, layers));
     
     % Clip SMB cell array data and add to output struct
     radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);

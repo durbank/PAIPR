@@ -84,8 +84,8 @@ file_end_idx = [0 cumsum(file_length)];
 invld_idx = lat>=-65 | lat<-90;
 lat(invld_idx) = NaN;
 lon(invld_idx) = NaN;
-lat = fillmissing(lat, 'previous');
-lon = fillmissing(lon, 'previous');
+lat = fillmissing(lat, 'nearest');
+lon = fillmissing(lon, 'nearest');
 
 % Calucate distance along traverse (in meters)
 d = pathdistps(lat, lon);
