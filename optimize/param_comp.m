@@ -23,62 +23,48 @@ addpath(genpath(PAIPR_path))
 
 %%
 
-input_dir = fullfile(data_path, "PAIPR-results/vWIP",...
-    "coeffs_branch/manual_layers");
+input_dir = fullfile(data_path, "PAIPR-results/WAIS_test/optim/");
 
-% SEAT10_4 = load(fullfile(input_dir, "SEAT10_4", ...
-%     "params_scaled.mat"));
-% SEAT10_5 = load(fullfile(input_dir, "SEAT10_5", ...
-%     "params_scaled.mat"));
-% SEAT10_6 = load(fullfile(input_dir, "SEAT10_6", ...
-%     "params_scaled.mat"));
-SEAT10_4 = load(fullfile(input_dir, "SEAT10_4", ...
-    "params_output.mat"));
-SEAT10_5 = load(fullfile(input_dir, "SEAT10_5", ...
-    "params_output.mat"));
-SEAT10_6 = load(fullfile(input_dir, "SEAT10_6", ...
-    "params_output.mat"));
+SEAT_4 = load(fullfile(input_dir, "params_SEAT4.mat"));
+SEAT_5 = load(fullfile(input_dir, "params_SEAT5.mat"));
+SEAT_6 = load(fullfile(input_dir, "params_SEAT6.mat"));
+PIG = load(fullfile(input_dir, "params_PIG.mat"));
 
 %%
 figure
 title("Rate parameter (r)")
 hold on
-ksdensity(SEAT10_4.r_params)
-ksdensity(SEAT10_5.r_params)
-ksdensity(SEAT10_6.r_params)
-legend("2010-4", "2010-5", "2010-6")
-xlim([-2e-3 0])
+ksdensity(SEAT_4.r_params(SEAT_4.SSE<25))
+ksdensity(SEAT_5.r_params(SEAT_5.SSE<25))
+ksdensity(SEAT_6.r_params(SEAT_6.SSE<25))
+ksdensity(PIG.r_params(PIG.SSE<25))
+legend("2010-4", "2010-5", "2010-6", "PIG")
 hold off
-
-sprintf("Median r parameters: %0.2e | %0.2e | %0.2e", ...
-    median(SEAT10_4.r_params), median(SEAT10_5.r_params), ...
-    median(SEAT10_6.r_params))
-
-% figure
-% title("Midpoint parameter (k)")
-% hold on
-% ksdensity(SEAT10_4.k_params)
-% ksdensity(SEAT10_5.k_params)
-% ksdensity(SEAT10_6.k_params)
-% legend("2010-4", "2010-5", "2010-6")
-% % xlim([-2 3])
-% hold off
-% sprintf("Median k parameters: %0.2f | %0.2f | %0.2f", ...
-%     median(SEAT10_4.k_params), median(SEAT10_5.k_params), ...
-%     median(SEAT10_6.k_params))
 
 figure
-title("SSE")
+title("Rate parameter (r) SSE")
 hold on
-ksdensity(SEAT10_4.SSE)
-ksdensity(SEAT10_5.SSE)
-ksdensity(SEAT10_6.SSE)
-legend("2010-4", "2010-5", "2010-6")
-xlim([0 100])
+ksdensity(SEAT_4.SSE(SEAT_4.SSE<25))
+ksdensity(SEAT_5.SSE(SEAT_5.SSE<25))
+ksdensity(SEAT_6.SSE(SEAT_6.SSE<25))
+ksdensity(PIG.SSE(PIG.SSE<25))
+legend("2010-4", "2010-5", "2010-6", "PIG")
 hold off
-sprintf("Median SSE values: %0.2f | %0.2f | %0.2f", ...
-    median(SEAT10_4.SSE), median(SEAT10_5.SSE), ...
-    median(SEAT10_6.SSE))
+
+w4 = (1./SEAT_4.SSE)./sum(1./SEAT_4.SSE);
+w5 = (1./SEAT_5.SSE)./sum(1./SEAT_5.SSE);
+w6 = (1./SEAT_6.SSE)./sum(1./SEAT_6.SSE);
+wPIG = (1./PIG.SSE)./sum(1./PIG.SSE);
+
+sprintf("Mean error-weighted r parameters: %0.2f | %0.2f | %0.2f | %0.2f", ...
+    sum(w4.*SEAT_4.r_params), sum(w5.*SEAT_5.r_params), ...
+    sum(w6.*SEAT_6.r_params), sum(wPIG.*PIG.r_params))
+
+r_all = [SEAT_4.r_params SEAT_5.r_params SEAT_6.r_params PIG.r_params];
+SSE_all = [SEAT_4.SSE SEAT_5.SSE SEAT_6.SSE PIG.SSE];
+
+r_hat = sum(((1./SSE_all)./sum(1./SSE_all)).*r_all);
+sprintf("Final error-weighted estiamte of r: %0.3f", r_hat)
 
 %%
 
