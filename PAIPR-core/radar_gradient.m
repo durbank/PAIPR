@@ -7,7 +7,7 @@ function [IM_gradients] = radar_gradient(radar, vert_res, horz_res)
 % Define depth/distance intervals over which to perform radon transforms
 % (in meters), and calculate data matrix window size (in data bins)
 depth_interval = 4;
-dist_interval = 1000;
+dist_interval = 500;
 depth_sz = round(0.5*depth_interval/vert_res);
 dist_sz = round(0.5*dist_interval/horz_res);
 
