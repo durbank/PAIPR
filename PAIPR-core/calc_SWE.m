@@ -52,7 +52,8 @@ accum = cell(1, size(radar.ages, 2));
 for i = 1:size(accum, 2)
     
     % Preallocate vector for accumulation rate at ith trace
-    accum_i = zeros(length(accum_yr_init), Ndraw);
+    accum_i = nan(length(accum_yr_init), Ndraw);
+%     accum_i = zeros(length(accum_yr_init), Ndraw);
     for j = 1:Ndraw
         
         % Calculate indices of integer ages for jth simulation of the ith
@@ -81,7 +82,9 @@ for i = 1:size(accum, 2)
     end
     
     % Output results to respective arrays
-    accum_idx = find(all(accum_i, 2), 1, 'last');
+    perc_num = sum(~isnan(accum_i),2)./Ndraw;
+    accum_idx = find(perc_num >= 0.67, 1, 'last');
+%     accum_idx = find(all(accum_i, 2), 1, 'last');
     accum_clip = accum_i(1:accum_idx,:);
     accum_yr{i} = accum_yr_init(1:accum_idx);
     accum{i} = accum_clip;
