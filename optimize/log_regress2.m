@@ -36,128 +36,70 @@ path_new = fullfile(data_path, 'PAIPR-results/WAIS_test/optim');
 % Define number of Monte Carlo simulations to perform
 Ndraw = 100;
 
-% Combine all input echograms and decompose into echogram subdomains of
-% desired length
-radar_dir = fullfile(path_new, 'raw_input/');
-radar_ALL = echo_format(radar_dir);
+radar_old = load(fullfile(path_new, "Nov25_data/PAIPR_SEAT6.mat"));
+vert_res = round(mean(diff(radar_old.depth)),2);
+horz_res = round(mean(diff(radar_old.dist)));
 
-% Select modeled density subset .mat file to use, and load to workspace
-rho_subset = load(fullfile(path_new, 'rho_20111109subset'));
-rho_subset = rho_subset.rho_subset;
 
-% Define overlap distance and the final horizontal resolution of the output
-% data
-overlap = 10000;
-horz_res = 25;
+% Iterative radon transforms
+[IM_gradients] = radar_gradient(radar_old, vert_res, horz_res);
 
-radar_tmp = struct();
-names = {'SEAT10_6', 'SEAT10_5', 'SEAT10_4'};
+% 
+% xstart_idx = 1:300:length(radar.dist);
+xstart_idx = round(length(radar_old.dist)/2);
+[stream_val, XY_streams] = stream_sum(radar_old, IM_gradients, xstart_idx);
 
-for i = 1:length(radar_ALL)
-    
-    % Find the mean response with depth in the radar data attributes across
-    % a given horizontal resolution (in meters)
-    [radar] = radar_stack(radar_ALL(i).segment, horz_res);
-    
-    % Load modeled depth-density data from stats model output at specified
-    % Easting/Northing coordinates
-    [rho_data] = load_rho(rho_subset, radar.Easting, radar.Northing);
-    
-    % Convert to depth
-    [radar] = radar_depth(radar, rho_data);
-    
-    %%
-    % Calculate radar age-depth profile distributions (includes processing
-    %signal-noise, radon transforms, layer tracing, likelihood assignments,
-    % and age calculations)
-    
-    % Stationarize the radar response by differencing traces with a smoothing
-    % spline
-    s = zeros(size(radar.data_stack));
-    for j = 1:size(s, 2)
-        s(:,j) = csaps(radar.depth(:,j), radar.data_stack(:,j), ...
-            0.95, radar.depth(:,j));
-    end
-    radar_stat = radar.data_stack - s;
-    
-    % Define the vertical resolution of the core data and horizontal resolution
-    % of the radar data
-    vert_res = 0.02;
-    horz_res = round(mean(diff(radar.dist)));
-    
-    % Define the cutoff depth for radar traces and find index of crossover
-    % depth
-    cutoff = 30;
-    depth_bott = floor(min([min(radar.depth(end,:)) cutoff]));
-    
-    % Trim radar traces to cutoff depth and interpolate data to vertical scale
-    % of the firn cores
-    radar_interp = zeros(depth_bott/vert_res+1, size(radar.data_stack, 2));
-    for j = 1:size(radar.data_stack, 2)
-        depth_interp = (0:vert_res:radar.depth(end,j));
-        radar_i = interp1(radar.depth(:,j), radar_stat(:,j), ...
-            depth_interp, 'pchip');
-        radar_interp(:,j) = radar_i(1:size(radar_interp, 1));
-    end
-    
-    % Assign structure output depth to interpolated depths
-    radar.depth = (0:vert_res:depth_bott)';
-    
-    % Smooth the laterally averaged radar traces with depth based on a 3rd
-    % order Savitzky-Golay filter with a window of 9 frames (~18 cm)
-    radar.data_smooth = sgolayfilt(radar_interp, 3, 9);
-    
-    
-    
-    
-    % Iterative radon transforms
-    [IM_gradients] = radar_gradient(radar, vert_res, horz_res);
-    
-    %
-    [stream_val, XY_stream] = stream_sum(radar, IM_gradients);
-    
-    
-    %
-    [~, peak_idx, ~, peak_prom] = findpeaks(stream_val, ...
+% 
+[~, peak_idx, ~, peak_prom] = findpeaks(stream_val, ...
         'MinPeakProminence', std(stream_val)/10);
+
+% Find the mean peak prominence (used to scale the prominence-distance
+% results)
+peak_w = 1/std(radar_old.data_smooth(:));
+dist_w = 1/(size(radar_old.data_smooth,2)*horz_res);
+
+
+layer_DB = zeros(size(radar_old.data_smooth));
+for i=1:length(peak_idx)
     
-    
-    % Find the mean peak prominence (used to scale the prominence-distance
-    % results)
-    peak_w = 1/std(radar.data_smooth(:));
-    dist_w = 1/(size(radar.data_smooth,2)*horz_res);
-    % peak_w = 1;
-    % dist_w = 1;
-    
-    
-    layer_DB = zeros(size(radar.data_smooth));
-    for j=1:length(peak_idx)
-        
-        layer_DB(XY_stream{peak_idx(j)}) = peak_w*dist_w*peak_prom(j);
-    end
-    
-    %%
-    % Clip radar data structure variables based on the desired radargram
-    % overlap, and combine desired clipped variables into new data
-    % structure
-    radar_tmp.(names{i}) = struct(...
-        'collect_time',radar.collect_time, ...
-        'Easting', radar.Easting,...
-        'Northing', radar.Northing, 'dist', radar.dist, ...
-        'depth', radar.depth, 'data_smooth', radar.data_smooth,...
-        'DB', layer_DB);
+    layer_DB(XY_streams{peak_idx(i)}) = peak_w*dist_w*peak_prom(i);
 end
-radar = radar_tmp;
-SEAT4 = radar.SEAT10_4;
-SEAT5 = radar.SEAT10_5;
-SEAT6 = radar.SEAT10_6;
 
 
-%
-% % Save processed radar structure for future use
-% output_path = ;
-% output_name = ;
-% save(fullfile(output_path, output_name), '-struct', 'radar')
+max_depth = zeros(1,size(layer_DB,2));
+for i=1:length(max_depth)
+    
+    max_depth(i) = find(layer_DB(:,i), 1, 'last');
+end
+
+% Clip depth-related variables to final cutoff depth
+cut_idx = min(max_depth);
+
+
+
+radar = struct('collect_time', radar_old.collect_time, 'Easting', ...
+    radar_old.Easting, 'Northing', radar_old.Northing, ...
+    'dist', radar_old.dist, 'depth', radar_old.depth(1:cut_idx), ...
+    'data_smooth', radar_old.data_smooth(1:cut_idx,:), ...
+    'IM_grad', IM_gradients(1:cut_idx,:), 'DB', layer_DB(1:cut_idx,:));
+
+if isfield(radar_old, 'elev')
+    radar.elev = radar_old.elev;
+end
+
+man_layers = cell(1,length(radar_old.man_layers));
+for i=1:length(man_layers)
+    
+    layer_i = radar_old.man_layers{i};
+    keep_idx = layer_i(:,2) <= length(radar.depth);
+    man_layers{i} = layer_i(keep_idx,:);
+end
+
+radar.man_layers = man_layers(~cellfun(@isempty, man_layers));
+
+%%
+% Save processed radar structure for future use
+% save(fullfile(path_new, "PAIPR_PIG.mat"), '-struct', 'radar')
 
 
 %% Run `draw_manual.m` to manually trace layers and add to radar structure
@@ -171,16 +113,8 @@ core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
 cores = load(core_file);
 
 % Load PAIPR radar data
-radar_file = fullfile(path_new, "PAIPR_SEAT4.mat");
+radar_file = fullfile(path_new, "PAIPR_SEAT6.mat");
 radar = load(radar_file);
-
-%% Calculate distance brightnesses
-
-% Weighting coefficients for mean brightness and echogram distance
-peak_w = 1/std(radar.data_smooth(:));
-dist_w = 1/radar.dist(end);
-% peak_w = 1;
-% dist_w = 1;
 
 %%
 
@@ -193,10 +127,12 @@ end
 
 %%
 
-cut_idx = 1100;
-DB = radar.DB(1:cut_idx,:);
-man_cut = man_grid(1:cut_idx,:);
-depth = radar.depth(1:cut_idx);
+% cut_idx = 1100;
+% DB = radar.DB(1:cut_idx,:);
+% man_cut = man_grid(1:cut_idx,:);
+% depth = radar.depth(1:cut_idx);
+DB = radar.DB;
+depth = radar.depth;
 
 r_params = zeros(1, size(DB,2));
 k_params = zeros(1, size(DB,2));
@@ -204,7 +140,7 @@ SSE = zeros(1, size(DB,2));
 
 parfor i = 1:length(r_params)
     
-    [r_params(i), k_params(i), SSE(i)] = opt_param(man_cut(:,i), ...
+    [r_params(i), k_params(i), SSE(i)] = opt_param(man_grid(:,i), ...
         DB(:,i), depth, 3, -8);
     
 end
@@ -212,5 +148,5 @@ end
 
 %%
 
-output_path = fullfile(input_dir, "params_output.mat");
-save(output_path, 'r_params', 'k_params', 'SSE')
+% output_path = fullfile(path_new, "params_PIG.mat");
+% save(output_path, 'r_params', 'k_params', 'SSE')

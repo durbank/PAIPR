@@ -66,6 +66,11 @@ SSE_all = [SEAT_4.SSE SEAT_5.SSE SEAT_6.SSE PIG.SSE];
 r_hat = sum(((1./SSE_all)./sum(1./SSE_all)).*r_all);
 sprintf("Final error-weighted estiamte of r: %0.3f", r_hat)
 
+
+
+
+
+
 %%
 
 % Load core data from file (data used was previously generated using
