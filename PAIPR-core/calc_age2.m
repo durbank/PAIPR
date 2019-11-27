@@ -47,8 +47,9 @@ radar.data_smooth = sgolayfilt(radar_interp, 3, 9);
 [IM_gradients] = radar_gradient(radar, vert_res, horz_res);
 
 % 
-[stream_val, XY_stream] = stream_sum(radar, IM_gradients);
-
+% xstart_idx = 1:300:length(radar.dist);
+xstart_idx = round(length(radar.dist)/2);
+[stream_val, XY_streams] = stream_sum(radar, IM_gradients, xstart_idx);
 
 % 
 [~, peak_idx, ~, peak_prom] = findpeaks(stream_val, ...
@@ -67,14 +68,41 @@ dist_w = 1/(size(radar.data_smooth,2)*horz_res);
 layer_DB = zeros(size(radar.data_smooth));
 for i=1:length(peak_idx)
     
-    layer_DB(XY_stream{peak_idx(i)}) = peak_w*dist_w*peak_prom(i);
+    layer_DB(XY_streams{peak_idx(i)}) = peak_w*dist_w*peak_prom(i);
 end
+
+
+max_depth = zeros(1,size(layer_DB,2));
+for i=1:length(max_depth)
+    
+    max_depth(i) = find(layer_DB(:,i), 1, 'last');
+end
+
+% Clip depth-related variables to final cutoff depth
+cut_idx = min(max_depth);
+
+
+
+radar_new = struct('collect_time', radar.collect_time, 'Easting', ...
+    radar.Easting, 'Northing', radar.Northing, 'dist', radar.dist, ...
+    'depth', radar.depth(1:cut_idx), 'data_smooth', ...
+    radar.data_smooth(1:cut_idx,:), ...
+    'IM_grad', IM_gradients(1:cut_idx,:), 'DB', layer_DB(1:cut_idx,:));
+
+if isfield(radar, 'elev')
+    radar_new.elev = radar.elev;
+end
+radar = radar_new;
+clear radar_new
+
+
+%%
 
 % Preallocate arrays for layer likelihoods and anges
 ages = zeros([size(radar.data_smooth) Ndraw]);
 radar.likelihood = zeros(size(radar.data_smooth));
 err_out = [];
-for i=1:size(layer_DB,2)
+for i=1:size(radar.DB,2)
     
     % Define surface age and the year associated with the first pick of the
     % algorithm
@@ -83,7 +111,7 @@ for i=1:size(layer_DB,2)
     age_top = yr_vec(1) + (30*yr_vec(2)+yr_vec(3))/365;
     
     % Get layer DB values and depths for layers in ith trace
-    layer_i = layer_DB(:,i);
+    layer_i = radar.DB(:,i);
     layer_idx = layer_i>0;
     layer_i = layer_i(layer_idx);
     depths_i = radar.depth(layer_idx);
@@ -122,21 +150,21 @@ radar.ages = ages;
 
 %%
 
-% Clip depth-related variables to final cutoff depth
-cutoff = 25;
-cut_idx = min([(round(cutoff/vert_res)+1) length(radar.depth)]);
-radar_new = struct('collect_time', radar.collect_time, 'Easting', ...
-    radar.Easting, 'Northing', radar.Northing, 'dist', radar.dist, ...
-    'depth', radar.depth(1:cut_idx), 'data_smooth', ...
-    radar.data_smooth(1:cut_idx,:), ...
-    'IM_grad', IM_gradients(1:cut_idx,:), 'DB', layer_DB(1:cut_idx,:), ...
-    'likelihood', radar.likelihood(1:cut_idx,:), ...
-    'ages', radar.ages(1:cut_idx,:,:));
-
-if isfield(radar, 'elev')
-    radar_new.elev = radar.elev;
-end
-radar = radar_new;
+% % Clip depth-related variables to final cutoff depth
+% cutoff = 25;
+% cut_idx = min([(round(cutoff/vert_res)+1) length(radar.depth)]);
+% radar_new = struct('collect_time', radar.collect_time, 'Easting', ...
+%     radar.Easting, 'Northing', radar.Northing, 'dist', radar.dist, ...
+%     'depth', radar.depth(1:cut_idx), 'data_smooth', ...
+%     radar.data_smooth(1:cut_idx,:), ...
+%     'IM_grad', IM_gradients(1:cut_idx,:), 'DB', layer_DB(1:cut_idx,:), ...
+%     'likelihood', radar.likelihood(1:cut_idx,:), ...
+%     'ages', radar.ages(1:cut_idx,:,:));
+% 
+% if isfield(radar, 'elev')
+%     radar_new.elev = radar.elev;
+% end
+% radar = radar_new;
 
 
 end
