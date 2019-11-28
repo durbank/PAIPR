@@ -75,17 +75,17 @@ overlap = 10000;
 horz_res = 25;
 
 % Determine if all data break segments are sufficiently long to process
-keep_idx = false(length(radar_ALL), 1);
-for i = 1:length(radar_ALL)
+fdns = fieldnames(radar_ALL);
+for i = 1:length(fdns)
     
-    if radar_ALL(i).segment.dist(end) >= 1.5*overlap
-        keep_idx(i) = true;
+    if radar_ALL.(fdns{i}).dist(end) < 1.5*overlap
+        radar_ALL = rmfield(radar_ALL, fdns{i});
     end
 end
-
-% Only keep data segments of sufficient length
-radar_ALL = radar_ALL(keep_idx);
-
+fdns = fieldnames(radar_ALL);
+tmp_path = fullfile(data_path, "echo_all_tmp.mat");
+save(tmp_path, '-struct', 'radar_ALL')
+clear radar_ALL
 
 %%
 
@@ -117,11 +117,12 @@ radar_ALL = radar_ALL(keep_idx);
 %%
 
 % Parellel for loop to process all decomposed echograms
-parfor i = 1:length(radar_ALL)
+parfor i = 1:length(fdns)
     
+    radar_tmp = load(tmp_path, fdns{i});
     % Find the mean response with depth in the radar data attributes across
     % a given horizontal resolution (in meters)
-    [radar_tmp] = radar_stack(radar_ALL(i).segment, horz_res);
+    [radar_tmp] = radar_stack(radar_tmp.(fdns{i}), horz_res);
     
     % Load modeled depth-density data from stats model output at specified
     % Easting/Northing coordinates
@@ -241,3 +242,5 @@ parfor i = 1:length(radar_ALL)
 %     [save_success3] = parsave(clip_end, end_path);
     
 end
+
+delete(tmp_path)

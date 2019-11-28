@@ -316,7 +316,9 @@ for i = 1:size(files_i,1)
     % radargram
     radar_tmp.dist = pathdistps(radar_tmp.lat, radar_tmp.lon);
     
-    radar_ALL(i).segment = radar_tmp;
+    
+    name_i = sprintf("radar%i", i);
+    radar_ALL.(name_i) = radar_tmp;
 end
 
 end
