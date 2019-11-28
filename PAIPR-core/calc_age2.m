@@ -53,7 +53,8 @@ xstart_idx = round(length(radar.dist)/2);
 
 % 
 [~, peak_idx, ~, peak_prom] = findpeaks(stream_val, ...
-        'MinPeakProminence', std(stream_val)/10);
+        'MinPeakProminence', std(stream_val)/10, ...
+        'MinPeakDistance', round(0.08/vert_res));
 
 %%
 
@@ -63,7 +64,6 @@ peak_w = 1/std(radar.data_smooth(:));
 dist_w = 1/(size(radar.data_smooth,2)*horz_res);
 % peak_w = 1;
 % dist_w = 1;
-
 
 layer_DB = zeros(size(radar.data_smooth));
 for i=1:length(peak_idx)

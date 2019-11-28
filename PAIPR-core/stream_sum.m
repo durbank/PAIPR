@@ -51,12 +51,6 @@ XY_right = stream2(ones(size(IM_grad)), IM_grad, ...
 XY_raw = cellfun(@(x,y) [flipud(x);y], XY_left, XY_right, ...
     'UniformOutput', false);
 
-XY = cellfun(@(x) sub2ind(size(radar.data_smooth), ...
-    round(x(:,2)), round(x(:,1))), XY_raw, 'UniformOutput', false);
-horz_res = round(mean(diff(radar.dist)));
-stream_val = horz_res*cellfun(@(x) sum(radar.data_smooth(x)), XY);
-
-
 % % Diagnostic plot
 % figure
 % imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
@@ -69,6 +63,25 @@ stream_val = horz_res*cellfun(@(x) sum(radar.data_smooth(x)), XY);
 % hlines = streamline(XY_plot(1:10:length(XY_plot)));
 % set(hlines, 'LineWidth', 1.5, 'Color', 'r', 'LineStyle', '--')
 % hold off
+
+XY = cell(1,length(XY_raw));
+for i=1:length(XY)
+    
+    col = unique(round(XY_raw{i}(:,1)));
+    col(col<1) = 1;
+    col(col>size(radar.data_smooth,2)) = size(radar.data_smooth,2);
+    row = round(interp1(XY_raw{i}(:,1),XY_raw{i}(:,2), col, ...
+        'linear', 'extrap'));
+    row(row<1) = 1;
+    row(row>size(radar.data_smooth,1)) = size(radar.data_smooth,1);
+    XY{i} = sub2ind(size(radar.data_smooth), row, col);
+end
+
+% XY = cellfun(@(x) sub2ind(size(radar.data_smooth), ...
+%     round(x(:,2)), round(x(:,1))), XY_raw, 'UniformOutput', false);
+
+horz_res = round(mean(diff(radar.dist)));
+stream_val = horz_res*cellfun(@(x) sum(radar.data_smooth(x)), XY);
 
 end
 
