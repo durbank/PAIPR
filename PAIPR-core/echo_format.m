@@ -25,9 +25,10 @@ end
 
 % Preallocate arrays for continuous lat/lon/time positions for all data in
 % directory
-lat = [];
-lon = [];
-time = [];
+lat = zeros(1, 5000*length(files));
+lon = zeros(1, 5000*length(files));
+time = zeros(1, 5000*length(files));
+i_pos = 1;
 
 % Preallocate array for the radargram length (in data bins) for each
 % data file in directory
@@ -40,11 +41,13 @@ switch format
         % corresponding values to arrays
         for i = 1:length(files)
             data_i = load(fullfile(files(i).folder, files(i).name), ...
-                'lat', 'lon');
+                'lat', 'lon', 'time_gps');
             file_length(i) = length(data_i.lat);
-            lat = [lat data_i.lat];
-            lon = [lon data_i.lon];
-%             time = [time data_i.time_gps];
+            lat(i_pos:(i_pos+length(data_i.lat)-1)) = data_i.lat;
+            lon(i_pos:(i_pos+length(data_i.lon)-1)) = data_i.lon;
+            time(i_pos:(i_pos+length(data_i.time_gps)-1)) = ...
+                data_i.time_gps;
+            i_pos = i_pos + length(data_i.lat);
         end
         
     case 'NetCDF'
@@ -59,19 +62,25 @@ switch format
             time_i = ncread(fullfile(files(i).folder, files(i).name), ...
                 'time');
             file_length(i) = length(lat_i);
-            lat = [lat lat_i'];
-            lon = [lon lon_i'];
-            time = [time time_i'];
+            lat(i_pos:(i_pos+length(lat_i)-1)) = lat_i;
+            lon(i_pos:(i_pos+length(lon_i)-1)) = lon_i;
+            time(i_pos:(i_pos+length(time_i)-1)) = time_i;
+            i_pos = i_pos + length(lat_i);
         end
         
 end
 
-% Arrange lat/lon data in ascending order of collection time
-if ~isempty(time)
-    [~,sort_idx] = sort(time, 'ascend');
-    lat = lat(sort_idx);
-    lon = lon(sort_idx);
-end
+% Remove excess array entries
+lat = lat(1:(i_pos-1));
+lon = lon(1:(i_pos-1));
+time = time(1:(i_pos-1));
+
+% % Arrange lat/lon data in ascending order of collection time
+% if ~isempty(time)
+%     [~,sort_idx] = sort(time, 'ascend');
+%     lat = lat(sort_idx);
+%     lon = lon(sort_idx);
+% end
 
 % Calculate the cummulative radargram length (in data bins) for the data
 % files in directory
@@ -204,7 +213,7 @@ end
 radar_ALL = struct;
 
 for i = 1:size(files_i,1)
-    
+
     switch source
         case 'SEAT'
             % Initialize for loop with first file in directory

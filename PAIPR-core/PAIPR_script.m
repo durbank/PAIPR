@@ -188,6 +188,8 @@ parfor i = 1:length(fdns)
     % available
     if isfield(radar_tmp, 'elev')
         radar.elev = radar_tmp.elev(clip:end-clip);
+    else
+        radar.elev = nan(1, length(radar.Easting));
     end
     
     % Clip SMB cell array data and add to output struct

@@ -42,7 +42,7 @@ TWTT = TWTT(:,1) - TWTT(1,1);
 c = 2.9979E8;
 u = c/sqrt(2.25);
 depth_cut = 30;     % Approximate cut-off depth (data below this depth unreliable)
-idx_end = ceil((depth_cut/u)/(0.5*TWTT(2)));
+idx_end = min([ceil((depth_cut/u)/(0.5*TWTT(2))) size(data_out,1)]);
 
 % Truncate data at this cut off point
 data_out = data_out(1:idx_end,:);
