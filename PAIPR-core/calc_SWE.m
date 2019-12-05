@@ -33,23 +33,21 @@ radar.ages = fillmissing(radar.ages, 'linear', 2);
 % ages = repmat(median(radar.ages, 3), 1, 1, Ndraw) + age_noise;
 ages = radar.ages;
 
-
-
-% Define calendar age of the top of the first year with complete 
-% accumulation data and earliest whole year with observations within the 
-% data set
-yr_top = floor(max(max(ages(1,:,:))));
-yr_end = ceil(min(min(ages(end,:,:))));
-
-% Define initial accumulation year vector (will be iteratively modified at
-% each trace in for loop)
-accum_yr_init = (yr_top-1:-1:yr_end)';
-
 % Preallocation of cell arrays for accumulation years and annual
 % accumulation rate
 accum_yr = cell(1, size(radar.ages, 2));
 accum = cell(1, size(radar.ages, 2));
 for i = 1:size(accum, 2)
+    
+    % Define calendar age of the top of the first year with complete
+    % accumulation data and earliest whole year with observations within the
+    % data set
+    yr_top = floor(max(ages(1,i,:)));
+    yr_end = ceil(min(ages(end,i,:)));
+    
+    % Define initial accumulation year vector (will be iteratively modified at
+    % each trace in for loop)
+    accum_yr_init = (yr_top-1:-1:yr_end)';
     
     % Preallocate vector for accumulation rate at ith trace
     accum_i = nan(length(accum_yr_init), Ndraw);

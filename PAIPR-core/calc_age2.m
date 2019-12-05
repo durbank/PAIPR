@@ -13,6 +13,25 @@ for i = 1:size(s, 2)
 end
 radar_stat = radar.data_stack - s;
 
+radar_Z = radar_stat;
+
+% % Remove linear trend in variance (attentuation with depth) and convert to
+% % standardized values (z-score statistics)
+% radar_Z = zeros(size(radar_stat));
+% for i = 1:size(radar_stat, 2)
+%     data_i = radar_stat(:,i);
+%     % Frame length to define local variance
+%     half_frame = round(0.5*length(data_i)/5);
+%     var0 = movvar(data_i, 2*half_frame, 'EndPoints', 'discard');
+%     x = (half_frame:length(data_i)-half_frame)';
+%     % Linear trend in variance
+%     EQ = polyfit(x, var0, 1);
+%     x_mod = (1:length(data_i))';
+%     mod = polyval(EQ, x_mod);
+%     % Standardize variance-corrected data
+%     radar_Z(:,i) = data_i./sqrt(abs(mod));
+% end
+
 % Define the vertical resolution of the core data and horizontal resolution
 % of the radar data
 vert_res = 0.02;
@@ -28,7 +47,7 @@ depth_bott = floor(min([min(radar.depth(end,:)) cutoff]));
 radar_interp = zeros(depth_bott/vert_res+1, size(radar.data_stack, 2));
 for i = 1:size(radar.data_stack, 2)
     depth_interp = (0:vert_res:radar.depth(end,i));
-    radar_i = interp1(radar.depth(:,i), radar_stat(:,i), ...
+    radar_i = interp1(radar.depth(:,i), radar_Z(:,i), ...
         depth_interp, 'pchip');
     radar_interp(:,i) = radar_i(1:size(radar_interp, 1));
 end
@@ -83,6 +102,25 @@ cut_idx = min(max_depth);
 
 
 
+
+% DB_Z = zeros(size(layer_DB));
+% for i = 1:size(layer_DB, 2)
+%     data_i = layer_DB(:,i);
+%     % Frame length to define local variance
+%     half_frame = round(0.5*length(data_i)/5);
+%     var0 = movvar(data_i, 2*half_frame, 'EndPoints', 'discard');
+%     x = (half_frame:length(data_i)-half_frame)';
+%     % Linear trend in variance
+%     EQ = polyfit(x, var0, 1);
+%     x_mod = (1:length(data_i))';
+%     mod = polyval(EQ, x_mod);
+%     % Standardize variance-corrected data
+%     DB_Z(:,i) = data_i./sqrt(abs(mod));
+% end
+
+
+
+
 radar_new = struct('collect_time', radar.collect_time, 'Easting', ...
     radar.Easting, 'Northing', radar.Northing, 'dist', radar.dist, ...
     'depth', radar.depth(1:cut_idx), 'data_smooth', ...
@@ -99,16 +137,16 @@ clear radar_new
 %%
 
 % Preallocate arrays for layer likelihoods and anges
-ages = zeros([size(radar.data_smooth) Ndraw]);
+ages = nan([size(radar.data_smooth) Ndraw]);
 radar.likelihood = zeros(size(radar.data_smooth));
-err_out = [];
+% err_out = [];
 for i=1:size(radar.DB,2)
     
     % Define surface age and the year associated with the first pick of the
     % algorithm
     yr_vec = datevec(radar.collect_time(i));
     yr_pick1 = yr_vec(1);
-    age_top = yr_vec(1) + (30*yr_vec(2)+yr_vec(3))/365;
+    age_top = yr_vec(1) + (30*(yr_vec(2)-1)+yr_vec(3))/365;
     
     % Get layer DB values and depths for layers in ith trace
     layer_i = radar.DB(:,i);
@@ -136,17 +174,18 @@ for i=1:size(radar.DB,2)
                 'linear', 'extrap');
         catch
             sprintf('Error in age interpolation for trace %u, trial %u. Filling with mean ages.', i, j)
-            err_out = [err_out j];
+%             err_out = [err_out j];
         end
     end
-    if ~isempty(err_out)
-        ages(:,i,err_out) = repmat(sum(squeeze(ages(:,i,:)), 2)./...
-            sum(squeeze(ages(:,i,:))~=0, 2), 1, length(err_out));
-    end
-    err_out = [];
+%     if ~isempty(err_out)
+%         ages(:,i,err_out) = repmat(sum(squeeze(ages(:,i,:)), 2)./...
+%             sum(squeeze(ages(:,i,:))~=0, 2), 1, length(err_out));
+%     end
+%     err_out = [];
+    
 end
 
-radar.ages = ages;
+radar.ages = sort(fillmissing(ages, 'linear', 2'), 'descend');
 
 %%
 
