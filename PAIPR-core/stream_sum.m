@@ -51,6 +51,12 @@ XY_right = stream2(ones(size(IM_grad)), IM_grad, ...
 XY_raw = cellfun(@(x,y) [flipud(x);y], XY_left, XY_right, ...
     'UniformOutput', false);
 
+for i=1:length(XY_raw)
+   keep_idx = ~isnan(XY_raw{i}(:,1)) & isfinite(XY_raw{i}(:,1)) & ...
+       ~isnan(XY_raw{i}(:,2)) & isfinite(XY_raw{i}(:,2));
+   XY_raw{i} = XY_raw{i}(keep_idx,:);
+end
+
 % % Diagnostic plot
 % figure
 % imagesc(radar.dist, radar.depth, radar.data_smooth, [-2 2])
