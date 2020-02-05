@@ -1,7 +1,8 @@
 % Function to optimize the logistic regression parameters using age-depth
 % profiles from manually and autonomously traced layers
 
-function [r_param, k_param, SSE] = opt_param(manual_vector, DB_vector, depth_vector)
+function [r_param, k_param, SSE] = opt_param(manual_vector, DB_vector, ...
+    depth_vector, k_param, r_guess)
 
 % Contruct manual age-depth profile
 yr_idx = find(manual_vector);
@@ -24,14 +25,14 @@ DB_vals = DB_vals(keep_idx);
 DB_vals(DB_vals == null_val) = [];
 
 
-options = optimset('TolX',25, 'MaxIter', 30);
-% options = optimset('PlotFcns','optimplotfval','TolX',25, 'MaxIter', 50);
+options = optimset('TolX',abs(0.05*r_guess), 'TolFun', 10, 'MaxIter', 50);
+% options = optimset('PlotFcns','optimplotfval','TolX',abs(0.05*r_guess),...
+%     'TolFun', 10, 'MaxIter', 50);
 % x0 = [-3e-4 3];
 % x0 = [-1e-4 4];
 % [xmin, fval] = fminsearch(@(x) ...
 %     loss_fun(PAIPR_depth,age_interp,DB_vals,x(1),x(2), 1000), x0, options);
-k_param = 4.6;
-x0 = -30e-5;
+x0 = r_guess;
 [xmin, fval] = fminsearch(@(x) ...
     loss_fun(PAIPR_depth,age_interp,DB_vals,x,k_param, 500), x0, options);
 % sprintf("%0.3e | %0.3f", xmin)

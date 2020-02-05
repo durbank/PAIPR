@@ -1,31 +1,21 @@
-function [radar] = calc_SWE(radar, Ndraw)
+function [radar] = calc_SWE(radar, rho_data, Ndraw)
 
-% Generate modelled std of density with depth for radar data
-rho_std = sqrt((radar.rho_var(1,:)-radar.rho_var(2,:))./...
-    (radar.rho_var(3,:).^radar.depth) + radar.rho_var(2,:));
 
-% Generate density with depth model for radar data
-radar.rho_coeff(1,:) = round(radar.rho_coeff(1,:));
-rho_ice = 0.917;
 rho_mod = zeros(size(radar.data_smooth));
-
-for i = 1:length(radar.Easting)
-    depth0 = 0:0.02:radar.depth(radar.rho_coeff(1,i));
-    depth1 = radar.depth(radar.rho_coeff(1,i)+1):0.02:radar.depth(end);
-    rho0 = (exp(radar.rho_coeff(2,i)*depth0+radar.rho_coeff(3,i))./...
-        (1+exp(radar.rho_coeff(2,i)*depth0+radar.rho_coeff(3,i))))*rho_ice;
-    rho1 = (exp(radar.rho_coeff(4,i)*depth1+radar.rho_coeff(5,i))./...
-        (1+exp(radar.rho_coeff(4,i)*depth1+radar.rho_coeff(5,i))))*rho_ice;
-    rho_mod(:,i) = [rho0 rho1]';
+rho_std = zeros(size(radar.data_smooth));
+for i = 1:size(rho_mod,2)
+    
+    depth_i = rho_data.Data{i}.Depth;
+    mod_i = rho_data.Data{i}.pred_mean;
+    std_i = rho_data.Data{i}.pred_sd;
+    rho_mod(:,i) = interp1(depth_i, mod_i, radar.depth);
+    rho_std(:,i) = interp1(depth_i, std_i, radar.depth);
 end
-
-% rho_mod = radar.rho_coeff(1,:).*radar.depth.^radar.rho_coeff(2,:) + ...
-%     radar.rho_coeff(3,:);
 
 %% Calculate annual accumulation for each radar trace
 
 % Calculate accumulation at each depth interval (0.02 m) with simulated
-% noise based on the variance in core density
+% noise based on the variance in core density (also converts to mm w.e.)
 noise_rho = 1000*repmat(rho_std, 1, 1, Ndraw).*randn(size(radar.ages));
 accum_dt = 0.02*(1000*repmat(rho_mod, 1, 1, Ndraw) + noise_rho);
 
@@ -43,26 +33,25 @@ radar.ages = fillmissing(radar.ages, 'linear', 2);
 % ages = repmat(median(radar.ages, 3), 1, 1, Ndraw) + age_noise;
 ages = radar.ages;
 
-
-
-% Define calendar age of the top of the first year with complete 
-% accumulation data and earliest whole year with observations within the 
-% data set
-yr_top = floor(max(max(ages(1,:,:))));
-yr_end = ceil(min(min(ages(end,:,:))));
-
-% Define initial accumulation year vector (will be iteratively modified at
-% each trace in for loop)
-accum_yr_init = (yr_top-1:-1:yr_end)';
-
 % Preallocation of cell arrays for accumulation years and annual
 % accumulation rate
 accum_yr = cell(1, size(radar.ages, 2));
 accum = cell(1, size(radar.ages, 2));
 for i = 1:size(accum, 2)
     
+    % Define calendar age of the top of the first year with complete
+    % accumulation data and earliest whole year with observations within the
+    % data set
+    yr_top = floor(max(ages(1,i,:)));
+    yr_end = ceil(min(ages(end,i,:)));
+    
+    % Define initial accumulation year vector (will be iteratively modified at
+    % each trace in for loop)
+    accum_yr_init = (yr_top-1:-1:yr_end)';
+    
     % Preallocate vector for accumulation rate at ith trace
-    accum_i = zeros(length(accum_yr_init), Ndraw);
+    accum_i = nan(length(accum_yr_init), Ndraw);
+%     accum_i = zeros(length(accum_yr_init), Ndraw);
     for j = 1:Ndraw
         
         % Calculate indices of integer ages for jth simulation of the ith
@@ -91,7 +80,9 @@ for i = 1:size(accum, 2)
     end
     
     % Output results to respective arrays
-    accum_idx = find(all(accum_i, 2), 1, 'last');
+    perc_num = sum(~isnan(accum_i),2)./Ndraw;
+    accum_idx = find(perc_num >= 0.67, 1, 'last');
+%     accum_idx = find(all(accum_i, 2), 1, 'last');
     accum_clip = accum_i(1:accum_idx,:);
     accum_yr{i} = accum_yr_init(1:accum_idx);
     accum{i} = accum_clip;

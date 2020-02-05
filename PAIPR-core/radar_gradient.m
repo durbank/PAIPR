@@ -7,13 +7,13 @@ function [IM_gradients] = radar_gradient(radar, vert_res, horz_res)
 % Define depth/distance intervals over which to perform radon transforms
 % (in meters), and calculate data matrix window size (in data bins)
 depth_interval = 4;
-dist_interval = 250;
+dist_interval = 500;
 depth_sz = round(0.5*depth_interval/vert_res);
 dist_sz = round(0.5*dist_interval/horz_res);
 
 % Define (overlapping) window center points for iterative radon transforms
-ii = dist_sz+1:4:size(radar.data_smooth,2)-dist_sz;
-jj = depth_sz+1:round(depth_sz/10):size(radar.data_smooth,1)-depth_sz;
+ii = dist_sz+1:dist_sz:size(radar.data_smooth,2)-dist_sz;
+jj = depth_sz+1:round(depth_sz/1):size(radar.data_smooth,1)-depth_sz;
 
 % Preallocate matrix for estimated layer slopes
 s_matrix = nan(size(radar.data_smooth));

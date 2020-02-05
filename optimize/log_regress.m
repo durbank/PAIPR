@@ -145,8 +145,8 @@ depth = radar.depth;
 
 parfor i = 1:length(r_params)
     
-    [r_params(i), k_params(i), SSE(i)] = opt_param(...
-        man_peaks(:,i), DB(:,i), depth);
+    [r_params(i), k_params(i), SSE(i)] = opt_param(man_peaks(:,i), ...
+        DB(:,i), depth, 4.60, -30e-5);
     
 end
 

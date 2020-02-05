@@ -1,66 +1,11 @@
 % Script to load selected radargram and manually draw annual layers, and
 % then save resulting layer positions for later use
 
-% Directories to data of interest based on computer (eventually will be
-% replaced with GUI for data directory selection)
-PC_true = ispc;
-switch PC_true
-    case true
-        data_path = 'E:/Research/Antarctica/Data/';
-        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
-    case false
-        data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
-        addon_path = '/home/durbank/MATLAB/Add-Ons/';
-end
-
-% Addons needed for analysis
-% Add Antarctic Mapping Toolbox (AMT) to path
-addon_struct = dir(fullfile(addon_path, 'AntarcticMappingTools_*'));
-addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
-% Add export_fig to path
-addon_struct = dir(fullfile(addon_path, 'altmany-export_fig*'));
-addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
-% Add CReSIS OIB MATLAB reader functions to path
-addon_struct = dir(fullfile(addon_path, 'cresis-L1B-matlab-readers*'));
-addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
-
-% Add PAIPR-core functions to path
-% parent = cd;
-% parent = fullfile(parent,'..', 'PAIPR-core');
-PAIPR_path = fullfile(cd,'..', 'PAIPR-core');
-addpath(genpath(PAIPR_path))
-
-%% Process raw OIB echograms for PAIPR results and save output
-
-% % Define number of Monte Carlo simulations to perform
-% Ndraw = 100;
-% 
-% % Load core data from file (data used was previously generated using
-% % import_cores.m)
-% core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
-% cores = load(core_file);
-% 
-% % Select radar directory for processing
-% [input_dir] = uigetdir(data_path,...
-%     "Select directory containing raw echograms to process");
-% 
-% % Select output directory in which to save processed echogram and manual
-% % layers
-% [output_dir] = uigetdir(input_dir, ...
-%     "Select directory to output processed echogram");
-% 
-% % Process OIB echogram with PAIPR
-% [radar] = PAIPR_draw(input_dir, cores, Ndraw);
-% 
-% % Save processed radar structure for future use
-% output_path = fullfile(output_dir, "PAIPR_out.mat");
-% save(output_path, '-struct', 'radar', '-v7.3')
 
 %% Load previously processed PAIPR echogram to manually trace layers
 
 % Load relevant radar data (previously generated using the above section)
-[r_file, r_path] = uigetfile(data_path,...
-    "Select radar file to use in manual picking");
+[r_file, r_path] = uigetfile("Select radar file to use in manual picking");
 radar_file = fullfile(r_path, r_file);
 radar = load(radar_file);
 
@@ -80,8 +25,7 @@ while draw==true
     % Draw position of manual layers in radargram (layers should be continuous
     % across the entire radargram)
     f_draw = figure;
-    imagesc(radar.data_smooth, [-2 2])
-    colormap('gray')
+    imagesc(radar.data_smooth, [-3 3])
     hold on
 %     for j = 1:length(guides)
 %         plot(guides{j}(:,1), guides{j}(:,2), 'm')
@@ -126,12 +70,9 @@ keep_idx = cellfun(@(x) round(x(:,2))<=size(radar.data_smooth,1), ...
 man_layers = cellfun(@(x,y) x(y,:), man_layers, keep_idx, 'UniformOutput', false);
 
 
-%% Clip resulting data to 25 m depth
-
-
 
 %% Save manual layer output to disk for later use
 
-% Save processed radar structure for future use
-output_path = fullfile(output_dir, "manual_layers.mat");
-save(output_path, '-struct', 'man_layers.man_all', '-v7.3')
+% % Save processed radar structure for future use
+% output_path = fullfile(output_dir, "manual_layers.mat");
+% save(output_path, '-struct', 'man_layers.man_all', '-v7.3')
