@@ -5,7 +5,7 @@
 % of the last member found
 
 function [peaks, group_num, layers] = radar_trace(peaks_raw, ...
-    peak_width, grad_matrix, core_res, horz_res)
+    peak_width, grad_matrix, vert_res, horz_res)
 
 % Preallocate layer group matrix and cell array
 peak_group = zeros(size(peaks_raw));
@@ -21,34 +21,59 @@ group_num = 1;
 i = 1;
 search_new = true;
 
+% Calculate 
+xstart_idx = round(size(peaks_raw,2)/2);
+[stream_val, ~] = stream_sum(peaks_raw, grad_matrix, ...
+    xstart_idx, horz_res);
+min_Prom = quantile(stream_val, 0.10);
 
 % While loop that iterates on each accumulation layer
 while search_new == true
     
-    % Convolve remaining peaks with a 10x10 matrix and find brightest
-    % convolved pixel (2D smoothing of matrix in order to find brightest
-    % local region)
-    A = peak_pool;
-    B = ones(10)/10^2;
-    C = conv2(A,B,'same');
-    [~,C_max] = max(C(:));
-    [r_C, c_C] = ind2sub(size(C), C_max);
     
-    % Find local area around max convolved peak
-    r_idx = [max([1 r_C-5]) min([size(peaks_raw,1) r_C+5])];
-    c_idx = [max([1 c_C-5]) min([size(peaks_raw,2) c_C+5])];
+    % 
+    [stream_val, XY_streams] = stream_sum(peak_pool, grad_matrix, ...
+    xstart_idx, horz_res);
+    [~, peak_idx, ~, peak_prom] = findpeaks(stream_val, ...
+        'MinPeakProminence', min_Prom, ...
+        'MinPeakDistance', round(0.08/vert_res));
+    [max_val, max_idx] = max(peak_prom);
+    stream_idx = XY_streams{peak_idx(max_idx)};
+    stream_peaks = peak_pool(stream_idx);
+    [~, peak_max] = max(stream_peaks);
     
-    % Find index of actual brightest peak within local search area
-    peak_local = peak_pool(r_idx(1):r_idx(2),c_idx(1):c_idx(2));
-    [~, local_max] = max(peak_local(:));
-    [r_max, c_max] = ind2sub(size(peak_local), local_max);
-    peak_max = sub2ind(size(peak_pool), ...
-        r_idx(1)+r_max-1, c_idx(1)+c_max-1);
+    if max_val <= min_Prom
+        search_new = false;
+    end
     
     % Assign max peak to current group and remove from future peak searches
-    %     [~, peak_max] = max(peak_pool(:));
-    peak_group(peak_max) = group_num;
-    peak_pool(peak_max) = 0;
+    peak_group(stream_idx(peak_max)) = group_num;
+    peak_pool(stream_idx(peak_max)) = 0;
+    
+    
+%     % Convolve remaining peaks with a 10x10 matrix and find brightest
+%     % convolved pixel (2D smoothing of matrix in order to find brightest
+%     % local region)
+%     A = peak_pool;
+%     B = ones(10)/10^2;
+%     C = conv2(A,B,'same');
+%     [~,C_max] = max(C(:));
+%     [r_C, c_C] = ind2sub(size(C), C_max);
+%     
+%     % Find local area around max convolved peak
+%     r_idx = [max([1 r_C-5]) min([size(peaks_raw,1) r_C+5])];
+%     c_idx = [max([1 c_C-5]) min([size(peaks_raw,2) c_C+5])];
+%     
+%     % Find index of actual brightest peak within local search area
+%     peak_local = peak_pool(r_idx(1):r_idx(2),c_idx(1):c_idx(2));
+%     [~, local_max] = max(peak_local(:));
+%     [r_max, c_max] = ind2sub(size(peak_local), local_max);
+%     peak_max = sub2ind(size(peak_pool), ...
+%         r_idx(1)+r_max-1, c_idx(1)+c_max-1);
+%     
+%     % Assign max peak to current group and remove from future peak searches
+%     peak_group(peak_max) = group_num;
+%     peak_pool(peak_max) = 0;
     
     %% Righthand search for layer members
     
@@ -80,8 +105,8 @@ while search_new == true
         % Define local  search window as 250 m to right of last known group
         % member, and 0.50 m above and below estimated row position for the
         % projected nearest neighbor
-        row_idx = [max([row_n-round(0.50/core_res) 1]) ...
-            min([row_n+round(0.50/core_res) size(peaks_raw, 1)])];
+        row_idx = [max([row_n-round(0.50/vert_res) 1]) ...
+            min([row_n+round(0.50/vert_res) size(peaks_raw, 1)])];
         col_idx = [col_n min([col_n+round(250/horz_res) ...
             size(peaks_raw, 2)])];
         
@@ -184,8 +209,8 @@ while search_new == true
         % Define local  search window as 250 m to right of last known group
         % member, and 0.50 m above and below estimated row position for the
         % projected nearest neighbor
-        row_idx = [max([row_n-round(0.50/core_res) 1]) ...
-            min([row_n+round(0.50/core_res) size(peaks_raw, 1)])];
+        row_idx = [max([row_n-round(0.50/vert_res) 1]) ...
+            min([row_n+round(0.50/vert_res) size(peaks_raw, 1)])];
         col_idx = [max([1 col_n-round(250/horz_res)]) col_n];
         
         % Get matrix of peaks from avaiable pool within the local search
@@ -282,8 +307,8 @@ while search_new == true
         
         % Define local search window as 0.50 m above and below jth member
         % and 250 m to left and right of jth member
-        row_idx = [max([row_mean(j)-round(0.50/core_res) 1]) ...
-            min([row_mean(j)+round(0.50/core_res) size(peaks_raw, 1)])];
+        row_idx = [max([row_mean(j)-round(0.50/vert_res) 1]) ...
+            min([row_mean(j)+round(0.50/vert_res) size(peaks_raw, 1)])];
         col_idx = [max([1 col(j)-round(250/horz_res)]) ...
             min([size(peaks_raw, 2) col(j)+round(150/horz_res)])];
         
@@ -315,7 +340,7 @@ while search_new == true
             w_m*(mag_local-mag_j).^2);
         
         % Set distance threshold for secondary recovery search
-        threshold = 2.5;
+        threshold = 1.0;
         
         % Assign all peaks within tolerance to the current layer group and
         % remove those peaks from the pool of available peaks to search
