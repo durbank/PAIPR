@@ -136,8 +136,8 @@ parfor i = 1:length(fdns)
     % and age calculations)
     r = -4.3491e-4;
     k = 4.600;
-%     [radar_tmp] = calc_age(radar_tmp, r, k, Ndraw);
-    [radar_tmp] = calc_age2(radar_tmp, -8.305, 3, Ndraw);
+    [radar_tmp] = calc_age(radar_tmp, r, k, Ndraw);
+%     [radar_tmp] = calc_age2(radar_tmp, -8.305, 3, Ndraw);
     
     % Calculate radar annual SMB
     [radar_tmp] = calc_SWE(radar_tmp, rho_data, Ndraw);
@@ -245,4 +245,4 @@ parfor i = 1:length(fdns)
     
 end
 
-delete(tmp_path)
+% delete(tmp_path)

@@ -25,7 +25,7 @@ search_new = true;
 xstart_idx = round(size(peaks_raw,2)/2);
 [stream_val, ~] = stream_sum(peaks_raw, grad_matrix, ...
     xstart_idx, horz_res);
-min_Prom = quantile(stream_val, 0.10);
+min_Prom = quantile(stream_val, 0.05);
 
 % While loop that iterates on each accumulation layer
 while search_new == true
@@ -37,6 +37,11 @@ while search_new == true
     [~, peak_idx, ~, peak_prom] = findpeaks(stream_val, ...
         'MinPeakProminence', min_Prom, ...
         'MinPeakDistance', round(0.08/vert_res));
+    
+    if isempty(peak_prom)
+        break
+    end
+    
     [max_val, max_idx] = max(peak_prom);
     stream_idx = XY_streams{peak_idx(max_idx)};
     stream_peaks = peak_pool(stream_idx);

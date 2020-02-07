@@ -68,45 +68,55 @@ clearvars -except radar r k Ndraw horz_res vert_res
 [peaks_raw, peak_width] = radar_peaks(radar, vert_res);
 
 
-[stream_val, XY_stream] = stream_sum(radar, IM_gradients);
-% stream_scale = (1/radar.dist(end))*(1/std(stream_val))*stream_val;
-[~, p_idx, ~, Prom_val] = findpeaks(stream_scale, ...
-        'MinPeakProminence', std(stream_scale)/10);
 
-
-% Find continuous layers within radargram based on peaks and layer stream
-% field
 [peaks, group_num, layers] = radar_trace(peaks_raw, peak_width, ...
     IM_gradients, vert_res, horz_res);
 
-% Output layer arrays to radar structure
-radar.peaks = peaks;
-radar.layers = layers;
-radar.groups = group_num;
+% Find max depth with full layer coverage
+max_depth = zeros(1,size(group_num,2));
+for i=1:length(max_depth)
+    max_depth(i) = find(group_num(:,i), 1, 'last');
+end
+cut_idx = min(max_depth);
+
+[rows,cols] = cellfun(@(x) ind2sub(size(peaks),x), layers, ...
+    'UniformOutput', false);
+[layers_new] = cellfun(@(x,y) sub2ind([cut_idx length(radar.dist)], ...
+    x(x<=cut_idx), y(x<=cut_idx)), rows, cols, 'UniformOutput', false);
+layers_new = layers_new(~cellfun(@isempty, layers_new));
+
+
+radar.depth = radar.depth(1:cut_idx);
+radar.data_smooth = radar.data_smooth(1:cut_idx,:);
+radar.IM_grad = IM_gradients(1:cut_idx,:);
+radar.peaks = peaks(1:cut_idx,:);
+radar.layers = layers_new;
+radar.groups = group_num(1:cut_idx,:);
+radar = rmfield(radar, {'data_stack', 'time_trace'});
 
 % Calculate age-depth profile distributions for each echogram trace
 [radar] = radar_age(radar, r, k, Ndraw);
 
-% Clip depth-related variables to final cutoff depth
-cutoff = 25;
-cut_idx = min([(round(cutoff/vert_res)+1) length(radar.depth)]);
-radar_new = struct('collect_time', radar.collect_time, 'Easting', ...
-    radar.Easting, 'Northing', radar.Northing, 'dist', radar.dist, ...
-    'depth', radar.depth(1:cut_idx), 'data_smooth', ...
-    radar.data_smooth(1:cut_idx,:), 'peaks', radar.peaks(1:cut_idx,:), ...
-    'groups', radar.groups(1:cut_idx,:), 'likelihood', ...
-    radar.likelihood(1:cut_idx,:), 'ages', radar.ages(1:cut_idx,:,:));
-
-if isfield(radar, 'elev')
-    radar_new.elev = radar.elev;
-end
-radar = radar_new;
-
-% Find layer member indices based on new clipped record
-layers_new = cell(1, max(radar.groups(:)));
-for j = 1:length(layers_new)
-    layers_new{j} = find(radar.groups == j);
-end
-radar.layers = layers_new(~cellfun(@isempty, layers_new));
+% % Clip depth-related variables to final cutoff depth
+% cutoff = 25;
+% cut_idx = min([(round(cutoff/vert_res)+1) length(radar.depth)]);
+% radar_new = struct('collect_time', radar.collect_time, 'Easting', ...
+%     radar.Easting, 'Northing', radar.Northing, 'dist', radar.dist, ...
+%     'depth', radar.depth(1:cut_idx), 'data_smooth', ...
+%     radar.data_smooth(1:cut_idx,:), 'peaks', radar.peaks(1:cut_idx,:), ...
+%     'groups', radar.groups(1:cut_idx,:), 'likelihood', ...
+%     radar.likelihood(1:cut_idx,:), 'ages', radar.ages(1:cut_idx,:,:));
+% 
+% if isfield(radar, 'elev')
+%     radar_new.elev = radar.elev;
+% end
+% radar = radar_new;
+% 
+% % Find layer member indices based on new clipped record
+% layers_new = cell(1, max(radar.groups(:)));
+% for j = 1:length(layers_new)
+%     layers_new{j} = find(radar.groups == j);
+% end
+% radar.layers = layers_new(~cellfun(@isempty, layers_new));
 
 end

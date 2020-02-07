@@ -67,37 +67,37 @@ radar.data_smooth = sgolayfilt(radar_interp, 3, 9);
 
 
 %%
-% Find radar peaks in echogram
-[peaks_raw, peak_width] = radar_peaks(radar, vert_res);
-
-
-% xstart_idx = round(length(radar.dist)/2);
-% [stream_val_int, XY_streams] = stream_sum(radar.data_smooth, IM_gradients, ...
-%     xstart_idx, horz_res);
-% [stream_val_peak, XY_streams] = stream_sum(peaks_raw, IM_gradients, ...
-%     xstart_idx, horz_res);
+% % Find radar peaks in echogram
+% [peaks_raw, peak_width] = radar_peaks(radar, vert_res);
 % 
-% figure
-% hold on
-% findpeaks(stream_val_int, ...
-%         'MinPeakProminence', std(stream_val_int)/10, ...
-%         'MinPeakDistance', round(0.08/vert_res));
-% findpeaks(stream_val_peak, ...
-%         'MinPeakProminence', quantile(stream_val_peak, 0.10), ...
-%         'MinPeakDistance', round(0.08/vert_res));
-% hold off
-
-% Find continuous layers within radargram based on peaks and layer stream
-% field
-[peaks, group_num, layers] = radar_trace(peaks_raw, peak_width, ...
-    IM_gradients, vert_res, horz_res);
+% 
+% % xstart_idx = round(length(radar.dist)/2);
+% % [stream_val_int, XY_streams] = stream_sum(radar.data_smooth, IM_gradients, ...
+% %     xstart_idx, horz_res);
+% % [stream_val_peak, XY_streams] = stream_sum(peaks_raw, IM_gradients, ...
+% %     xstart_idx, horz_res);
+% % 
+% % figure
+% % hold on
+% % findpeaks(stream_val_int, ...
+% %         'MinPeakProminence', std(stream_val_int)/10, ...
+% %         'MinPeakDistance', round(0.08/vert_res));
+% % findpeaks(stream_val_peak, ...
+% %         'MinPeakProminence', quantile(stream_val_peak, 0.10), ...
+% %         'MinPeakDistance', round(0.08/vert_res));
+% % hold off
+% 
+% % Find continuous layers within radargram based on peaks and layer stream
+% % field
+% [peaks, group_num, layers] = radar_trace(peaks_raw, peak_width, ...
+%     IM_gradients, vert_res, horz_res);
 
 
 %%
-% 
 % xstart_idx = 1:300:length(radar.dist);
 xstart_idx = round(length(radar.dist)/2);
-[stream_val, XY_streams] = stream_sum(radar, IM_gradients, xstart_idx);
+[stream_val, XY_streams] = stream_sum(radar.data_smooth, IM_gradients, ...
+    xstart_idx, horz_res);
 
 % 
 [~, peak_idx, ~, peak_prom] = findpeaks(stream_val, ...
