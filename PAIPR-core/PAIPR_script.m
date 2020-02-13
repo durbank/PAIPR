@@ -116,6 +116,11 @@ clear radar_ALL
 
 %%
 
+% tmp = load(tmp_path);
+% fdns = fieldnames(tmp);
+% clear tmp
+
+
 % Parellel for loop to process all decomposed echograms
 parfor i = 1:length(fdns)
     
