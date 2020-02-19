@@ -6,8 +6,8 @@
 PC_true = ispc;
 switch PC_true
     case true
-        data_path = 'E:/Research/Antarctica/Data/';
-        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
+        data_path = 'G:/Research/Antarctica/Data/';
+        addon_path = 'N:/MATLAB/Add-ons/';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
         addon_path = '/home/durbank/MATLAB/Add-Ons/';
@@ -23,7 +23,8 @@ addpath(genpath(PAIPR_path))
 
 %%
 
-input_dir = fullfile(data_path, "PAIPR-results/WAIS_test/optim/");
+input_dir = uigetdir(data_path, "Select optimization directory");
+% input_dir = fullfile(data_path, "PAIPR-results/tmp/optim/");
 
 SEAT_4 = load(fullfile(input_dir, "params_SEAT4.mat"));
 SEAT_5 = load(fullfile(input_dir, "params_SEAT5.mat"));
@@ -70,7 +71,6 @@ sprintf("Final error-weighted estiamte of r: %0.3f", r_hat)
 
 
 
-
 %%
 
 % Load core data from file (data used was previously generated using
@@ -79,21 +79,21 @@ core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
 cores = load(core_file);
 
 
-[f4, xi4] = ksdensity(SEAT10_4.r_params(SEAT10_4.r_params < ...
-    quantile(SEAT10_4.r_params, 0.99) & SEAT10_4.r_params > ...
-    quantile(SEAT10_4.r_params, 0.01)));
+[f4, xi4] = ksdensity(SEAT_4.r_params(SEAT_4.r_params < ...
+    quantile(SEAT_4.r_params, 0.99) & SEAT_4.r_params > ...
+    quantile(SEAT_4.r_params, 0.01)));
 [~, f_idx] = max(f4);
 r4 = xi4(f_idx);
 
-[f5, xi5] = ksdensity(SEAT10_5.r_params(SEAT10_5.r_params < ...
-    quantile(SEAT10_5.r_params, 0.95) & SEAT10_5.r_params > ...
-    quantile(SEAT10_5.r_params, 0.25)));
+[f5, xi5] = ksdensity(SEAT_5.r_params(SEAT_5.r_params < ...
+    quantile(SEAT_5.r_params, 0.99) & SEAT_5.r_params > ...
+    quantile(SEAT_5.r_params, 0.01)));
 [~, f_idx] = max(f5);
 r5 = xi5(f_idx);
 
-[f6, xi6] = ksdensity(SEAT10_6.r_params(SEAT10_6.r_params < ...
-    quantile(SEAT10_6.r_params, 0.99) & SEAT10_6.r_params > ...
-    quantile(SEAT10_6.r_params, 0.01)));
+[f6, xi6] = ksdensity(SEAT_6.r_params(SEAT_6.r_params < ...
+    quantile(SEAT_6.r_params, 0.99) & SEAT_6.r_params > ...
+    quantile(SEAT_6.r_params, 0.01)));
 [~, f_idx] = max(f6);
 r6 = xi6(f_idx);
 
