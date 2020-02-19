@@ -139,8 +139,8 @@ parfor i = 1:length(fdns)
     % Calculate radar age-depth profile distributions (includes processing
     %signal-noise, radon transforms, layer tracing, likelihood assignments,
     % and age calculations)
-    r = -4.3491e-4;
-    k = 4.600;
+    r = -3.206;
+    k = 3.0;
     [radar_tmp] = calc_age(radar_tmp, r, k, Ndraw);
 %     [radar_tmp] = calc_age2(radar_tmp, -8.305, 3, Ndraw);
     

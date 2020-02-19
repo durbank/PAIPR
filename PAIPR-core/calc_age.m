@@ -94,6 +94,31 @@ radar.layers = layers_new;
 radar.groups = group_num(1:cut_idx,:);
 radar = rmfield(radar, {'data_stack', 'time_trace'});
 
+%%
+
+% Calculate continuous layer distances for each layer (accounting for 
+% lateral size of stacked radar trace bins)
+layers_dist = cellfun(@(x) numel(x)*horz_res, radar.layers);
+
+% Find the mean peak prominence (used to scale the prominence-distance
+% results)
+peak_w = 1/mean(radar.peaks(radar.peaks>0));
+dist_w = 1/(size(radar.data_smooth,2)*horz_res);
+% peak_w = 1;
+% dist_w = 1;
+
+% Map layer prominence-distance values to the location within the radar
+% matrix of the ith layer
+layer_DB = zeros(size(radar.peaks));
+for i = 1:length(radar.layers)
+    layer_DB(radar.layers{i}) = peak_w*dist_w*...
+        radar.peaks(radar.layers{i}).*layers_dist(i);
+end
+
+radar.DB = layer_DB;
+
+%%
+
 % Calculate age-depth profile distributions for each echogram trace
 [radar] = radar_age(radar, r, k, Ndraw);
 

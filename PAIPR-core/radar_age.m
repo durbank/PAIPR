@@ -3,29 +3,29 @@
 
 function [radar] = radar_age(radar, r, k, Ndraw)
 
-% Find horizontal resolution of input radar echogram
-horz_res = mean(diff(radar.dist));
-
-% Calculate continuous layer distances for each layer (accounting for 
-% lateral size of stacked radar trace bins)
-layers_dist = cellfun(@(x) numel(x)*horz_res, radar.layers);
-
-% Find the mean peak prominence (used to scale the prominence-distance
-% results)
-% peak_w = 1/mean(radar.peaks(radar.peaks>0));
-% dist_w = 1/(size(radar.data_smooth,2)*horz_res);
-peak_w = 1;
-dist_w = 1;
-
-% Map layer prominence-distance values to the location within the radar
-% matrix of the ith layer
-layer_peaks = zeros(size(radar.peaks));
-for i = 1:length(radar.layers)
-    layer_peaks(radar.layers{i}) = peak_w*dist_w*...
-        radar.peaks(radar.layers{i}).*layers_dist(i);
-end
-
-radar.DB = layer_peaks;
+% % Find horizontal resolution of input radar echogram
+% horz_res = mean(diff(radar.dist));
+% 
+% % Calculate continuous layer distances for each layer (accounting for 
+% % lateral size of stacked radar trace bins)
+% layers_dist = cellfun(@(x) numel(x)*horz_res, radar.layers);
+% 
+% % Find the mean peak prominence (used to scale the prominence-distance
+% % results)
+% % peak_w = 1/mean(radar.peaks(radar.peaks>0));
+% % dist_w = 1/(size(radar.data_smooth,2)*horz_res);
+% peak_w = 1;
+% dist_w = 1;
+% 
+% % Map layer prominence-distance values to the location within the radar
+% % matrix of the ith layer
+% layer_DB = zeros(size(radar.peaks));
+% for i = 1:length(radar.layers)
+%     layer_DB(radar.layers{i}) = peak_w*dist_w*...
+%         radar.peaks(radar.layers{i}).*layers_dist(i);
+% end
+% 
+% radar.DB = layer_DB;
 
 %% Assign layer likelihood scores and estimate age-depth scales
 
@@ -33,7 +33,7 @@ radar.DB = layer_peaks;
 ages = zeros([size(radar.data_smooth) Ndraw]);
 radar.likelihood = zeros(size(radar.data_smooth));
 err_out = [];
-for i = 1:size(layer_peaks, 2)
+for i = 1:size(radar.DB, 2)
     
     % Define surface age and the year associated with the first pick of the
     % algorithm
@@ -42,7 +42,7 @@ for i = 1:size(layer_peaks, 2)
     age_top = yr_vec(1) + (30*yr_vec(2)+yr_vec(3))/365;
     
     % Get layer prom-distance values and depths for layers in ith trace
-    peaks_i = layer_peaks(:,i);
+    peaks_i = radar.DB(:,i);
     peaks_idx = peaks_i>0;
     peaks_i = peaks_i(peaks_idx);
     depths_i = radar.depth(peaks_idx);
