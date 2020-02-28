@@ -6,7 +6,7 @@
 PC_true = ispc;
 switch PC_true
     case true
-        data_path = 'G:/Research/Antarctica/Data/';
+        data_path = 'E:/Research/Antarctica/Data/';
         addon_path = 'N:/MATLAB/Add-ons/';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
@@ -65,7 +65,7 @@ r_all = [SEAT_4.r_params SEAT_5.r_params SEAT_6.r_params PIG.r_params];
 SSE_all = [SEAT_4.SSE SEAT_5.SSE SEAT_6.SSE PIG.SSE];
 
 r_hat = sum(((1./SSE_all)./sum(1./SSE_all)).*r_all);
-sprintf("Final error-weighted estiamte of r: %0.3f", r_hat)
+sprintf("Final error-weighted estimate of r: %0.3f", r_hat)
 
 
 
@@ -106,8 +106,8 @@ plot(xi6, f6)
 
 
 r = mean([r4 r5 r6]);
-k = mean([median(SEAT10_4.k_params), median(SEAT10_5.k_params), ...
-    median(SEAT10_6.k_params)]);
+k = mean([median(SEAT_4.k_params), median(SEAT_5.k_params), ...
+    median(SEAT_6.k_params)]);
 
 % % max bounds
 % r = -2.33e-4;
