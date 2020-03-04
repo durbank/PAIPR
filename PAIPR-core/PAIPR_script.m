@@ -7,7 +7,7 @@ PC_true = ispc;
 switch PC_true
     case true
         data_path = 'E:/Research/Antarctica/Data/';
-        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
+        addon_path = 'N:/MATLAB/Add-Ons';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
         addon_path = '/home/durbank/MATLAB/Add-Ons/';
@@ -116,6 +116,11 @@ clear radar_ALL
 
 %%
 
+% tmp = load(tmp_path);
+% fdns = fieldnames(tmp);
+% clear tmp
+
+
 % Parellel for loop to process all decomposed echograms
 parfor i = 1:length(fdns)
     
@@ -134,10 +139,10 @@ parfor i = 1:length(fdns)
     % Calculate radar age-depth profile distributions (includes processing
     %signal-noise, radon transforms, layer tracing, likelihood assignments,
     % and age calculations)
-    r = -4.3491e-4;
-    k = 4.600;
-%     [radar_tmp] = calc_age(radar_tmp, r, k, Ndraw);
-    [radar_tmp] = calc_age2(radar_tmp, -8.305, 3, Ndraw);
+    r = -3.206;
+    k = 3.0;
+    [radar_tmp] = calc_age(radar_tmp, r, k, Ndraw);
+%     [radar_tmp] = calc_age2(radar_tmp, -8.305, 3, Ndraw);
     
     % Calculate radar annual SMB
     [radar_tmp] = calc_SWE(radar_tmp, rho_data, Ndraw);
@@ -245,4 +250,4 @@ parfor i = 1:length(fdns)
     
 end
 
-delete(tmp_path)
+% delete(tmp_path)

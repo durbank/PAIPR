@@ -7,7 +7,7 @@ PC_true = ispc;
 switch PC_true
     case true
         data_path = 'E:/Research/Antarctica/Data/';
-        addon_path = 'C:/Users/u1046484/Documents/MATLAB/Addons/';
+        addon_path = 'N:/MATLAB/Add-ons/';
     case false
         data_path = '/media/durbank/WARP/Research/Antarctica/Data/';
         addon_path = '/home/durbank/MATLAB/Add-Ons/';
@@ -23,7 +23,8 @@ addpath(genpath(PAIPR_path))
 
 %%
 
-input_dir = fullfile(data_path, "PAIPR-results/WAIS_test/optim/");
+input_dir = uigetdir(data_path, "Select optimization directory");
+% input_dir = fullfile(data_path, "PAIPR-results/tmp/optim/");
 
 SEAT_4 = load(fullfile(input_dir, "params_SEAT4.mat"));
 SEAT_5 = load(fullfile(input_dir, "params_SEAT5.mat"));
@@ -64,8 +65,7 @@ r_all = [SEAT_4.r_params SEAT_5.r_params SEAT_6.r_params PIG.r_params];
 SSE_all = [SEAT_4.SSE SEAT_5.SSE SEAT_6.SSE PIG.SSE];
 
 r_hat = sum(((1./SSE_all)./sum(1./SSE_all)).*r_all);
-sprintf("Final error-weighted estiamte of r: %0.3f", r_hat)
-
+sprintf("Final error-weighted estimate of r: %0.3f", r_hat)
 
 
 
@@ -79,21 +79,21 @@ core_file = fullfile(data_path, 'Ice-cores/SEAT_cores/SEAT_cores.mat');
 cores = load(core_file);
 
 
-[f4, xi4] = ksdensity(SEAT10_4.r_params(SEAT10_4.r_params < ...
-    quantile(SEAT10_4.r_params, 0.99) & SEAT10_4.r_params > ...
-    quantile(SEAT10_4.r_params, 0.01)));
+[f4, xi4] = ksdensity(SEAT_4.r_params(SEAT_4.r_params < ...
+    quantile(SEAT_4.r_params, 0.99) & SEAT_4.r_params > ...
+    quantile(SEAT_4.r_params, 0.01)));
 [~, f_idx] = max(f4);
 r4 = xi4(f_idx);
 
-[f5, xi5] = ksdensity(SEAT10_5.r_params(SEAT10_5.r_params < ...
-    quantile(SEAT10_5.r_params, 0.95) & SEAT10_5.r_params > ...
-    quantile(SEAT10_5.r_params, 0.25)));
+[f5, xi5] = ksdensity(SEAT_5.r_params(SEAT_5.r_params < ...
+    quantile(SEAT_5.r_params, 0.99) & SEAT_5.r_params > ...
+    quantile(SEAT_5.r_params, 0.01)));
 [~, f_idx] = max(f5);
 r5 = xi5(f_idx);
 
-[f6, xi6] = ksdensity(SEAT10_6.r_params(SEAT10_6.r_params < ...
-    quantile(SEAT10_6.r_params, 0.99) & SEAT10_6.r_params > ...
-    quantile(SEAT10_6.r_params, 0.01)));
+[f6, xi6] = ksdensity(SEAT_6.r_params(SEAT_6.r_params < ...
+    quantile(SEAT_6.r_params, 0.99) & SEAT_6.r_params > ...
+    quantile(SEAT_6.r_params, 0.01)));
 [~, f_idx] = max(f6);
 r6 = xi6(f_idx);
 
@@ -106,8 +106,8 @@ plot(xi6, f6)
 
 
 r = mean([r4 r5 r6]);
-k = mean([median(SEAT10_4.k_params), median(SEAT10_5.k_params), ...
-    median(SEAT10_6.k_params)]);
+k = mean([median(SEAT_4.k_params), median(SEAT_5.k_params), ...
+    median(SEAT_6.k_params)]);
 
 % % max bounds
 % r = -2.33e-4;
