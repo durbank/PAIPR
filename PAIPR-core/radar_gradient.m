@@ -6,7 +6,7 @@ function [IM_gradients] = radar_gradient(radar, vert_res, horz_res)
 
 % Define depth/distance intervals over which to perform radon transforms
 % (in meters), and calculate data matrix window size (in data bins)
-depth_interval = 4;
+depth_interval = 5;
 dist_interval = 500;
 depth_sz = round(0.10*depth_interval/vert_res);
 dist_sz = round(0.25*dist_interval/horz_res);
@@ -45,8 +45,7 @@ for i = 1:length(ii)
         theta_max = theta_rad(max_idx);
         
         
-        pk_ratio = (R_sum./R_max) .* abs(sin(theta_max - theta_rad));
-%         pk_ratio = ((R_sum./R_max) - cos(theta_max - theta_rad)).^2;
+        pk_ratio = (R_sum./R_max).^2 .* sin(theta_max - theta_rad).^2;
         
         
 %         % Find max peak and angle in the integrated brightness angles
@@ -73,13 +72,25 @@ for i = 1:length(ii)
         
         
 
+%         % Diagnostic plots
+%         figure
+%         imagesc(data_i)
+%     
+%         figure
+%         hold on
+%         plot(theta, R_sum./R_max)
+%         plot(theta, pk_ratio)
+%         plot(repmat(theta_max*180/pi+90, 1, 2), [0 1], 'k--')
+%         hold off
+
+
         % Transform dominant angle to true layer gradient and assign to
         % preallocated matrix
         s_matrix(jj(j),ii(i)) = -1*tan(theta_max);
 %         s_matrix(jj(j),ii(i)) = -1*tand(theta_max-90);  
 
 %         pk_matrix(jj(j), ii(i)) = mean(pk_ratio);
-        pk_matrix(jj(j), ii(i)) = sum(pk_ratio);
+        pk_matrix(jj(j), ii(i)) = max(pk_ratio);
         R_matrix(jj(j), ii(i)) = R_max;
     end
     
@@ -88,11 +99,38 @@ for i = 1:length(ii)
     pk_matrix(1,ii(i)) = 0;
     R_matrix(1,ii(i)) = max(R_matrix(:));
     
-    % Extrapolate the layer gradients at the base of the echogram based on
-    % the robust linear regression of the slopes of overlying layers
-    p = robustfit(1:size(radar.depth,1), s_matrix(:,ii(i)));
-    s_matrix(end,ii(i)) = size(radar.depth,1)*p(2);
+%     % Diagnostic plot
+%     figure
+%     scatter(1:size(radar.depth,1), s_matrix(:,ii(i)));
+    
+%     % Extrapolate the layer gradients at the base of the echogram based on
+%     % the robust linear regression of the slopes of overlying layers
+% %     p = robustfit(1:size(radar.depth,1), s_matrix(:,ii(i)));
+%     s_matrix(end,ii(i)) = size(radar.depth,1)*p(2);
 end
+
+
+i_idx = randi(length(ii));
+% i_idx = 10;
+i = ii(i_idx);
+data_idx = ~isnan(s_matrix(:,i));
+wind_int = 1;
+y = s_matrix(data_idx,ii(i_idx-wind_int:i_idx+wind_int));
+X = repmat(radar.depth(data_idx), 1, size(y,2));
+% w = pk_matrix(data_idx,ii(i_idx-wind_int:i_idx+wind_int));
+p0 = fitlm(X(:,1+wind_int), y(:,1+wind_int), ...
+    'RobustOpts', 'on', 'Intercept', false);
+p = fitlm(reshape(X,[numel(X) 1]), reshape(y, [numel(y) 1]), ...
+    'RobustOpts', 'on', 'Intercept', false);
+figure
+hold on
+plot(p.Variables.x1, p.Residuals.Standardized, 'bo')
+plot(p0.Variables.x1, p0.Residuals.Standardized, 'ro')
+figure
+plot(p0)
+figure
+plot(p)
+
 
 % Extrapolate gradient values and peak ratios for echogram edges based on 
 % nearest non-NaN values
@@ -117,15 +155,6 @@ pk_matrix(:,1) = pk_matrix(:,ii(1));
 pk_matrix(:,end) = pk_matrix(:,ii(end));
 pk_s = pk_matrix(y,x);
 IM_ratios = interp2(X, Y, pk_s, Vx, Vy);
-
-
-R_matrix(:,1) = R_matrix(:,ii(1));
-R_matrix(:,end) = R_matrix(:,ii(end));
-R_s = R_matrix(y,x);
-IM_ratios2 = interp2(X, Y, R_s, Vx, Vy);
-
-
-val_idx = ~isnan(pk_matrix);
 
 
 % % Diagnostic plot
