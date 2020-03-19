@@ -4,15 +4,15 @@ function [radar] = calc_age(radar, r, k, Ndraw)
 
 %% Signal-noise processing
 
-% % Stationarize the radar response by differencing traces with a smoothing
-% % spline
-% s = zeros(size(radar.data_stack));
-% for i = 1:size(s, 2)
-%     s(:,i) = csaps(radar.depth(:,i), radar.data_stack(:,i), ...
-%         0.95, radar.depth(:,i));
-% end
-% radar_stat = radar.data_stack - s;
-% 
+% Stationarize the radar response by differencing traces with a smoothing
+% spline
+s = zeros(size(radar.data_stack));
+for i = 1:size(s, 2)
+    s(:,i) = csaps(radar.depth(:,i), radar.data_stack(:,i), ...
+        0.95, radar.depth(:,i));
+end
+radar_stat = radar.data_stack - s;
+
 % % Remove linear trend in variance (attentuation with depth) and convert to
 % % standardized values (z-score statistics)
 % radar_Z = zeros(size(radar_stat));
@@ -31,10 +31,12 @@ function [radar] = calc_age(radar, r, k, Ndraw)
 % end
 
 
+radar_Z = zscore(radar_stat);
 
-% More straightforward stationarization using differencing
-radar_Z = [zeros(1, size(radar.data_stack,2)); ...
-    zscore(diff(radar.data_stack))];
+
+% % More straightforward stationarization using differencing
+% radar_Z = [zeros(1, size(radar.data_stack,2)); ...
+%     zscore(diff(radar.data_stack))];
 
 
 % Define the vertical resolution of the core data and horizontal resolution
@@ -69,7 +71,7 @@ clearvars -except radar r k Ndraw horz_res vert_res
 %%
 
 % Iterative radon transforms
-[IM_gradients] = radar_gradient(radar, vert_res, horz_res);
+[IM_gradients, im_QC] = radar_gradient(radar, vert_res, horz_res);
 
 % Find radar peaks in echogram
 [peaks_raw, peak_width] = radar_peaks(radar, vert_res);
