@@ -2,23 +2,26 @@
 % Output is a matrix (same dimensions as input image) with the estimated
 % layer slope at each bin location in the image.
 
-function [IM_gradients] = radar_gradient(radar, vert_res, horz_res)
+function [IM_gradients, IM_quality] = radar_gradient(radar, vert_res, horz_res)
 
 % Define depth/distance intervals over which to perform radon transforms
 % (in meters), and calculate data matrix window size (in data bins)
 depth_interval = 5;
-dist_interval = 500;
-depth_sz = round(0.10*depth_interval/vert_res);
-dist_sz = round(0.25*dist_interval/horz_res);
+dist_interval = 300;
+depth_sz = round(0.5*depth_interval/vert_res);
+dist_sz = round(0.5*dist_interval/horz_res);
 
 % Define (overlapping) window center points for iterative radon transforms
-ii = dist_sz+1:dist_sz:size(radar.data_smooth,2)-dist_sz;
-jj = depth_sz+1:round(depth_sz/1):size(radar.data_smooth,1)-depth_sz;
+depth_lap = 0.25;
+dist_lap = 0.33;
+ii = dist_sz+1:round(2*dist_lap*dist_sz):size(radar.data_smooth,2)-dist_sz;
+jj = depth_sz+1:round(2*depth_lap*depth_sz):size(radar.data_smooth,1)-depth_sz;
 
 % Preallocate matrix for estimated layer slopes and peak ratios
 s_matrix = nan(size(radar.data_smooth));
 pk_matrix = nan(size(radar.data_smooth));
 R_matrix = nan(size(radar.data_smooth));
+lm_array = cell(1, length(ii));
 
 % Iteratively calculate local layer gradients (data array units) for
 % overlapping local windows within the echogram
@@ -107,29 +110,56 @@ for i = 1:length(ii)
 %     % the robust linear regression of the slopes of overlying layers
 % %     p = robustfit(1:size(radar.depth,1), s_matrix(:,ii(i)));
 %     s_matrix(end,ii(i)) = size(radar.depth,1)*p(2);
+
+
+    y_idx = ~isnan(s_matrix(:,ii(i)));
+    X = radar.depth(y_idx);
+    Y = s_matrix(y_idx,ii(i));
+    p = fitlm(X,Y, 'RobustOpts', 'on', 'Weights', (length(X):-1:1)/length(X));
+%     p = fitlm(X,Y, 'RobustOpts', 'on', 'Intercept', false, ...
+%         'Weights', (length(X):-1:1)/length(X));
+    lm_array{i} = p;
+    
 end
 
+%%%%%%%%
 
-i_idx = randi(length(ii));
-% i_idx = 10;
-i = ii(i_idx);
-data_idx = ~isnan(s_matrix(:,i));
-wind_int = 1;
-y = s_matrix(data_idx,ii(i_idx-wind_int:i_idx+wind_int));
-X = repmat(radar.depth(data_idx), 1, size(y,2));
-% w = pk_matrix(data_idx,ii(i_idx-wind_int:i_idx+wind_int));
-p0 = fitlm(X(:,1+wind_int), y(:,1+wind_int), ...
-    'RobustOpts', 'on', 'Intercept', false);
-p = fitlm(reshape(X,[numel(X) 1]), reshape(y, [numel(y) 1]), ...
-    'RobustOpts', 'on', 'Intercept', false);
-figure
-hold on
-plot(p.Variables.x1, p.Residuals.Standardized, 'bo')
-plot(p0.Variables.x1, p0.Residuals.Standardized, 'ro')
-figure
-plot(p0)
-figure
-plot(p)
+s_model = s_matrix;
+mod_log = isnan(s_model(:,1));
+mod_idx = 1:size(s_model,1);
+mod_idx = mod_idx(mod_log);
+depth_idx = [round(0.50*depth_sz*depth_lap):...
+    round(0.50*2*depth_sz*depth_lap):length(mod_idx) size(s_model,1)];
+for i = 1:length(lm_array)
+%     s_model(:,ii(i)) = predict(lm_array{i}, radar.depth);
+    s_model(depth_idx,ii(i)) = predict(lm_array{i}, radar.depth(depth_idx));
+end
+
+s_matrix = s_model;
+
+%%%%%%%%%%%%
+
+
+% i_idx = randi(length(ii));
+% % i_idx = 10;
+% i = ii(i_idx);
+% data_idx = ~isnan(s_matrix(:,i));
+% wind_int = 1;
+% y = s_matrix(data_idx,ii(i_idx-wind_int:i_idx+wind_int));
+% X = repmat(radar.depth(data_idx), 1, size(y,2));
+% % w = pk_matrix(data_idx,ii(i_idx-wind_int:i_idx+wind_int));
+% p0 = fitlm(X(:,1+wind_int), y(:,1+wind_int), ...
+%     'RobustOpts', 'on', 'Intercept', false);
+% p = fitlm(reshape(X,[numel(X) 1]), reshape(y, [numel(y) 1]), ...
+%     'RobustOpts', 'on', 'Intercept', false);
+% figure
+% hold on
+% plot(p.Variables.x1, p.Residuals.Standardized, 'bo')
+% plot(p0.Variables.x1, p0.Residuals.Standardized, 'ro')
+% figure
+% plot(p0)
+% figure
+% plot(p)
 
 
 % Extrapolate gradient values and peak ratios for echogram edges based on 
@@ -154,7 +184,7 @@ IM_gradients = interp2(X, Y, ss, Vx, Vy);
 pk_matrix(:,1) = pk_matrix(:,ii(1));
 pk_matrix(:,end) = pk_matrix(:,ii(end));
 pk_s = pk_matrix(y,x);
-IM_ratios = interp2(X, Y, pk_s, Vx, Vy);
+IM_quality = interp2(X, Y, pk_s, Vx, Vy);
 
 
 % % Diagnostic plot

@@ -98,6 +98,7 @@ layers_new = layers_new(~cellfun(@isempty, layers_new));
 radar.depth = radar.depth(1:cut_idx);
 radar.data_smooth = radar.data_smooth(1:cut_idx,:);
 radar.IM_grad = IM_gradients(1:cut_idx,:);
+radar.IM_QC = im_QC(1:cut_idx,:);
 radar.peaks = peaks(1:cut_idx,:);
 radar.layers = layers_new;
 radar.groups = group_num(1:cut_idx,:);
