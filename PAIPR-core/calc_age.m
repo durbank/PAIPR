@@ -13,22 +13,31 @@ for i = 1:size(s, 2)
 end
 radar_stat = radar.data_stack - s;
 
-% Remove linear trend in variance (attentuation with depth) and convert to
-% standardized values (z-score statistics)
-radar_Z = zeros(size(radar_stat));
-for i = 1:size(radar_stat, 2)
-    data_i = radar_stat(:,i);
-    % Frame length to define local variance
-    half_frame = round(0.5*length(data_i)/5);
-    var0 = movvar(data_i, 2*half_frame, 'EndPoints', 'discard');
-    x = (half_frame:length(data_i)-half_frame)';
-    % Linear trend in variance
-    EQ = polyfit(x, var0, 1);
-    x_mod = (1:length(data_i))';
-    mod = polyval(EQ, x_mod);
-    % Standardize variance-corrected data
-    radar_Z(:,i) = data_i./sqrt(abs(mod));
-end
+% % Remove linear trend in variance (attentuation with depth) and convert to
+% % standardized values (z-score statistics)
+% radar_Z = zeros(size(radar_stat));
+% for i = 1:size(radar_stat, 2)
+%     data_i = radar_stat(:,i);
+%     % Frame length to define local variance
+%     half_frame = round(0.5*length(data_i)/5);
+%     var0 = movvar(data_i, 2*half_frame, 'EndPoints', 'discard');
+%     x = (half_frame:length(data_i)-half_frame)';
+%     % Linear trend in variance
+%     EQ = polyfit(x, var0, 1);
+%     x_mod = (1:length(data_i))';
+%     mod = polyval(EQ, x_mod);
+%     % Standardize variance-corrected data
+%     radar_Z(:,i) = data_i./sqrt(abs(mod));
+% end
+
+
+radar_Z = zscore(radar_stat);
+
+
+% % More straightforward stationarization using differencing
+% radar_Z = [zeros(1, size(radar.data_stack,2)); ...
+%     zscore(diff(radar.data_stack))];
+
 
 % Define the vertical resolution of the core data and horizontal resolution
 % of the radar data
@@ -62,7 +71,7 @@ clearvars -except radar r k Ndraw horz_res vert_res
 %%
 
 % Iterative radon transforms
-[IM_gradients] = radar_gradient(radar, vert_res, horz_res);
+[IM_gradients, im_QC] = radar_gradient(radar, vert_res, horz_res);
 
 % Find radar peaks in echogram
 [peaks_raw, peak_width] = radar_peaks(radar, vert_res);
@@ -89,6 +98,7 @@ layers_new = layers_new(~cellfun(@isempty, layers_new));
 radar.depth = radar.depth(1:cut_idx);
 radar.data_smooth = radar.data_smooth(1:cut_idx,:);
 radar.IM_grad = IM_gradients(1:cut_idx,:);
+radar.IM_QC = im_QC(1:cut_idx,:);
 radar.peaks = peaks(1:cut_idx,:);
 radar.layers = layers_new;
 radar.groups = group_num(1:cut_idx,:);
