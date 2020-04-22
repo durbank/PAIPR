@@ -1,6 +1,20 @@
-% Function to manually draw annual layers for PAIPR-processed echogram
+% Script to load selected radargram and manually draw annual layers, and
+% then save resulting layer positions for later use
 
-function [man_layers] = draw_manual(radar, output_file)
+
+%% Load previously processed PAIPR echogram to manually trace layers
+
+% Load relevant radar data (previously generated using the above section)
+[r_file, r_path] = uigetfile("Select radar file to use in manual picking");
+radar_file = fullfile(r_path, r_file);
+radar = load(radar_file);
+
+% guides = load(fullfile(data_path, 'IceBridge/manual_layers', name, ...
+%     strcat('manual_', name, '.mat')));
+% guides = guides.man_all;
+
+%%
+% Figure for manually tracing visible annual layers
 
 % Preallocate cell array for position subscripts of manual layers
 man_layers = cell(1,250);
@@ -53,15 +67,12 @@ man_layers = man_layers(~cellfun(@isempty,man_layers));
 % Keep only traced layer data inside the boundaries of the echogram
 keep_idx = cellfun(@(x) round(x(:,2))<=size(radar.data_smooth,1), ...
     man_layers, 'UniformOutput', false);
-man_layers = cellfun(@(x,y) x(y,:), man_layers, keep_idx, ...
-    'UniformOutput', false);
+man_layers = cellfun(@(x,y) x(y,:), man_layers, keep_idx, 'UniformOutput', false);
 
 
 
 %% Save manual layer output to disk for later use
 
-% Save processed radar structure for future use
-save(output_file, '-struct', 'man_layers', '-v7.3')
-
-
-end
+% % Save processed radar structure for future use
+% output_path = fullfile(output_dir, "manual_layers.mat");
+% save(output_path, '-struct', 'man_layers.man_all', '-v7.3')
