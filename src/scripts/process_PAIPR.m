@@ -23,6 +23,10 @@ addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
 % Add CReSIS OIB MATLAB reader functions to path
 addon_struct = dir(fullfile(addon_path, 'cresis-L1B-matlab-reader*'));
 addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
+% Import PAIPR functions
+addpath(genpath("../PAIPR-core"))
+
+%%
 
 % Define number of Monte Carlo simulations to perform
 Ndraw = 100;
@@ -116,10 +120,13 @@ clear radar_ALL
 
 %%
 
-% tmp = load(tmp_path);
-% fdns = fieldnames(tmp);
-% clear tmp
+overlap = 10000;
+horz_res = 25;
+tmp_path = fullfile(data_path, "echo_all_tmp.mat");
+radar_ALL = load(tmp_path);
+fdns = fieldnames(radar_ALL);
 
+%%
 
 % Parellel for loop to process all decomposed echograms
 parfor i = 1:length(fdns)
@@ -139,10 +146,23 @@ parfor i = 1:length(fdns)
     % Calculate radar age-depth profile distributions (includes processing
     %signal-noise, radon transforms, layer tracing, likelihood assignments,
     % and age calculations)
-    r = -3.206;
+    [radar_tmp] = calc_layers(radar_tmp, 'stream');
+    r = -6.723;
     k = 3.0;
-    [radar_tmp] = calc_age(radar_tmp, r, k, Ndraw);
+    [radar_tmp] = radar_age(radar_tmp, r, k, Ndraw);
+    
+    
+%     [radar_tmp] = calc_layers(radar_tmp, 'trace');
+%     r = -3.206;
+%     k = 3.0;
+%     [radar_tmp] = radar_age(radar_tmp, r, k, Ndraw);
+    
+
 %     [radar_tmp] = calc_age2(radar_tmp, -8.305, 3, Ndraw);
+    
+
+
+    
     
     % Calculate radar annual SMB
     [radar_tmp] = calc_SWE(radar_tmp, rho_data, Ndraw);
@@ -160,20 +180,23 @@ parfor i = 1:length(fdns)
         'dist', radar_tmp.dist(clip:end-clip), 'depth', radar_tmp.depth, ...
         'data_smooth', radar_tmp.data_smooth(:,clip:end-clip),...
         'IM_grad', radar_tmp.IM_grad(:,clip:end-clip), ...
+        'IM_QC', radar_tmp.IM_QC(:,clip:end-clip), ...
         'DB', radar_tmp.DB(:,clip:end-clip), ...
-        'groups', radar_tmp.groups(:,clip:end-clip), ...
         'likelihood', radar_tmp.likelihood(:,clip:end-clip), ...
         'ages', radar_tmp.ages(:,clip:end-clip,:));
-        
-    % Find layer member indices based on new clipped record
-    layers = cell(1, max(radar.groups(:)));
-    for j = 1:length(layers)
-        layers{j} = find(radar.groups == j);
-    end
-    radar.layers = layers(~cellfun(@isempty, layers));
     
-    % Redefine radargram distances based on clipped data
-    radar.dist = radar.dist - radar.dist(1);
+    
+    if isfield(radar_tmp, 'groups')
+        radar.groups = radar_tmp.groups(:,clip:end-clip);
+        
+        % Find layer member indices based on new clipped record
+        layers = cell(1, max(radar.groups(:)));
+        for j = 1:length(layers)
+            layers{j} = find(radar.groups == j);
+        end
+        radar.layers = layers(~cellfun(@isempty, layers));
+        
+    end
     
     % Check for existing elevation data, and add to output struct if
     % available
@@ -182,6 +205,9 @@ parfor i = 1:length(fdns)
     else
         radar.elev = nan(1, length(radar.Easting));
     end
+    
+    % Redefine radargram distances based on clipped data
+    radar.dist = radar.dist - radar.dist(1);
     
     % Clip SMB cell array data and add to output struct
     radar.SMB_yr =  radar_tmp.SMB_yr(clip:end-clip);

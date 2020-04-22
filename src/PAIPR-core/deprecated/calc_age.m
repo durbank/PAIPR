@@ -73,36 +73,47 @@ clearvars -except radar r k Ndraw horz_res vert_res
 % Iterative radon transforms
 [IM_gradients, im_QC] = radar_gradient(radar, vert_res, horz_res);
 
-% Find radar peaks in echogram
-[peaks_raw, peak_width] = radar_peaks(radar, vert_res);
-
-
-
-[peaks, group_num, layers] = radar_trace(peaks_raw, peak_width, ...
-    IM_gradients, vert_res, horz_res);
-
-% Find max depth with full layer coverage
-max_depth = zeros(1,size(group_num,2));
-for i=1:length(max_depth)
-    max_depth(i) = find(group_num(:,i), 1, 'last');
+% Perform layer picking and likelihood assignments based on chosen method
+switch method
+    
+    case 'trace'
+        % Find radar peaks in echogram
+        [peaks_raw, peak_width] = radar_peaks(radar, vert_res);
+        
+        % Trace horizons using peak results and RT gradients
+        [peaks, group_num, layers] = radar_trace(peaks_raw, peak_width, ...
+            IM_gradients, vert_res, horz_res);
+        
+        % Find max depth with full layer coverage
+        max_depth = zeros(1,size(group_num,2));
+        for i=1:length(max_depth)
+            max_depth(i) = find(group_num(:,i), 1, 'last');
+        end
+        cut_idx = min(max_depth);
+        
+        % Clip traced layers to max usable depth
+        [rows,cols] = cellfun(@(x) ind2sub(size(peaks),x), layers, ...
+            'UniformOutput', false);
+        [layers_new] = cellfun(@(x,y) sub2ind([cut_idx length(radar.dist)], ...
+            x(x<=cut_idx), y(x<=cut_idx)), rows, cols, 'UniformOutput', false);
+        layers_new = layers_new(~cellfun(@isempty, layers_new));
+        
+        % Clip radar results to max usable depth
+        radar.depth = radar.depth(1:cut_idx);
+        radar.data_smooth = radar.data_smooth(1:cut_idx,:);
+        radar.IM_grad = IM_gradients(1:cut_idx,:);
+        radar.IM_QC = im_QC(1:cut_idx,:);
+        radar.peaks = peaks(1:cut_idx,:);
+        radar.layers = layers_new;
+        radar.groups = group_num(1:cut_idx,:);
+        
+        % Remove unnecessary radar object fields
+        radar = rmfield(radar, {'data_stack', 'time_trace'});
+        
+    case 'stream'
+        % Stuff
+        
 end
-cut_idx = min(max_depth);
-
-[rows,cols] = cellfun(@(x) ind2sub(size(peaks),x), layers, ...
-    'UniformOutput', false);
-[layers_new] = cellfun(@(x,y) sub2ind([cut_idx length(radar.dist)], ...
-    x(x<=cut_idx), y(x<=cut_idx)), rows, cols, 'UniformOutput', false);
-layers_new = layers_new(~cellfun(@isempty, layers_new));
-
-
-radar.depth = radar.depth(1:cut_idx);
-radar.data_smooth = radar.data_smooth(1:cut_idx,:);
-radar.IM_grad = IM_gradients(1:cut_idx,:);
-radar.IM_QC = im_QC(1:cut_idx,:);
-radar.peaks = peaks(1:cut_idx,:);
-radar.layers = layers_new;
-radar.groups = group_num(1:cut_idx,:);
-radar = rmfield(radar, {'data_stack', 'time_trace'});
 
 %%
 

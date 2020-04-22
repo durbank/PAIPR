@@ -23,13 +23,13 @@ addpath(genpath(PAIPR_path))
 
 %%
 
-input_dir = uigetdir(data_path, "Select optimization directory");
-% input_dir = fullfile(data_path, "PAIPR-results/tmp/optim/");
+% input_dir = uigetdir(data_path, "Select optimization directory");
+input_dir = fullfile(data_path, "PAIPR-results/v0.3.0/optim/");
 
-SEAT_4 = load(fullfile(input_dir, "params_SEAT4.mat"));
-SEAT_5 = load(fullfile(input_dir, "params_SEAT5.mat"));
-SEAT_6 = load(fullfile(input_dir, "params_SEAT6.mat"));
-PIG = load(fullfile(input_dir, "params_PIG.mat"));
+SEAT_4 = load(fullfile(input_dir, "params_SEAT2010_4.mat"));
+SEAT_5 = load(fullfile(input_dir, "params_SEAT2010_5.mat"));
+SEAT_6 = load(fullfile(input_dir, "params_SEAT2010_6.mat"));
+PIG = load(fullfile(input_dir, "params_PIG2010.mat"));
 
 %%
 figure
@@ -47,7 +47,7 @@ title("Rate parameter (r) SSE")
 hold on
 ksdensity(SEAT_4.SSE(SEAT_4.SSE<25))
 ksdensity(SEAT_5.SSE(SEAT_5.SSE<25))
-ksdensity(SEAT_6.SSE(SEAT_6.SSE<25))
+% ksdensity(SEAT_6.SSE(SEAT_6.SSE<25))
 ksdensity(PIG.SSE(PIG.SSE<25))
 legend("2010-4", "2010-5", "2010-6", "PIG")
 hold off
