@@ -147,8 +147,7 @@ parfor i = 1:length(fdns)
     %signal-noise, radon transforms, layer tracing, likelihood assignments,
     % and age calculations)
     [radar_tmp] = calc_layers(radar_tmp, 'stream');
-    r = -8.305;
-    r = -5;
+    r = -6.723;
     k = 3.0;
     [radar_tmp] = radar_age(radar_tmp, r, k, Ndraw);
     
