@@ -21,8 +21,15 @@ table_cell = cellfun(@(lat, lon, elev, time, SMB, year) ...
 % Concatenate results into a single table in long format
 long_table = vertcat(table_cell{:});
 
+% Create table for QC values of echogram image
+QC_T = table(mdata.QC_flag, mdata.QC_med, mdata.QC_val, mdata.QC_depth_idx,...
+    'VariableNames', {'QC_flag', 'QC_med', 'QC_val', 'QC_depth'});
+
+% Add variables for QC values of echogram image
+full_table = [long_table repmat(QC_T, height(long_table), 1)];
+
 % Save the file
-writetable(long_table, csv_output);
+writetable(full_table, csv_output);
 
 %%
 
