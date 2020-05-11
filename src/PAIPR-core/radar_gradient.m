@@ -12,7 +12,7 @@ depth_sz = round(0.5*depth_interval/vert_res);
 dist_sz = round(0.5*dist_interval/horz_res);
 
 % Define (overlapping) window center points for iterative radon transforms
-depth_lap = 0.25;
+depth_lap = 0.20;
 dist_lap = 0.33;
 ii = dist_sz+1:round(2*dist_lap*dist_sz):size(radar.data_smooth,2)-dist_sz;
 jj = depth_sz+1:round(2*depth_lap*depth_sz):size(radar.data_smooth,1)-depth_sz;
@@ -185,6 +185,8 @@ pk_matrix(:,1) = pk_matrix(:,ii(1));
 pk_matrix(:,end) = pk_matrix(:,ii(end));
 pk_s = pk_matrix(y,x);
 IM_quality = interp2(X, Y, pk_s, Vx, Vy);
+% IM_quality = interp2(X, Y, pk_s, Vx, Vy, 'makima');
+
 
 
 % % Diagnostic plot
