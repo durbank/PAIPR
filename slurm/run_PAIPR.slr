@@ -1,0 +1,44 @@
+#!/bin/bash
+#SBATCH --time=00:05:00 # walltime, abbreviated by -t
+#SBATCH --nodes=1      # number of cluster nodes, abbreviated by -N
+#SBATCH -o slurm-%j.out-%N # name of the stdout, using the job number (%j) and the first node (%N)
+#SBATCH --ntasks=1    # number of MPI tasks, abbreviated by -n
+# additional information for allocated clusters
+#SBATCH --account=rupper     # account - abbreviated by -A
+#SBATCH --partition=notchpeak-freecycle  # partition, abbreviated by -p
+
+# just in case purge the old modules and load Matlab module
+module purge
+module load matlab
+
+# MATLAB wrapper script file path
+set SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/slurm/run_matlab.m"
+# directory with the Matlab functions required to run src script
+set SRCDIR="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/src"
+# directory with the data input files
+set DATADIR="/uufs/chpc.utah.edu/common/home/u1046484/Data"
+# directory to output results
+set OUTDIR="/uufs/chpc.utah.edu/common/home/u1046484/Data/"
+# scratch directory where MATLAB is run
+set SCRDIR="/scratch/serial/u1046484/matlab_run1"
+
+# make scratch dir, copy input data there and cd to it
+mkdir -p $SCRDIR
+cp $SRCFILE $SCRDIR
+cp -r $SRCDIR $SCRDIR
+cp -r $DATADIR $SCRDIR
+cd $SCRDIR
+mkdir Outputs
+
+# run matlab program via the run_matlab script
+matlab -nodisplay -r run_matlab.m -logfile Outputs/matlab_batch.log
+
+# create results directory in home DATADIR
+mkdir $OUTDIR/tmp_results
+
+# copy results from scratch to the result dir - replace matlab_outputs*
+# with your own results files
+cp -r Outputs/* $OUTDIR/tmp_results
+
+# Clear the scratch directory
+rm -rf $SCRDIR
