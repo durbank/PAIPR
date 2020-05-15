@@ -22,8 +22,6 @@ SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/slurm/run_matla
 SRCDIR="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/src/"
 # Path to density results file
 RHOFILE="/uufs/chpc.utah.edu/common/home/u1046484/Data/PAIPR/rho_files/rho_20111109subset.mat"
-# directory with the data input files
-DATADIR="gcloud:CHPC/IceBridge-raw/test/raw_data/"
 # directory to output results
 OUTDIR=$startDIR
 # Assign scratch directory to process data
@@ -33,15 +31,19 @@ SCRDIR="/scratch/general/lustre/u1046484/"
 #mkdir -p $OUTDIR
 
 # make scratch dir, copy input data there and cd to it
-mkdir -p $SCRDIR
+mkdir -p $SCRDIR #should already exist from dataDMZ.sh
 cp $SRCFILE $SCRDIR
 cp -r $SRCDIR $SCRDIR/src
 cp $RHOFILE $SCRDIR/rho_data.mat
-rclone copy $DATADIR $SCRDIR/Data/
 cd $SCRDIR
 
+# Data directory should	have been assigned, created, and populated previously
+# using	the dataDMZ.sh script
+#DATADIR="gcloud:CHPC?IceBridge-raw/..."
+#rclone copy $DATADIR $SCRDIR/Data/
+
 # Create seperate directory within scratch to store outputs
-mkdir Outputs
+mkdir -p Outputs/
 
 # run matlab program with variable options
 matlab -nodisplay -r "try; run_matlab; catch; end; exit" -logfile Outputs/matlab_stdout.log
