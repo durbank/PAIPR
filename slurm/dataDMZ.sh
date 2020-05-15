@@ -2,6 +2,7 @@
 
 # Script to create scratch directory and download data to it from gcloud
 # This should be implemented in the Science DMZ nodes
+# e.g. dtn01-dmz.chpc.utah.edu
 
 # Purge old modules and load required ones
 module purge

@@ -46,11 +46,18 @@ mkdir Outputs
 # run matlab program with variable options
 matlab -nodisplay -r "try; run_matlab; catch; end; exit" -logfile Outputs/matlab_stdout.log
 
-# copy results from scratch to the result dir
-cp -r Outputs/ $OUTDIR
+# Determine is matlab completed cleanly or with errors
+if [$? -eq 0 ]
+then
+    # copy results from scratch to the results dir
+    cp -r Outputs/ $OUTDIR
 
-# Return to initial working directory
-cd $startDIR
+    # Return to start dir
+    cd $startDIR
 
-# Clear the scratch directory
-rm -rf $SCRDIR
+    # Clean scratch
+    rm -rf $SCRDIR
+else
+    echo "MATLAB exited due to an unknown error"
+    cd $startDIR
+fi
