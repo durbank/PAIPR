@@ -19,12 +19,12 @@ addpath('src/scripts/')
 %%
 
 % If required, start parellel pool
-poolobj=parpool('local',4);
+poolobj=parpool('local',11);
 
 
 
 % Define input/output file locations
-rho_file = 'rho_data.mat';
+rho_file = 'rho_data.csv';
 out_dir = 'Outputs/';
 
 % Define directories for raw echogram inputs

@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --time=06:00:00 # walltime, abbreviated by -t
+#SBATCH --time=03:00:00 # walltime, abbreviated by -t
 #SBATCH --nodes=1      # number of cluster nodes, abbreviated by -N
 #SBATCH -o slurm-%j.out-%N # name of the stdout, using the job number (%j) and the first node (%N)
 #SBATCH --ntasks=1    # number of MPI tasks, abbreviated by -n
 # additional information for allocated clusters
 #SBATCH --account=rupper     # account - abbreviated by -A
-#SBATCH --partition=kingspeak  # partition, abbreviated by -p
+#SBATCH --partition=lonepeak  # partition, abbreviated by -p
 #SBATCH --mail-type=FAIL,BEGIN,END
 #SBATCH --mail-user=durban.keeler@gmail.com
 
@@ -21,7 +21,7 @@ SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/slurm/run_matla
 # directory with the Matlab functions required to run src script
 SRCDIR="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/src/"
 # Path to density results file
-RHOFILE="/uufs/chpc.utah.edu/common/home/u1046484/Data/PAIPR/rho_files/rho_20111109subset.mat"
+#RHOFILE="/uufs/chpc.utah.edu/common/home/u1046484/Data/PAIPR/rho_files/rho_20111109subset.mat"
 # directory to output results
 OUTDIR=$startDIR
 # Assign scratch directory to process data
@@ -34,7 +34,7 @@ SCRDIR="/scratch/general/lustre/u1046484/"
 mkdir -p $SCRDIR #should already exist from dataDMZ.sh
 cp $SRCFILE $SCRDIR
 cp -r $SRCDIR $SCRDIR/src
-cp $RHOFILE $SCRDIR/rho_data.mat
+#cp $RHOFILE $SCRDIR/rho_data.mat
 cd $SCRDIR
 
 # Data directory should	have been assigned, created, and populated previously
@@ -58,7 +58,7 @@ then
     cd $startDIR
 
     # Clean scratch
-    rm -rf $SCRDIR
+#    rm -rf $SCRDIR
 else
     echo "MATLAB exited due to an unknown error"
     cd $startDIR
