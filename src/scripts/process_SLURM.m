@@ -12,9 +12,9 @@ Ndraw = 100;
 % Directory containing raw OIB echograms
 radar_dir = DATADIR;
 
-% Select modeled density subset .mat file to use, and load to workspace
-rho_file = load(RHO_PATH);
-rho_subset = rho_file.rho_subset;
+% % Select modeled density subset .mat file to use, and load to workspace
+% rho_file = load(RHO_PATH);
+% rho_subset = rho_file.rho_subset;
 
 % Check for existence of echogram output directory and create as necessary
 echo_out = fullfile(OUTDIR, 'echo');
@@ -29,6 +29,9 @@ if 7~=exist(gamma_out, 'dir')
 end
 
 %%
+
+% Import density profiles and format as nested table
+rho_table = import_rho(RHO_PATH);
 
 % Get grouping indices of echograms
 [files, start_idx, end_idx] = OIB_chunk(radar_dir);
@@ -73,7 +76,7 @@ parfor i=1:length(end_idx)
     
     % Load modeled depth-density data from stats model output at specified
     % Easting/Northing coordinates
-    [rho_data] = load_rho(rho_subset, radar_tmp.Easting, radar_tmp.Northing);
+    [rho_data] = load_rho(rho_table, radar_tmp.Easting, radar_tmp.Northing);
     
     % Convert to depth
     [radar_tmp] = radar_depth(radar_tmp, rho_data);
