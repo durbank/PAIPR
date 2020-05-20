@@ -12,7 +12,7 @@ module purge
 module load rclone
 
 # Define location of input data directories
-DATADIR="gcloud:CHPC/IceBridge-raw/wais-central/20111109/"
+DATADIR="gcloud:CHPC/IceBridge-raw/WAIS-central/20111109/"
 
 # Define location of input density file
 RHOFILE="gcloud:CHPC/flight-density/rho_20111109.csv"
