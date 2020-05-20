@@ -46,7 +46,7 @@ cd $SCRDIR
 mkdir -p Outputs/
 
 # run matlab program with variable options
-matlab -nodisplay -r "try; run_matlab; catch; end; exit" -logfile Outputs/matlab_stdout.log
+matlab -nodisplay -r "run_matlab" -logfile Outputs/matlab_stdout.log
 
 # Determine is matlab completed cleanly or with errors
 if [$? -eq 0 ]
