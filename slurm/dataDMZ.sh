@@ -17,12 +17,16 @@ DATADIR="gcloud:CHPC/IceBridge-raw/wais-central/20111109/"
 # Define location of input density file
 RHOFILE="gcloud:CHPC/flight-density/rho_20111109.csv"
 
+echo "Creating scratch directory"
+
 # Define and create scratch directory
 SCRDIR="/scratch/general/lustre/u1046484/"
 mkdir -p $SCRDIR
 
 # Transfer input data to scratch
+echo "Transfering density data"
 rclone copyto $RHOFILE $SCRDIR/rho_data.csv
+echo "Transfering echogram data"
 rclone copy $DATADIR $SCRDIR/Data/20111109/ --transfers=16 --drive-chunk-size=32768
 
 # Define end time and calculate execution time
