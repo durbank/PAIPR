@@ -1,0 +1,65 @@
+#!/bin/bash
+#SBATCH --time=03:00:00 # walltime, abbreviated by -t
+#SBATCH --nodes=1      # number of cluster nodes, abbreviated by -N
+#SBATCH -o slurm-%j.out-%N # name of the stdout, using the job number (%j) and the first node (%N)
+#SBATCH --ntasks=1    # number of MPI tasks, abbreviated by -n
+# additional information for allocated clusters
+#SBATCH --account=rupper     # account - abbreviated by -A
+#SBATCH --partition=lonepeak  # partition, abbreviated by -p
+#SBATCH --mail-type=FAIL,BEGIN,END
+#SBATCH --mail-user=durban.keeler@gmail.com
+
+# Purge old modules and load required ones
+module purge
+module load matlab
+module load rclone
+
+# Define current working directory
+startDIR=$(pwd)
+
+SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/slurm/run_matlab.m"
+# directory with the Matlab functions required to run src script
+SRCDIR="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/src/"
+# Path to density results file
+#RHOFILE="/uufs/chpc.utah.edu/common/home/u1046484/Data/PAIPR/rho_files/rho_20111109subset.mat"
+# directory to output results
+OUTDIR=$startDIR
+# Assign scratch directory to process data
+SCRDIR="/scratch/general/lustre/u1046484/"
+
+# create results directory in home space
+#mkdir -p $OUTDIR
+
+# make scratch dir, copy input data there and cd to it
+mkdir -p $SCRDIR #should already exist from dataDMZ.sh
+cp $SRCFILE $SCRDIR
+cp -r $SRCDIR $SCRDIR/src
+#cp $RHOFILE $SCRDIR/rho_data.mat
+cd $SCRDIR
+
+# Data directory should	have been assigned, created, and populated previously
+# using	the dataDMZ.sh script
+#DATADIR="gcloud:CHPC?IceBridge-raw/..."
+#rclone copy $DATADIR $SCRDIR/Data/
+
+# Create seperate directory within scratch to store outputs
+mkdir -p Outputs/
+
+# run matlab program with variable options
+matlab -nodisplay -r "run_matlab" -logfile Outputs/matlab_stdout.log
+
+# Determine is matlab completed cleanly or with errors
+if [$? -eq 0 ]
+then
+    # copy results from scratch to the results dir
+    cp -r Outputs/ $OUTDIR
+
+    # Return to start dir
+    cd $startDIR
+
+    # Clean scratch
+#    rm -rf $SCRDIR
+else
+    echo "MATLAB exited due to an unknown error"
+    cd $startDIR
+fi
