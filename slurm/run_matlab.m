@@ -56,8 +56,8 @@ try
     end
     
 catch ME
-    disp("An error occurred in processing");
-    fprintf(1, "The error thrown reads:\n%s", ME.message);
+    disp("An error occurred in processing \n");
+    fprintf(1, "The error thrown reads:\n%s \n", ME.message);
     
 end
 
