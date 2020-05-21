@@ -29,3 +29,5 @@ OUTDIR = '/home/durbank/Documents/scratch/';
 NSIM = 100;
 
 [success_codes] = process_SLURM(DATADIR, RHOFILE, OUTDIR, NSIM);
+% [success_codes] = process_SLURM(...
+%     DATADIR, RHOFILE, OUTDIR, NSIM, 'VerboseOutput', true);

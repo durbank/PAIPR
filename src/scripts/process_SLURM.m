@@ -4,7 +4,16 @@
 %               functions, and 'AntarcticMappingTools' functions to be
 %               added to the path previously
 
-function [success_codes] = process_SLURM(DATADIR, RHO_PATH, OUTDIR, Ndraw)
+function [success_codes] = process_SLURM(...
+    DATADIR, RHO_PATH, OUTDIR, Ndraw, NameValueArgs)
+
+arguments
+    DATADIR %string
+    RHO_PATH %string
+    OUTDIR %string
+    Ndraw %int16
+    NameValueArgs.VerboseOutput = false
+end
 
 % % Define number of Monte Carlo simulations to perform
 % Ndraw = 100;
@@ -16,10 +25,12 @@ radar_dir = DATADIR;
 % rho_file = load(RHO_PATH);
 % rho_subset = rho_file.rho_subset;
 
-% Check for existence of echogram output directory and create as necessary
-echo_out = fullfile(OUTDIR, 'echo');
-if 7~=exist(echo_out, 'dir')
-    mkdir(echo_out)
+if NameValueArgs.VerboseOutput == true
+    % Check for existence of echogram output dir and create as necessary
+    echo_out = fullfile(OUTDIR, 'echo');
+    if 7~=exist(echo_out, 'dir')
+        mkdir(echo_out)
+    end
 end
 
 % Check for existence of .csv output directory and create as necessary
@@ -160,11 +171,18 @@ parfor i=1:length(end_idx)
         
         % Generate file names and paths under which to save data
         filename = sprintf('%s%d','radar_out',i);
-        mat_output = fullfile(echo_out, strcat(filename, '.mat'));
         csv_output = fullfile(gamma_out, strcat(filename, '.csv'));
         
-        % Save output structures to disk
-        [success_codes(i)] = parsave_all(radar, mat_output, csv_output);
+        switch NameValueArgs.VerboseOutput
+            case true
+                mat_output = fullfile(echo_out, strcat(filename, '.mat'));
+                % Save output structures to disk
+                [success_codes(i)] = parsave_all(...
+                    radar, csv_output, mat_output);
+            case false
+                % Save output structures to disk
+                [success_codes(i)] = parsave_all(radar, csv_output);
+        end
         
     catch ME
         fprintf(1, ['An error occurred while processing data in the '...
