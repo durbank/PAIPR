@@ -50,6 +50,9 @@ if (threshold_val >= warning_lim) || (max(depth_vals) >= warning_lim)
     
     % Find depth cutoff index for "good" data
     depth_idx = find(depth_vals > warning_lim, 1, 'first');
+    if isempty(depth_idx)
+        depth_idx = size(QC_image,1);
+    end
     
 else
     QC_flag = false;
