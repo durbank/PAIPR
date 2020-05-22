@@ -108,8 +108,8 @@ parfor i=1:length(end_idx)
         [radar_tmp] = calc_SWE(radar_tmp, rho_data, Ndraw);
         
         % Perform QC check on echogram image
-        [QC_med, QC_val, QC_flag, depth_idx] = QC_check(...
-            radar_tmp.IM_QC, 0.50, 0.10);
+        [QC_med, QC_val, QC_flag, depth_idx, yr_cutoff] = QC_check(...
+            radar_tmp, 0.50, 0.10);
         
         switch overlap_switch
             case true
@@ -128,6 +128,7 @@ parfor i=1:length(end_idx)
                     'IM_QC', radar_tmp.IM_QC(:,clip:end-clip), ...
                     'QC_med', QC_med, 'QC_val', QC_val, ...
                     'QC_flag', QC_flag', 'QC_depth_idx', depth_idx,...
+                    'QC_yr', yr_cutoff, ...
                     'DB', radar_tmp.DB(:,clip:end-clip), ...
                     'likelihood', radar_tmp.likelihood(:,clip:end-clip), ...
                     'ages', radar_tmp.ages(:,clip:end-clip,:));
@@ -167,6 +168,7 @@ parfor i=1:length(end_idx)
                 radar.QC_val = QC_val;
                 radar.QC_flag = QC_flag;
                 radar.QC_depth_idx = depth_idx;
+                radar.QC_yr = yr_cutoff;
         end
         
         % Generate file names and paths under which to save data
