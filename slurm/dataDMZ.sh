@@ -27,7 +27,7 @@ mkdir -p $SCRDIR
 echo "Transfering density data"
 rclone copyto $RHOFILE $SCRDIR/rho_data.csv
 echo "Transfering echogram data"
-rclone copy $DATADIR $SCRDIR/Data/20111109/ --transfers=16 --drive-chunk-size=32768
+rclone copy $DATADIR $SCRDIR/Data/20111109/ --transfers=16 --drive-chunk-size=32768 --progress
 
 # Define end time and calculate execution time
 t_end=`date +%s`
