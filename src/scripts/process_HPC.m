@@ -20,8 +20,8 @@ try
         'AntarcticMappingTools_*'));
     addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
     
-    % Add PAIPR scripts to path
-    addpath('src/scripts/')
+%     % Add PAIPR scripts to path
+%     addpath('src/scripts/')
     
     %%
     
@@ -45,8 +45,13 @@ try
         mkdir(out_i);
         
         % Run PAIPR functions
-        [success_codes] = process_SLURM(...
-            fullfile(echo_dir.folder, echo_dir.name), rho_file, out_i);
+        NSIM = 100;
+        [success_codes] = process_PAIPR(...
+            fullfile(echo_dir.folder, echo_dir.name), ...
+            rho_file, out_i, NSIM);
+%         [success_codes] = process_PAIPR(...
+%             fullfile(echo_dir.folder, echo_dir.name), ...
+%             rho_file, out_i, NSIM, 'VerboseOutput', true);
         
         % Save sucess codes as .csv table
         T = table(1:length(success_codes), success_codes, ...
