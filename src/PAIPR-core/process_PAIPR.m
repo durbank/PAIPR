@@ -179,11 +179,11 @@ parfor i=1:length(end_idx)
             case true
                 mat_output = fullfile(echo_out, strcat(filename, '.mat'));
                 % Save output structures to disk
-                [success_codes(i)] = parsave_all(...
+                [success_codes(i)] = parsave(...
                     radar, csv_output, mat_output);
             case false
                 % Save output structures to disk
-                [success_codes(i)] = parsave_all(radar, csv_output);
+                [success_codes(i)] = parsave(radar, csv_output);
         end
         
     catch ME
