@@ -4,7 +4,7 @@
 %               functions, and 'AntarcticMappingTools' functions to be
 %               added to the path previously
 
-function [success_codes] = process_SLURM(...
+function [success_codes] = process_PAIPR(...
     DATADIR, RHO_PATH, OUTDIR, Ndraw, NameValueArgs)
 
 arguments

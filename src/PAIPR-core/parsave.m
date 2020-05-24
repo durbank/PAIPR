@@ -2,7 +2,7 @@
 % loop (so as to preserve variable transparency). This saves both the .mat
 % results of PAIPR as well as the .csv results of gamma-fitting
 
-function [success] = parsave_all(mdata, csv_output, varargin)
+function [success] = parsave(mdata, csv_output, varargin)
 
 %% Fit gamma distributions to results and save to disk
 
