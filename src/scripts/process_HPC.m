@@ -3,6 +3,9 @@
 % Start parellel pool
 poolobj=parpool('local',11);
 
+% Suppress warnings for robust fit iteration limit
+warning('off', 'stats:statrobustfit:IterationLimit')
+
 try
     
     %%
@@ -62,6 +65,8 @@ try
     
 catch ME
     disp("An error occurred in processing \n");
+    fprintf(1,"The error occurred in the following location: %s \n",...
+            Me.stack)
     fprintf(1, "The error thrown reads:\n%s \n", ME.message);
     
 end

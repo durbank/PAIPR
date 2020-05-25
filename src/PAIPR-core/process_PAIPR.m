@@ -25,9 +25,9 @@ radar_dir = DATADIR;
 % rho_file = load(RHO_PATH);
 % rho_subset = rho_file.rho_subset;
 
+echo_out = fullfile(OUTDIR, 'echo');
 if NameValueArgs.VerboseOutput == true
     % Check for existence of echogram output dir and create as necessary
-    echo_out = fullfile(OUTDIR, 'echo');
     if 7~=exist(echo_out, 'dir')
         mkdir(echo_out)
     end
@@ -190,10 +190,12 @@ parfor i=1:length(end_idx)
         fprintf(1, ['An error occurred while processing data in the '...
         'following directory: \n %s \n'], files(i).folder);
         fprintf(1, "Affected echograms span %s to %s \n", ...
-            files(start_idx(i)).name, files(start_idx(i)).name)
+            files(start_idx(i)).name, files(end_idx(i)).name)
         fn_missing = sprintf('%s%d', 'radar_out', i);
         fprintf(1, "Resultant missing files should be named %s \n", ...
             fn_missing);
+        fprintf(1,"The error occurred in the following location: %s \n",...
+            Me.stack)
         fprintf(1, "The error thrown reads:\n%s \n", ME.message);
     end
     
