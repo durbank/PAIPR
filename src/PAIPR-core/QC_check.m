@@ -62,7 +62,14 @@ else
     
     % Find depth cutoff index for "good" data
     depth_idx = find(depth_vals > warning_lim, 1, 'first');
-    
+    if isempty(depth_idx)
+        % Set depth cutoff index for "good" data to bottom of image
+        depth_idx = size(QC_image,1);
+        
+        % Expand cutoffs for warning limit and % threshold by 20%
+        warning_lim = warning_lim + 0.20*warning_lim;
+        thresh_perc = thresh_perc + 0.20*thresh_perc;
+    end
     
     % QC image above depth cutoff
     im_cut = QC_image(1:depth_idx, :);
