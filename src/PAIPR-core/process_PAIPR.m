@@ -195,7 +195,7 @@ parfor i=1:length(end_idx)
         fprintf(1, "Resultant missing files should be named %s \n", ...
             fn_missing);
         fprintf(1,"The error occurred in the following location: %s \n",...
-            Me.stack)
+            ME.stack)
         fprintf(1, "The error thrown reads:\n%s \n", ME.message);
     end
     

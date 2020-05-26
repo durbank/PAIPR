@@ -70,7 +70,9 @@ radar.data_smooth = sgolayfilt(radarZ_interp, 3, 9);
 clearvars -except radar horz_res vert_res method
 
 
-
+% Suppress warnings for robust fit iteration limit
+w_ID = "stats:statrobustfit:IterationLimit";
+warning('off', w_ID)
 % Iterative radon transforms
 [IM_gradients, im_QC] = radar_gradient(radar, vert_res, horz_res);
 

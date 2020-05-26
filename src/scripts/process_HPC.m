@@ -3,9 +3,6 @@
 % Start parellel pool
 poolobj=parpool('local',11);
 
-% Suppress warnings for robust fit iteration limit
-warning('off', 'stats:statrobustfit:IterationLimit')
-
 try
     
     %%
@@ -29,7 +26,9 @@ try
     %%
     
     % Define input/output file locations
-    rho_file = 'rho_data.csv';
+    %rho_file = 'rho_data.csv';
+%     rho_files = dir(fullfile('rho_data', '*.csv'));
+    rho_dir = 'rho_data';
     out_dir = 'Outputs/';
     
     % Define directories for raw echogram inputs
@@ -46,6 +45,10 @@ try
         % Create output directory for current iteration
         out_i = fullfile(out_dir, echo_dir.name);
         mkdir(out_i);
+        
+        % Get rho file for current iteration
+        rho_file = fullfile(rho_dir, ...
+            strcat('rho_', echo_dir.name, '.csv'));
         
         % Run PAIPR functions
         NSIM = 100;
@@ -66,7 +69,7 @@ try
 catch ME
     disp("An error occurred in processing \n");
     fprintf(1,"The error occurred in the following location: %s \n",...
-            Me.stack)
+            ME.stack)
     fprintf(1, "The error thrown reads:\n%s \n", ME.message);
     
 end
