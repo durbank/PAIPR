@@ -55,11 +55,20 @@ overlap_switch = false;
 overlap = 10000;
 
 
-echo_0 = orderfields(import_radar(...
-    OIB_convert(fullfile(files(1).folder, files(1).name))));
-fields = fieldnames(echo_0);
-for i = 1:length(fields)
-    echo_0.(fields{i}) = [];
+try
+    echo_0 = orderfields(import_radar(...
+        OIB_convert(fullfile(files(1).folder, files(1).name))));
+    fields = fieldnames(echo_0);
+    for i = 1:length(fields)
+        echo_0.(fields{i}) = [];
+    end
+catch
+    disp('Initial stucture assignment failed')
+    disp('Reverting to manual assignment')
+    
+    echo_0 = struct('Easting', [], 'Northing', [], 'collect_time', [], ...
+        'data_out', [], 'dist', [], 'elev', [], ...
+        'lat', [], 'lon', [], 'time_trace', []);
 end
 
 % Preallocate array for success codes
@@ -188,15 +197,19 @@ parfor i=1:length(end_idx)
         
     catch ME
         fprintf(1, ['An error occurred while processing data in the '...
-        'following directory: \n %s \n'], files(i).folder);
-        fprintf(1, "Affected echograms span %s to %s \n", ...
+        'following directory:\n %s\n'], files(i).folder);
+        fprintf(1, "Affected echograms span %s to %s\n", ...
             files(start_idx(i)).name, files(end_idx(i)).name)
         fn_missing = sprintf('%s%d', 'radar_out', i);
-        fprintf(1, "Resultant missing files should be named %s \n", ...
+        fprintf(1, "Resultant missing files should be named %s\n", ...
             fn_missing);
-        fprintf(1,"The error occurred in the following location: %s \n",...
-            ME.stack)
-        fprintf(1, "The error thrown reads:\n%s \n", ME.message);
+        disp("The error occurred in the following locations: ")
+        for m=1:length(ME.stack)
+            fprintf(1, '>> Function = %s: Line %u\n', ...
+                ME.stack(m).name, ME.stack(m).line)
+        end
+        fprintf(1, "The error thrown reads:\n%s\n", ME.message);
+        disp('--------------------------------------------------')
     end
     
     
