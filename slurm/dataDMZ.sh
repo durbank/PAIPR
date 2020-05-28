@@ -12,7 +12,7 @@ module purge
 module load rclone
 
 # Define location of input data directories
-DATADIR="gcloud:CHPC/IceBridge-raw/wais-central-min/20161109/"
+DATADIR="gcloud:CHPC/IceBridge-raw/wais-central-min/"
 
 # Define location of input density file
 #RHOFILE="gcloud:CHPC/flight-density/rho_20111109.csv"
@@ -29,7 +29,7 @@ echo "Transfering density data"
 #rclone copyto $RHOFILE $SCRDIR/rho_data.csv
 rclone copy $RHODIR $SCRDIR/rho_data/ --progress
 echo "Transfering echogram data"
-rclone copy $DATADIR $SCRDIR/Data/20161109/ --transfers=16 --drive-chunk-size=32768 --progress
+rclone copy $DATADIR $SCRDIR/Data/ --transfers=16 --drive-chunk-size=32768 --progress
 
 # Define end time and calculate execution time
 t_end=`date +%s`
