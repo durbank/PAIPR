@@ -1,0 +1,7 @@
+# Ignore generated images
+*.png
+*.jpg
+
+# Ignore generated doc files
+*.html
+*.pdf
