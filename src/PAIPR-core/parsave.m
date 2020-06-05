@@ -2,8 +2,7 @@
 % loop (so as to preserve variable transparency). This saves both the .mat
 % results of PAIPR as well as the .csv results of gamma-fitting
 
-function [success] = parsave_all(mdata, mat_output, csv_output)
-
+function [success] = parsave(mdata, csv_output, varargin)
 
 %% Fit gamma distributions to results and save to disk
 
@@ -22,8 +21,9 @@ table_cell = cellfun(@(lat, lon, elev, time, SMB, year) ...
 long_table = vertcat(table_cell{:});
 
 % Create table for QC values of echogram image
-QC_T = table(mdata.QC_flag, mdata.QC_med, mdata.QC_val, mdata.QC_depth_idx,...
-    'VariableNames', {'QC_flag', 'QC_med', 'QC_val', 'QC_depth'});
+QC_T = table(mdata.QC_flag, mdata.QC_med, mdata.QC_val, ...
+    mdata.QC_yr, mdata.QC_depth_idx,...
+    'VariableNames', {'QC_flag', 'QC_med', 'QC_val', 'QC_yr', 'QC_depth'});
 
 % Add variables for QC values of echogram image
 full_table = [long_table repmat(QC_T, height(long_table), 1)];
@@ -33,7 +33,12 @@ writetable(full_table, csv_output);
 
 %%
 
-save(mat_output, '-struct', 'mdata', '-v7.3')
+if length(varargin) == 1
+    mat_output = varargin{1};
+    save(mat_output, '-struct', 'mdata', '-v7.3')
+end
+
+
 success = true;
 
 end

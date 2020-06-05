@@ -17,11 +17,9 @@ module load rclone
 # Define current working directory
 startDIR=$(pwd)
 
-SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/slurm/run_matlab.m"
+SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/src/scripts/process_HPC.m"
 # directory with the Matlab functions required to run src script
 SRCDIR="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/src/"
-# Path to density results file
-#RHOFILE="/uufs/chpc.utah.edu/common/home/u1046484/Data/PAIPR/rho_files/rho_20111109subset.mat"
 # directory to output results
 OUTDIR=$startDIR
 # Assign scratch directory to process data
@@ -34,22 +32,23 @@ SCRDIR="/scratch/general/lustre/u1046484/"
 mkdir -p $SCRDIR #should already exist from dataDMZ.sh
 cp $SRCFILE $SCRDIR
 cp -r $SRCDIR $SCRDIR/src
-#cp $RHOFILE $SCRDIR/rho_data.mat
 cd $SCRDIR
 
 # Data directory should	have been assigned, created, and populated previously
 # using	the dataDMZ.sh script
-#DATADIR="gcloud:CHPC?IceBridge-raw/..."
+#RHOFILE="gcloud:CHPC/flight/densities/..."
+#DATADIR="gcloud:CHPC/IceBridge-raw/..."
+#rclone copyto $RHOFILE $SCRDIR/rho_data.csv
 #rclone copy $DATADIR $SCRDIR/Data/
 
 # Create seperate directory within scratch to store outputs
 mkdir -p Outputs/
 
 # run matlab program with variable options
-matlab -nodisplay -r "run_matlab" -logfile Outputs/matlab_stdout.log
+matlab -nodisplay -r "process_HPC" -logfile Outputs/matlab_stdout.log
 
 # Determine is matlab completed cleanly or with errors
-if [$? -eq 0 ]
+if [[ $? == 0 ]]
 then
     # copy results from scratch to the results dir
     cp -r Outputs/ $OUTDIR
