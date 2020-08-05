@@ -88,7 +88,17 @@ parfor i=1:length(end_idx)
             
             
         end
-        echo_i.dist = pathdistps(echo_i.lat, echo_i.lon);
+        
+        % Determine whether data are in Greenland or Antarctica
+        if mean(echo_i.lat) < 0
+            % Calucate distance along traverse (in meters)
+            echo_i.dist = pathdistps(echo_i.lat, echo_i.lon);
+        
+        else
+            % Calculate distance along traverse (in meters)
+            echo_i.dist = pathdist(echo_i.lat, echo_i.lon);
+        
+        end
         
         
         
@@ -128,6 +138,8 @@ parfor i=1:length(end_idx)
                 clip = round(0.5*overlap/horz_res);
                 radar = struct(...
                     'collect_time',radar_tmp.collect_time(clip:end-clip),...
+                    'Lat', radar_tmp.Lat(clip:end-clip), ...
+                    'Lon', radar_tmp.Lon(clip:end-clip), ...
                     'Easting', radar_tmp.Easting(clip:end-clip),...
                     'Northing', radar_tmp.Northing(clip:end-clip), ...
                     'dist', radar_tmp.dist(clip:end-clip), ...

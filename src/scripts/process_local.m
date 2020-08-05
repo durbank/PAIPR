@@ -21,13 +21,13 @@ addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
 
 %% 
 
-DATADIR = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
-    'WAIS-central/20111109/'];
-RHOFILE = ['/media/durbank/WARP/Research/Antarctica/Data/rho-stats/Data/'...
-    'cent_interior/Data/densities/rho_20111109.csv'];
-OUTDIR = '/home/durbank/Documents/scratch/';
+DATADIR = ['/media/durbank/WARP/Research/Mentoring/Laurie/Data/'...
+    'gis_test/'];
+RHOFILE = ['/home/durbank/Documents/Durban/Research/Mentoring/Laurie/'...
+    'Data/rho_20110502.csv'];
+OUTDIR = '/home/durbank/scratch/';
 NSIM = 100;
 
-[success_codes] = process_PAIPR(DATADIR, RHOFILE, OUTDIR, NSIM);
-% [success_codes] = process_PAIPR(...
-%     DATADIR, RHOFILE, OUTDIR, NSIM, 'VerboseOutput', true);
+% [success_codes] = process_PAIPR(DATADIR, RHOFILE, OUTDIR, NSIM);
+[success_codes] = process_PAIPR(...
+    DATADIR, RHOFILE, OUTDIR, NSIM, 'VerboseOutput', true);

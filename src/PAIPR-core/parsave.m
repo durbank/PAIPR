@@ -6,8 +6,10 @@ function [success] = parsave(mdata, csv_output, varargin)
 
 %% Fit gamma distributions to results and save to disk
 
-% Convert Northing, Easting to lat/lon
-[lat, lon] = ps2ll(mdata.Easting, mdata.Northing);
+% % Convert Northing, Easting to lat/lon
+% [lat, lon] = ps2ll(mdata.Easting, mdata.Northing);
+lat = mdata.Lat;
+lon = mdata.Lon;
 
 % Fit gamma distribution parameters to each year of accumulation data for
 % each trace in data

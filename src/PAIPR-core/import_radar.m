@@ -61,11 +61,24 @@ end
         
 bounds_idx = 1:length(mdata.lat) < start_idx | ...
     1:length(mdata.lat) > end_idx;
-loc_idx = mdata.lat >= -65 | mdata.lat < -90;
+
+% Determine whether data are in Greenland or Antarctica
+if mean(mdata.lat) > 45
+    % Find erroneous lat data (Greenland)
+    loc_idx = mdata.lat <= 45 | mdata.lat > 90;
+    
+else
+    % Find erroneous lat data (Antarctica)
+    loc_idx = mdata.lat >= -65 | mdata.lat < -90;
+end
+
+% Determine traces with missing data
 nan_idx = all(isnan(mdata.data_out));
 
+% Indices of data to remove (out of bounds, bad location, or missing data)
 rm_idx = logical(sum([bounds_idx; loc_idx; nan_idx]));
 
+% Remove data at selected indices
 mdata.lat(rm_idx) = [];
 mdata.lon(rm_idx) = [];
 % mdata.time_gps(rm_idx) = [];
@@ -74,10 +87,21 @@ mdata.time_trace(rm_idx) = [];
 mdata.data_out(:,rm_idx) = [];
 
 try
-    % Calucate distance along traverse (in meters)
-    distances = pathdistps(mdata.lat, mdata.lon);
+    % Determine whether data are in Greenland or Antarctica
+    if mean(mdata.lat) < -65
+        % Calucate distance along traverse (in meters)
+        distances = pathdistps(mdata.lat, mdata.lon);
+        
+    else
+       % Calculate distance along traverse (in meters)
+        distances = pathdist(mdata.lat, mdata.lon);
+        
+    end
+    
+    % Check for bad distance results
     dist_idx = ~logical([1 diff(distances)]);
     
+    % Remove data with bad distances
     mdata.lat(dist_idx) = [];
     mdata.lon(dist_idx) = [];
 %     mdata.time_gps(dist_idx) = [];
@@ -114,12 +138,39 @@ end
 % piecewise shape-preserving spline
 mdata.data_out = fillmissing(mdata.data_out, 'pchip');
 
-% Convert lat/lon coordinates to polar stereo coordinates (uses AMT)
-[mdata.Easting, mdata.Northing] = ll2ps(mdata.lat, mdata.lon);
+% Determine whether data are in Greenland or Antarctica
+if mean(mdata.lat) < 0
+    % Convert lat/lon coordinates to polar stereo coordinates (uses AMT)
+    [mdata.Easting, mdata.Northing] = ll2ps(mdata.lat, mdata.lon);
+        
+else
+   % Generate projection structure for EPSG:3413 (NSIDC Sea Ice Polar
+    % Stereographic North)
+    proj = defaultm('ups');
+    proj.geoid = wgs84Ellipsoid('meters');
+    proj.maplatlimit = [84, 90];
+    proj.maplonlimit = [-180, 180];
+    proj.origin = [90,0,0];
+    proj.flatlimit = [-Inf,6];
+    proj.flonlimit = [-180,180];
+    
+    % Convert lat/lon coordinates to Easting/Northing
+    [mdata.Easting, mdata.Northing] = projfwd(proj, mdata.lat, mdata.lon);
+        
+end
 
 % Calucate path distance along traverse (in meters)
 try
-    mdata.dist = pathdistps(mdata.lat, mdata.lon);
+    % Determine whether data are in Greenland or Antarctica
+    if mean(mdata.lat) < -65
+        % Calucate distance along traverse (in meters)
+        mdata.dist = pathdistps(mdata.lat, mdata.lon);
+        
+    else
+       % Calculate distance along traverse (in meters)
+        mdata.dist = pathdist(mdata.lat, mdata.lon);
+        
+    end
 catch
     mdata.dist = [];
     disp(strcat(...
