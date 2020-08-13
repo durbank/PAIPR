@@ -17,9 +17,10 @@ module load rclone
 # Define current working directory
 startDIR=$(pwd)
 
-SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/src/scripts/process_HPC.m"
-# directory with the Matlab functions required to run src script
-SRCDIR="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/src/"
+# Define path to primary MATLAB processing script
+SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Codebase/PAIPR/src/scripts/process_HPC.m"
+# directory with the Matlab functions required to run primary script
+SRCDIR="/uufs/chpc.utah.edu/common/home/u1046484/Codebase/PAIPR/src/"
 # directory to output results
 OUTDIR=$startDIR
 # Assign scratch directory to process data
@@ -57,7 +58,7 @@ then
     cd $startDIR
 
     # Clean scratch
-#    rm -rf $SCRDIR
+    rm -rf $SCRDIR
 else
     echo "MATLAB exited due to an unknown error"
     cd $startDIR
