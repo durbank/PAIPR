@@ -119,8 +119,8 @@ parfor i=1:length(end_idx)
         [radar_tmp] = calc_layers(radar_tmp, 'stream');
         
         % Calculate age-depth profiles
-        r = -6.723;
-        r_std = abs(0.10*r);
+        r = -6.89;
+        r_std = 1.27;
         k = 3.0;
         [radar_tmp, Ndraw_new] = radar_age(radar_tmp, r, r_std, k, Ndraw);
         

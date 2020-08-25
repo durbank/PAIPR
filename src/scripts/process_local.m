@@ -28,6 +28,6 @@ RHOFILE = ['/media/durbank/WARP/Research/Antarctica/Data/CHPC/'...
 OUTDIR = '/home/durbank/scratch/';
 NSIM = 500;
 
-% [success_codes] = process_PAIPR(DATADIR, RHOFILE, OUTDIR, NSIM);
-[success_codes] = process_PAIPR(...
-    DATADIR, RHOFILE, OUTDIR, NSIM, 'VerboseOutput', true);
+[success_codes] = process_PAIPR(DATADIR, RHOFILE, OUTDIR, NSIM);
+% [success_codes] = process_PAIPR(...
+%     DATADIR, RHOFILE, OUTDIR, NSIM, 'VerboseOutput', true);
