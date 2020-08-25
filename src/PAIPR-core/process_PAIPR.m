@@ -120,11 +120,12 @@ parfor i=1:length(end_idx)
         
         % Calculate age-depth profiles
         r = -6.723;
+        r_std = abs(0.10*r);
         k = 3.0;
-        [radar_tmp] = radar_age(radar_tmp, r, k, Ndraw);
+        [radar_tmp, Ndraw_new] = radar_age(radar_tmp, r, r_std, k, Ndraw);
         
         % Calculate radar annual SMB
-        [radar_tmp] = calc_SWE(radar_tmp, rho_data, Ndraw);
+        [radar_tmp] = calc_SWE(radar_tmp, rho_data, Ndraw_new);
         
         % Perform QC check on echogram image
         [QC_med, QC_val, QC_flag, depth_idx, yr_cutoff] = QC_check(...
