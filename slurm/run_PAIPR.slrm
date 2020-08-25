@@ -3,6 +3,7 @@
 #SBATCH --nodes=1      # number of cluster nodes, abbreviated by -N
 #SBATCH -o slurm-%j.out-%N # name of the stdout, using the job number (%j) and the first node (%N)
 #SBATCH --ntasks=1    # number of MPI tasks, abbreviated by -n
+#SBATCH --constraint="c20"
 # additional information for allocated clusters
 #SBATCH --account=rupper     # account - abbreviated by -A
 #SBATCH --partition=lonepeak  # partition, abbreviated by -p
