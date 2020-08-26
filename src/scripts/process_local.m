@@ -21,10 +21,12 @@ addpath(genpath(fullfile(addon_struct.folder, addon_struct.name)))
 
 %% 
 
+% DATADIR = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
+%     'manual_layers/SEAT10_4/raw_data/'];
 DATADIR = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
-    'manual_layers/SEAT10_4/raw_data/'];
+    'WAIS-central/20101119'];
 RHOFILE = ['/media/durbank/WARP/Research/Antarctica/Data/CHPC/'...
-    'flight-density/rho_20111109.csv'];
+    'flight-density/rho_20101119.csv'];
 OUTDIR = '/home/durbank/scratch/';
 NSIM = 500;
 

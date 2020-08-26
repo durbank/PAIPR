@@ -1,7 +1,7 @@
 
 
 % Start parellel pool
-poolobj=parpool('local', 19);
+poolobj=parpool('local', 12);
 
 %%
 % Add PAIPR-core functions to path
