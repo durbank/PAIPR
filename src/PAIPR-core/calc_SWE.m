@@ -18,6 +18,7 @@ end
 % noise based on the variance in core density (also converts to mm w.e.)
 noise_rho = 1000*repmat(rho_std, 1, 1, Ndraw).*randn(size(radar.ages));
 accum_dt = 0.02*(1000*repmat(rho_mod, 1, 1, Ndraw) + noise_rho);
+clear noise_rho
 
 % Preallocation of cell arrays for accumulation years and annual
 % accumulation rate

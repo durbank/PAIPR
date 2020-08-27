@@ -193,6 +193,9 @@ parfor i=1:length(end_idx)
                 radar.QC_yr = yr_cutoff;
         end
         
+        % Clear radar_tmp variable (to free up memory)
+        radar_tmp = [];
+        
         % Generate file names and paths under which to save data
         filename = sprintf('%s%d','radar_out',i);
         csv_output = fullfile(gamma_out, strcat(filename, '.csv'));
