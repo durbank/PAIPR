@@ -30,6 +30,15 @@ switch distribution
         
         % Converts data to a long form space-time table
         long_table = vertcat(table_cell{:});
+        
+    case 'mixture'
+        % Fit Gaussian mixture model distributions to each year of
+        % accumulation data (also aggregates traces by given distance bins)
+        bin_size = 200;
+        table_cell = accum_GMix(mdata, bin_size);
+        
+        % Converts data to a long form space-time table
+        long_table = vertcat(table_cell{:});
 end
 
 % Create table for QC values of echogram image
