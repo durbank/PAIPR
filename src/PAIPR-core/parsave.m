@@ -6,7 +6,7 @@ function [success] = parsave(mdata, csv_output, varargin)
 
 %% Fit gamma distributions to results and save to disk
 
-distribution = 'gaussian';
+distribution = 'mixture';
 
 switch distribution
 
