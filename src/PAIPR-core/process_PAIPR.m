@@ -118,9 +118,10 @@ parfor i=1:length(end_idx)
         % likelihood assignments, and age calculations)
         [radar_tmp] = calc_layers(radar_tmp, 'stream');
         
-        % Calculate age-depth profiles
-        r = -6.89;
-        r_std = 1.27;
+        % Calculate age-depth profiles (r and k parameters taken from
+        % calculations using 'r_calculate.m')
+        r = -5.89;
+        r_std = 1.37;
         k = 3.0;
         [radar_tmp, Ndraw_new] = radar_age(radar_tmp, r, r_std, k, Ndraw);
         
