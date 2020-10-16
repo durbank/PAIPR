@@ -2,13 +2,14 @@
 % loop (so as to preserve variable transparency). This saves both the .mat
 % results of PAIPR as well as the .csv results of gamma-fitting
 
-function [success] = parsave(mdata, csv_output, varargin)
+function [success] = parsave(mdata, csv_output, dist, bin_size, varargin)
 
-%% Fit gamma distributions to results and save to disk
+%% Fit distributions to results and save to disk
 
-distribution = 'mixture';
+% dist = 'mixture';
+% bin_size = 200; % In meters
 
-switch distribution
+switch dist
 
     case 'gamma'
         % Fit gamma distribution parameters to each year of accumulation 
@@ -25,7 +26,6 @@ switch distribution
     case 'gaussian'
         % Fit gaussian distributions to each year of accumulation data
         % (also aggregates traces by given distance bin in meters)
-        bin_size = 200;
         table_cell = accum_Gauss(mdata, bin_size);
         
         % Converts data to a long form space-time table
@@ -34,7 +34,6 @@ switch distribution
     case 'mixture'
         % Fit Gaussian mixture model distributions to each year of
         % accumulation data (also aggregates traces by given distance bins)
-        bin_size = 200;
         table_cell = accum_GMix(mdata, bin_size);
         
         % Converts data to a long form space-time table

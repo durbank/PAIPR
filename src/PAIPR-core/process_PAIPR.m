@@ -15,15 +15,8 @@ arguments
     NameValueArgs.VerboseOutput = false
 end
 
-% % Define number of Monte Carlo simulations to perform
-% Ndraw = 100;
-
 % Directory containing raw OIB echograms
 radar_dir = DATADIR;
-
-% % Select modeled density subset .mat file to use, and load to workspace
-% rho_file = load(RHO_PATH);
-% rho_subset = rho_file.rho_subset;
 
 echo_out = fullfile(OUTDIR, 'echo');
 if NameValueArgs.VerboseOutput == true
@@ -201,15 +194,21 @@ parfor i=1:length(end_idx)
         filename = sprintf('%s%d','radar_out',i);
         csv_output = fullfile(gamma_out, strcat(filename, '.csv'));
         
+        % Assign what distribution modeling to perform and bin size (in
+        % meters) to use
+        distribution = 'mixture';
+        bin_size = 200;
+        
         switch NameValueArgs.VerboseOutput
             case true
                 mat_output = fullfile(echo_out, strcat(filename, '.mat'));
                 % Save output structures to disk
                 [success_codes(i)] = parsave(...
-                    radar, csv_output, mat_output);
+                    radar, csv_output, distribution, bin_size, mat_output);
             case false
                 % Save output structures to disk
-                [success_codes(i)] = parsave(radar, csv_output);
+                [success_codes(i)] = parsave(...
+                    radar, distribution, bin_size, csv_output);
         end
         
     catch ME
