@@ -46,36 +46,43 @@ for i=1:length(flight_list)
             sites(j).name));
         man_layers = tmp.man_layers;
         
-        % Get dimensions of overlapping results between manual and radar
-        man_sz = [round(max(cellfun(@(x) max(x(:,2)), man_layers))) ...
-            round(max(cellfun(@(x) max(x(:,1)), man_layers)))];
-        rad_sz = size(radar.data_smooth);
-        dims = [min([man_sz(1) rad_sz(1)]) min([man_sz(2) rad_sz(2)])];
+        % Format manual layers and radar to eliminate misaligned data
+        [radar] = optim_format(radar, man_layers);
+%         % Get dimensions of overlapping results between manual and radar
+%         man_sz = [round(max(cellfun(@(x) max(x(:,2)), man_layers))) ...
+%             round(max(cellfun(@(x) max(x(:,1)), man_layers)))];
+%         rad_sz = size(radar.data_smooth);
+%         dims = [min([man_sz(1) rad_sz(1)]) min([man_sz(2) rad_sz(2)])];
+%         
+%         % Clip results overlapping sections
+%         man_keep = cellfun(...
+%             @(x) round(x(:,1)) <= dims(2) & round(x(:,2)) <= dims(1), ...
+%             man_layers, 'UniformOutput', false);
+%         man_layers = cellfun(@(x,y) x(y,:), man_layers, man_keep, ...
+%             'UniformOutput', false);
+%         
+%         % Subset man_layers to those that extend the full echogram length
+%         last_idx = find(cellfun(@length, man_layers) >= dims(2), ...
+%             1, 'last');
+%         man_layers = man_layers(1:last_idx);
+%         
+%         % Create logical matrix of manual layers
+%         man_idx = cellfun(@(x) sub2ind(dims, round(x(:,2)),x(:,1)), ...
+%             man_layers, 'UniformOutput', false);
+%         man_grid = zeros(dims);
+%         for k = 1:length(man_idx)
+%             man_grid(man_idx{k}) = 1;
+%         end
         
-        % Clip results overlapping sections
-        man_keep = cellfun(...
-            @(x) round(x(:,1)) <= dims(2) & round(x(:,2)) <= dims(1), ...
-            man_layers, 'UniformOutput', false);
-        man_layers = cellfun(@(x,y) x(y,:), man_layers, man_keep, ...
-            'UniformOutput', false);
-        
-        % Subset man_layers to those that extend the full echogram length
-        last_idx = find(cellfun(@length, man_layers) >= dims(2), ...
-            1, 'last');
-        man_layers = man_layers(1:last_idx);
-        
-        % Create logical matrix of manual layers
-        man_idx = cellfun(@(x) sub2ind(dims, round(x(:,2)),x(:,1)), ...
-            man_layers, 'UniformOutput', false);
-        man_grid = zeros(dims);
-        for k = 1:length(man_idx)
-            man_grid(man_idx{k}) = 1;
-        end
+%         % Extract PAIPR radar variables (to avoid unnecessary broadcasting)
+%         DB = radar.DB(1:dims(1),1:dims(2));
+%         depth = radar.depth(1:dims(1));
         
         % Extract PAIPR radar variables (to avoid unnecessary broadcasting)
-        DB = radar.DB(1:dims(1),1:dims(2));
-        depth = radar.depth(1:dims(1));
-        
+        man_grid = logical(radar.man_grid);
+        DB = radar.DB;
+        depth = radar.depth;
+
         % Remove DB results below the last manually picked layer
         man_bott = arrayfun(@(x) find(man_grid(:,x),1,'last'), ...
             1:size(man_grid,2));
