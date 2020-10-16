@@ -9,7 +9,7 @@ RHOFILE = ['/media/durbank/WARP/Research/Antarctica/Data/CHPC/'...
     'flight-density/rho_20111109.csv'];
 OUT_DIR = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
     'optimization/v0.4.0/SMB_results/'];
-NSIM = 250;
+NSIM = 100;
 
 % Add dependencies and functions to path
 addpath(genpath(fullfile(ROOT_DIR, 'src')))
@@ -19,24 +19,6 @@ addpath(genpath(fullfile(ROOT_DIR, 'src')))
 % Get list of flightline directories
 flight_list = dir(fullfile(DATA_DIR, 'flights'));
 flight_list = flight_list(~ismember({flight_list.name},{'.','..'}));
-
-% % Preallocate with results from first flight folder
-% files_interim = dir(fullfile(flight_list(1).folder, flight_list(1).name, ...
-%     'interim_data', '*.mat'));
-% files_manual = dir(fullfile(flight_list(1).folder, flight_list(1).name, ...
-%     'man_layers', '*.mat'));
-% 
-% % Concatentate additional flightline data to existing structures
-% for i=2:length(flight_list)
-%     
-%     interim_i = dir(fullfile(flight_list(i).folder, flight_list(i).name, ...
-%         'interim_data', '*.mat'));
-%     files_interim = vertcat(files_interim, interim_i);
-%     
-%     manual_i = dir(fullfile(flight_list(i).folder, flight_list(i).name, ...
-%         'man_layers', '*.mat'));
-%     files_manual = vertcat(files_manual, manual_i);
-% end
 
 % Import density profiles and format as nested table
 rho_table = import_rho(RHOFILE);
@@ -61,7 +43,7 @@ for i=1:length(flight_list)
     f_dir = [content.isdir];
     files_manual = content(~f_dir);
     
-    for j=1:length(files_interim)
+    parfor j=1:length(files_interim)
         
         % Load current radar and man_layer files
         radar = load(fullfile(...
@@ -128,5 +110,3 @@ for i=1:length(flight_list)
     end
     
 end
-
-
