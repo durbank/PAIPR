@@ -14,17 +14,23 @@ end
 
 %% Calculate annual accumulation for each radar trace
 
-% Calculate accumulation at each depth interval (0.02 m) with simulated
-% noise based on the variance in core density (also converts to mm w.e.)
-noise_rho = 1000*repmat(rho_std, 1, 1, Ndraw).*randn(size(radar.ages));
-accum_dt = 0.02*(1000*repmat(rho_mod, 1, 1, Ndraw) + noise_rho);
-clear noise_rho
+% % Calculate accumulation at each depth interval (0.02 m) with simulated
+% % noise based on the variance in core density (also converts to mm w.e.)
+% noise_rho = 1000*repmat(rho_std, 1, 1, Ndraw).*randn(size(radar.ages));
+% accum_dt = 0.02*(1000*repmat(rho_mod, 1, 1, Ndraw) + noise_rho);
+% clear noise_rho
 
 % Preallocation of cell arrays for accumulation years and annual
 % accumulation rate
 accum_yr = cell(1, size(radar.ages, 2));
 accum = cell(1, size(radar.ages, 2));
 for i = 1:size(accum, 2)
+    
+    % Calculate accumulation at each depth interval (0.02 m) with simulated
+    % noise based on the variance in core density (alco converts to mm
+    % w.e.)
+    accum_dt = 1000*0.02*(rho_mod(:,i) ...
+        + rho_std(:,i).*randn(length(radar.depth)));
     
     % Define calendar age of the top of the first year with complete
     % accumulation data and earliest whole year with observations within the
@@ -61,7 +67,8 @@ for i = 1:size(accum, 2)
         n_length = length(yr_loc) - 1;
         accum_j = zeros(n_length, 1);
         for n = 1:n_length
-            accum_j(n) = sum(accum_dt(yr_loc(n)+1:yr_loc(n+1),i,j));
+            accum_j(n) = sum(accum_dt(yr_loc(n)+1:yr_loc(n+1)));
+%             accum_j(n) = sum(accum_dt(yr_loc(n)+1:yr_loc(n+1),i,j));
         end
         accum_i(1:n_length,j) = accum_j;
     end

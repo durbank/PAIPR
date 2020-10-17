@@ -27,9 +27,9 @@ if NameValueArgs.VerboseOutput == true
 end
 
 % Check for existence of .csv output directory and create as necessary
-gamma_out = fullfile(OUTDIR, 'gamma');
-if 7~=exist(gamma_out, 'dir')
-    mkdir(gamma_out)
+smb_out = fullfile(OUTDIR, 'smb');
+if 7~=exist(smb_out, 'dir')
+    mkdir(smb_out)
 end
 
 %%
@@ -192,7 +192,7 @@ parfor i=1:length(end_idx)
         
         % Generate file names and paths under which to save data
         filename = sprintf('%s%d','radar_out',i);
-        csv_output = fullfile(gamma_out, strcat(filename, '.csv'));
+        csv_output = fullfile(smb_out, strcat(filename, '.csv'));
         
         % Assign what distribution modeling to perform and bin size (in
         % meters) to use
@@ -208,7 +208,7 @@ parfor i=1:length(end_idx)
             case false
                 % Save output structures to disk
                 [success_codes(i)] = parsave(...
-                    radar, distribution, bin_size, csv_output);
+                    radar, csv_output, distribution, bin_size);
         end
         
     catch ME
