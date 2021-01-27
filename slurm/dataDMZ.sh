@@ -18,7 +18,6 @@ DATADIR="gcloud:CHPC/IceBridge-raw/ALL_flightlines/"
 FILTER="filter-file.txt"
 
 # Define location of input density file
-#RHOFILE="gcloud:CHPC/flight-density/rho_20111109.csv"
 RHODIR="gcloud:CHPC/flight-density/"
 
 echo "Creating scratch directory"
