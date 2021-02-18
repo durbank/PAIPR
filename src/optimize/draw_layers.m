@@ -1,19 +1,19 @@
 % Re-usable script to manually draw layers from radar echograms (using the
 % 'draw_manual' function)
 
+DATA_DIR = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
+    'optimization/v0.4.0/flights/flight_20161109/'];
+fn = 'Site_B.mat';
+
 % File containing interim data (processed with PAIPR at least through
 % 'calc_layers' function)
-INPUT_FN = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
-    'optimization/v0.4.0/flights/flight_20161109/interim_data/'...
-    'SEAT2010_4.mat'];
+data_path = fullfile(DATA_DIR, 'interim_data', fn);
 
 % Path for output of saved manully traced layers
-OUTPUT_FN = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
-    'optimization/v0.4.0/flights/flight_20161109/man_layers/'...
-    'SEAT2010_4.mat'];
+output_path = fullfile(DATA_DIR, 'man_layers', fn);
 
 % Load radar to workspace
-radar = load(INPUT_FN);
+radar = load(data_path);
 
 % Run drawing routine
 [man_layers] = draw_manual(radar);
@@ -21,4 +21,4 @@ radar = load(INPUT_FN);
 %% Save manual layer output to disk for later use
 
 % Save processed radar structure for future use
-save(OUTPUT_FN, 'man_layers')
+save(output_path, 'man_layers')

@@ -12,7 +12,7 @@ addpath(genpath(fullfile(ROOT_DIR, 'src/optimize/')))
 
 % Assign data directory and density file
 DATA_DIR = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
-    'optimization/v0.4.0/flights/flight_20111109/'];
+    'optimization/v0.4.0/flights/flight_20161109/'];
 RHO_FILE = ['/media/durbank/WARP/Research/Antarctica/Data/CHPC/'...
     'flight-density/rho_20111109.csv'];
 
@@ -45,7 +45,7 @@ for i=1:length(sites)
 
         % Export to relevant interim data directory
         output_path = fullfile(DATA_DIR, 'interim_data', site_fn);
-        save(output_path, 'radar')
+        save(output_path, '-struct', 'radar')
         
     else
         sprintf(...
