@@ -105,7 +105,7 @@ for i=1:length(flight_list)
             strcat(filename, '_', flight_name, '.csv'));
         
         % Save csv outputs to disk
-        [success_code] = parsave(radar, csv_output, 'gaussian', 200);
+        [success_code] = parsave(radar, csv_output, 'mixture', 250);
         
     end
     

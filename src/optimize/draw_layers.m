@@ -1,9 +1,24 @@
 % Re-usable script to manually draw layers from radar echograms (using the
 % 'draw_manual' function)
 
+%% Set up environment
+
+% Define data directory for flight path of interest
 DATA_DIR = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
     'optimization/v0.4.0/flights/flight_20161109/'];
-fn = 'Site_B.mat';
+
+% Define name of site of interest
+fn = 'Site_C.mat';
+
+
+
+% Import src functions and dependencies
+ROOT_DIR = fileparts(fileparts(pwd));
+addpath(genpath(fullfile(ROOT_DIR, 'src/PAIPR-core/')))
+addpath(genpath(fullfile(ROOT_DIR, 'src/Dependencies/')))
+% addpath(genpath(fullfile(ROOT_DIR, 'src/optimize/')))
+
+%% Initialize manual drawing function
 
 % File containing interim data (processed with PAIPR at least through
 % 'calc_layers' function)
