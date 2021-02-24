@@ -37,8 +37,12 @@ for i=1:length(start_idx)
     
     % Keep only results where at least 75% of simulations have coverage
     nan_sum = sum(isnan(SMB_mat),2) / size(SMB_mat,2);
-    cut_idx = find(nan_sum > 0.25, 1, 'first') - 1;
-    SMB_mat = SMB_mat(1:cut_idx,:);
+    if any(nan_sum > 0.25, 'all')
+        cut_idx = find(nan_sum > 0.25, 1, 'first') - 1;
+        SMB_mat = SMB_mat(1:cut_idx,:);
+    else
+        cut_idx = size(SMB_mat, 1);
+    end
     
     % Preallocation
     SMB_mu = cell(size(SMB_mat,1),1);

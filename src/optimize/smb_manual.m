@@ -101,11 +101,11 @@ for i=1:length(flight_list)
         % Generate file names and paths under which to save data
         [~, filename, ~] = fileparts(fullfile(...
             files_interim(j).folder, files_interim(j).name));
-        csv_output = fullfile(OUT_DIR, ...
+        csv_output = fullfile(OUT_DIR, flight_name, ...
             strcat(filename, '_', flight_name, '.csv'));
         
         % Save csv outputs to disk
-        [success_code] = parsave(radar, csv_output, 'mixture', 250);
+        [success_code] = parsave(radar, csv_output, 'mixture', 200);
         
     end
     
