@@ -1,8 +1,10 @@
 #!/bin/bash
-#SBATCH --time=03:00:00 # walltime, abbreviated by -t
+#SBATCH --time=06:00:00 # walltime, abbreviated by -t
 #SBATCH --nodes=1      # number of cluster nodes, abbreviated by -N
 #SBATCH -o slurm-%j.out-%N # name of the stdout, using the job number (%j) and the first node (%N)
 #SBATCH --ntasks=1    # number of MPI tasks, abbreviated by -n
+# #SBATCH --constraint="c20"
+#SBATCH --mem=256G
 # additional information for allocated clusters
 #SBATCH --account=rupper     # account - abbreviated by -A
 #SBATCH --partition=lonepeak  # partition, abbreviated by -p
@@ -17,9 +19,10 @@ module load rclone
 # Define current working directory
 startDIR=$(pwd)
 
-SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/src/scripts/process_HPC.m"
-# directory with the Matlab functions required to run src script
-SRCDIR="/uufs/chpc.utah.edu/common/home/u1046484/Projects/PAIPR/src/"
+# Define path to primary MATLAB processing script
+SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Codebase/PAIPR/src/scripts/process_HPC.m"
+# directory with the Matlab functions required to run primary script
+SRCDIR="/uufs/chpc.utah.edu/common/home/u1046484/Codebase/PAIPR/src/"
 # directory to output results
 OUTDIR=$startDIR
 # Assign scratch directory to process data
@@ -57,7 +60,7 @@ then
     cd $startDIR
 
     # Clean scratch
-#    rm -rf $SCRDIR
+    rm -rf $SCRDIR
 else
     echo "MATLAB exited due to an unknown error"
     cd $startDIR

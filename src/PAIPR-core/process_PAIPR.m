@@ -15,15 +15,8 @@ arguments
     NameValueArgs.VerboseOutput = false
 end
 
-% % Define number of Monte Carlo simulations to perform
-% Ndraw = 100;
-
 % Directory containing raw OIB echograms
 radar_dir = DATADIR;
-
-% % Select modeled density subset .mat file to use, and load to workspace
-% rho_file = load(RHO_PATH);
-% rho_subset = rho_file.rho_subset;
 
 echo_out = fullfile(OUTDIR, 'echo');
 if NameValueArgs.VerboseOutput == true
@@ -34,9 +27,9 @@ if NameValueArgs.VerboseOutput == true
 end
 
 % Check for existence of .csv output directory and create as necessary
-gamma_out = fullfile(OUTDIR, 'gamma');
-if 7~=exist(gamma_out, 'dir')
-    mkdir(gamma_out)
+smb_out = fullfile(OUTDIR, 'smb');
+if 7~=exist(smb_out, 'dir')
+    mkdir(smb_out)
 end
 
 %%
@@ -88,7 +81,17 @@ parfor i=1:length(end_idx)
             
             
         end
-        echo_i.dist = pathdistps(echo_i.lat, echo_i.lon);
+        
+        % Determine whether data are in Greenland or Antarctica
+        if mean(echo_i.lat) < 0
+            % Calucate distance along traverse (in meters)
+            echo_i.dist = pathdistps(echo_i.lat, echo_i.lon);
+        
+        else
+            % Calculate distance along traverse (in meters)
+            echo_i.dist = pathdist(echo_i.lat, echo_i.lon);
+        
+        end
         
         
         
@@ -108,13 +111,15 @@ parfor i=1:length(end_idx)
         % likelihood assignments, and age calculations)
         [radar_tmp] = calc_layers(radar_tmp, 'stream');
         
-        % Calculate age-depth profiles
-        r = -6.723;
+        % Calculate age-depth profiles (r and k parameters taken from
+        % calculations using 'r_calculate.m')
+        r = -5.89;
+        r_std = 1.37;
         k = 3.0;
-        [radar_tmp] = radar_age(radar_tmp, r, k, Ndraw);
+        [radar_tmp, Ndraw_new] = radar_age(radar_tmp, r, r_std, k, Ndraw);
         
         % Calculate radar annual SMB
-        [radar_tmp] = calc_SWE(radar_tmp, rho_data, Ndraw);
+        [radar_tmp] = calc_SWE(radar_tmp, rho_data, Ndraw_new);
         
         % Perform QC check on echogram image
         [QC_med, QC_val, QC_flag, depth_idx, yr_cutoff] = QC_check(...
@@ -128,6 +133,8 @@ parfor i=1:length(end_idx)
                 clip = round(0.5*overlap/horz_res);
                 radar = struct(...
                     'collect_time',radar_tmp.collect_time(clip:end-clip),...
+                    'Lat', radar_tmp.Lat(clip:end-clip), ...
+                    'Lon', radar_tmp.Lon(clip:end-clip), ...
                     'Easting', radar_tmp.Easting(clip:end-clip),...
                     'Northing', radar_tmp.Northing(clip:end-clip), ...
                     'dist', radar_tmp.dist(clip:end-clip), ...
@@ -180,19 +187,28 @@ parfor i=1:length(end_idx)
                 radar.QC_yr = yr_cutoff;
         end
         
+        % Clear radar_tmp variable (to free up memory)
+        radar_tmp = [];
+        
         % Generate file names and paths under which to save data
         filename = sprintf('%s%d','radar_out',i);
-        csv_output = fullfile(gamma_out, strcat(filename, '.csv'));
+        csv_output = fullfile(smb_out, strcat(filename, '.csv'));
+        
+        % Assign what distribution modeling to perform and bin size (in
+        % meters) to use
+        distribution = 'mixture';
+        bin_size = 200;
         
         switch NameValueArgs.VerboseOutput
             case true
                 mat_output = fullfile(echo_out, strcat(filename, '.mat'));
                 % Save output structures to disk
                 [success_codes(i)] = parsave(...
-                    radar, csv_output, mat_output);
+                    radar, csv_output, distribution, bin_size, mat_output);
             case false
                 % Save output structures to disk
-                [success_codes(i)] = parsave(radar, csv_output);
+                [success_codes(i)] = parsave(...
+                    radar, csv_output, distribution, bin_size);
         end
         
     catch ME

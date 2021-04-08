@@ -1,6 +1,6 @@
 % Function to manually draw annual layers for PAIPR-processed echogram
 
-function [man_layers] = draw_manual(radar, output_file)
+function [man_layers] = draw_manual(radar)
 
 % Preallocate cell array for position subscripts of manual layers
 man_layers = cell(1,250);
@@ -55,13 +55,6 @@ keep_idx = cellfun(@(x) round(x(:,2))<=size(radar.data_smooth,1), ...
     man_layers, 'UniformOutput', false);
 man_layers = cellfun(@(x,y) x(y,:), man_layers, keep_idx, ...
     'UniformOutput', false);
-
-
-
-%% Save manual layer output to disk for later use
-
-% Save processed radar structure for future use
-save(output_file, '-struct', 'man_layers', '-v7.3')
 
 
 end

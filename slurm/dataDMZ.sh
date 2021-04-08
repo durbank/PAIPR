@@ -12,10 +12,12 @@ module purge
 module load rclone
 
 # Define location of input data directories
-DATADIR="gcloud:CHPC/IceBridge-raw/wais-central-min/"
+DATADIR="gcloud:CHPC/IceBridge-raw/ALL_flightlines/"
+
+# Define filtering file to download subset of echograms
+FILTER="filter-file.txt"
 
 # Define location of input density file
-#RHOFILE="gcloud:CHPC/flight-density/rho_20111109.csv"
 RHODIR="gcloud:CHPC/flight-density/"
 
 echo "Creating scratch directory"
@@ -24,12 +26,19 @@ echo "Creating scratch directory"
 SCRDIR="/scratch/general/lustre/u1046484/"
 mkdir -p $SCRDIR
 
-# Transfer input data to scratch
+# Transfer input density data to scratch
 echo "Transfering density data"
-#rclone copyto $RHOFILE $SCRDIR/rho_data.csv
 rclone copy $RHODIR $SCRDIR/rho_data/ --progress
-echo "Transfering echogram data"
-rclone copy $DATADIR $SCRDIR/Data/ --transfers=16 --drive-chunk-size=32768 --progress
+
+# Transfer input radar data (based on filtering if it exists)
+if [ -e $FILTER ]
+then
+  echo "Transfering filtered echogram data"
+  rclone copy $DATADIR $SCRDIR/Data/ --filter-from=$FILTER --transfers=16 --drive-chunk-size=32768 --progress
+else
+  echo "Transfering all echogram data"
+  rclone copy $DATADIR $SCRDIR/Data/ --transfers=16 --drive-chunk-size=32768 --progress
+fi
 
 # Define end time and calculate execution time
 t_end=`date +%s`

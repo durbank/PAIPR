@@ -47,7 +47,7 @@ title("Rate parameter (r) SSE")
 hold on
 ksdensity(SEAT_4.SSE(SEAT_4.SSE<25))
 ksdensity(SEAT_5.SSE(SEAT_5.SSE<25))
-% ksdensity(SEAT_6.SSE(SEAT_6.SSE<25))
+ksdensity(SEAT_6.SSE(SEAT_6.SSE<25))
 ksdensity(PIG.SSE(PIG.SSE<25))
 legend("2010-4", "2010-5", "2010-6", "PIG")
 hold off
@@ -63,9 +63,12 @@ sprintf("Mean error-weighted r parameters: %0.2f | %0.2f | %0.2f | %0.2f", ...
 
 r_all = [SEAT_4.r_params SEAT_5.r_params SEAT_6.r_params PIG.r_params];
 SSE_all = [SEAT_4.SSE SEAT_5.SSE SEAT_6.SSE PIG.SSE];
+w_all = (1./SSE_all)./sum(1./SSE_all);
 
 r_hat = sum(((1./SSE_all)./sum(1./SSE_all)).*r_all);
+r_std = std(r_all, w_all);
 sprintf("Final error-weighted estimate of r: %0.3f", r_hat)
+sprintf("Finall error-weighted standard deviation of r: %0.3f", r_std)
 
 
 

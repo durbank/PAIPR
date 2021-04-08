@@ -1,0 +1,9 @@
+# Example filter-file to subset which echogram directories to download
+# Delete this file when all echogram directories are desired
+
+# Include the 20111109 and 20161109 flightlines
++ /20111109/**
++ /20161109/**
+# Exclude everything else
+- *
+
