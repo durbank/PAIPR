@@ -23,7 +23,8 @@ RHODIR="gcloud:CHPC/flight-density/"
 echo "Creating scratch directory"
 
 # Define and create scratch directory
-SCRDIR="/scratch/general/lustre/u1046484/"
+# SCRDIR="/scratch/general/lustre/u1046484/"
+SCRDIR="/scratch/general/nfs1/u1046484/"
 mkdir -p $SCRDIR
 
 # Transfer input density data to scratch
