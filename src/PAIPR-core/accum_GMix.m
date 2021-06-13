@@ -135,8 +135,8 @@ for i=1:length(start_idx)
                 
                 % If only one peak present, fall back to standard uni-modal
                 % Gaussian model
-                SMB_mu{j} = nanmean(SMB_mat(j,:));
-                SMB_std{j} = nanstd(SMB_mat(j,:));
+                SMB_mu{j} = mean(SMB_mat(j,:), 'omitnan');
+                SMB_std{j} = std(SMB_mat(j,:), 'omitnan');
                 SMB_scale{j} = 1;
                 
             end
@@ -145,8 +145,8 @@ for i=1:length(start_idx)
             
             % If mixture model fails, default to simple Gaussian
             % distribution statistics
-            SMB_mu{j} = nanmean(SMB_mat(j,:));
-            SMB_std{j} = nanstd(SMB_mat(j,:));
+            SMB_mu{j} = mean(SMB_mat(j,:), 'omitnan');
+            SMB_std{j} = std(SMB_mat(j,:), 'omitnan');
             SMB_scale{j} = 1;
             
         end

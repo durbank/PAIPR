@@ -2,7 +2,8 @@
 % loop (so as to preserve variable transparency). This saves both the .mat
 % results of PAIPR as well as the .csv results of gamma-fitting
 
-function [success] = parsave(mdata, csv_output, dist, bin_size, varargin)
+function [success] = parsave(...
+    mdata, csv_output, dist, bin_size, mat_path, depth_path)
 
 %% Fit distributions to results and save to disk
 
@@ -53,10 +54,21 @@ writetable(full_table, csv_output);
 
 %%
 
-if length(varargin) == 1
-    mat_output = varargin{1};
-    save(mat_output, '-struct', 'mdata', '-v7.3')
+% If full echogram file path given, save as .mat file
+if ~isempty(mat_path)
+    save(mat_path, '-struct', 'mdata', '-v7.3')
 end
+        
+% If layer_depth file path given, save as .csv
+if ~isempty(depth_path)
+    
+    % Calculate annual layer depths as save as table
+    IRH_depths = get_depths(mdata, bin_size);
+    depths_table = vertcat(IRH_depths{:});
+    writetable(depths_table, depth_path);
+end
+
+
 
 
 success = true;
