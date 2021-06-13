@@ -16,6 +16,9 @@ arguments
     NameValueArgs.LayerDepths=false
 end
 
+% Sets random number generator seed (for reproducibility)
+rng(777)
+
 % Directory containing raw OIB echograms
 radar_dir = DATADIR;
 

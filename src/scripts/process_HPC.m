@@ -1,7 +1,7 @@
 
 
 % Start parellel pool
-poolobj=parpool('local', 15);
+poolobj=parpool('local', 16);
 
 %%
 % Add PAIPR-core functions to path
@@ -51,10 +51,11 @@ for i=1:length(datadir_list)
             strcat('rho_', echo_dir.name, '.csv'));
         
         % Run PAIPR functions
-        NSIM = 500;
+        NSIM = 250;
         [success_codes] = process_PAIPR(...
             fullfile(echo_dir.folder, echo_dir.name), ...
-            rho_file, out_i, NSIM);
+            rho_file, out_i, NSIM, ...
+            'LayerDepths', true);
         %         [success_codes] = process_PAIPR(...
         %             fullfile(echo_dir.folder, echo_dir.name), ...
         %             rho_file, out_i, NSIM, 'VerboseOutput', true);
