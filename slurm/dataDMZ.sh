@@ -2,7 +2,7 @@
 
 # Script to create scratch directory and download data to it from gcloud
 # This should be implemented in the Science DMZ nodes
-# e.g. dtn01-dmz.chpc.utah.edu
+# e.g. dtn07.chpc.utah.edu
 
 # Define start time (for clocking execution speed)
 t_start=`date +%s`
