@@ -32,6 +32,10 @@ RHOFILE = ['/media/durbank/WARP/Research/Antarctica/Data/CHPC/'...
 OUTDIR = '/home/durbank/scratch/';
 NSIM = 250;
 
+if ~isfile(RHOFILE)
+    RHOFILE = fullfile('../data-defaults', 'density-default.csv');
+end
+
 % [success_codes] = process_PAIPR(DATADIR, RHOFILE, OUTDIR, NSIM);
 % [success_codes] = process_PAIPR(...
 %     DATADIR, RHOFILE, OUTDIR, NSIM, 'VerboseOutput', true);

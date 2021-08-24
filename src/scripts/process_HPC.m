@@ -50,6 +50,10 @@ for i=1:length(datadir_list)
         rho_file = fullfile(rho_dir, ...
             strcat('rho_', echo_dir.name, '.csv'));
         
+        if ~isfile(rho_file)
+            rho_file = fullfile('src/data-defaults', 'density-default.csv');
+        end
+        
         % Run PAIPR functions
         NSIM = 250;
         [success_codes] = process_PAIPR(...
