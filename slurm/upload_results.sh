@@ -19,7 +19,7 @@ t_start=`date +%s`
 
 # Transfer sbatch source files and results to gcloud
 echo "Transferring files to gcloud..."
-rclone copy $SRC_DIR $CLOUD_DIR/$dir_name --transfers=8
+rclone copy $SRC_DIR $CLOUD_DIR/$dir_name --transfers=8 --progress
 echo "Tranfer complete"
 
 # Define end time and calculate execution time
