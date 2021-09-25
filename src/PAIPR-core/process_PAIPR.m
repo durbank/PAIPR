@@ -210,6 +210,7 @@ parfor i=1:length(end_idx)
         % Assign what distribution modeling to perform and bin size (in
         % meters) to use
         distribution = 'mixture';
+        distribution = 'raw';
         bin_size = 200;
         
         % Name echogram file path based on NameValueArgs
