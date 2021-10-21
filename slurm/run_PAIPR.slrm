@@ -25,24 +25,16 @@ SRCFILE="/uufs/chpc.utah.edu/common/home/u1046484/Codebase/PAIPR/src/scripts/pro
 SRCDIR="/uufs/chpc.utah.edu/common/home/u1046484/Codebase/PAIPR/src/"
 # directory to output results
 OUTDIR=$startDIR
-# Assign scratch directory to process data
-SCRDIR="/scratch/general/lustre/u1046484/"
 
-# create results directory in home space
-#mkdir -p $OUTDIR
+# Assign scratch directory to process data
+SCRDIR="/scratch/general/nfs1/u1046484/"
+# SCRDIR="/scratch/general/lustre/u1046484/"
 
 # make scratch dir, copy input data there and cd to it
 mkdir -p $SCRDIR #should already exist from dataDMZ.sh
 cp $SRCFILE $SCRDIR
 cp -r $SRCDIR $SCRDIR/src
 cd $SCRDIR
-
-# Data directory should	have been assigned, created, and populated previously
-# using	the dataDMZ.sh script
-#RHOFILE="gcloud:CHPC/flight/densities/..."
-#DATADIR="gcloud:CHPC/IceBridge-raw/..."
-#rclone copyto $RHOFILE $SCRDIR/rho_data.csv
-#rclone copy $DATADIR $SCRDIR/Data/
 
 # Create seperate directory within scratch to store outputs
 mkdir -p Outputs/

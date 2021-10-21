@@ -2,7 +2,7 @@
 
 # Script to create scratch directory and download data to it from gcloud
 # This should be implemented in the Science DMZ nodes
-# e.g. dtn01-dmz.chpc.utah.edu
+# e.g. dtn07.chpc.utah.edu
 
 # Define start time (for clocking execution speed)
 t_start=`date +%s`
@@ -23,7 +23,8 @@ RHODIR="gcloud:CHPC/flight-density/"
 echo "Creating scratch directory"
 
 # Define and create scratch directory
-SCRDIR="/scratch/general/lustre/u1046484/"
+# SCRDIR="/scratch/general/lustre/u1046484/"
+SCRDIR="/scratch/general/nfs1/u1046484/"
 mkdir -p $SCRDIR
 
 # Transfer input density data to scratch

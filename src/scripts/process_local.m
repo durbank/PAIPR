@@ -26,12 +26,19 @@ addpath(genpath(fullfile(ROOT_DIR, 'src/Dependencies/')))
 % DATADIR = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
 %     'manual_layers/SEAT10_4/raw_data/'];
 DATADIR = ['/media/durbank/WARP/Research/Antarctica/Data/IceBridge/'...
-    'optimization/v0.4.0/flights/flight_20161109/raw_data/SEAT2010_4/'];
+    'optimization/v0.4.0/flights/flight_20161109/raw_data/Site_A/'];
 RHOFILE = ['/media/durbank/WARP/Research/Antarctica/Data/CHPC/'...
     'flight-density/rho_20111109.csv'];
 OUTDIR = '/home/durbank/scratch/';
 NSIM = 250;
 
-[success_codes] = process_PAIPR(DATADIR, RHOFILE, OUTDIR, NSIM);
+if ~isfile(RHOFILE)
+    RHOFILE = fullfile('../data-defaults', 'density-default.csv');
+end
+
+% [success_codes] = process_PAIPR(DATADIR, RHOFILE, OUTDIR, NSIM);
 % [success_codes] = process_PAIPR(...
 %     DATADIR, RHOFILE, OUTDIR, NSIM, 'VerboseOutput', true);
+[success_codes] = process_PAIPR(...
+    DATADIR, RHOFILE, OUTDIR, NSIM, ...
+    'LayerDepths', true);

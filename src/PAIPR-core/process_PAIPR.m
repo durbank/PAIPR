@@ -12,17 +12,30 @@ arguments
     RHO_PATH %string
     OUTDIR %string
     Ndraw %int16
-    NameValueArgs.VerboseOutput = false
+    NameValueArgs.VerboseOutput=false
+    NameValueArgs.LayerDepths=false
 end
+
+% Sets random number generator seed (for reproducibility)
+rng(777)
 
 % Directory containing raw OIB echograms
 radar_dir = DATADIR;
 
+% If VerboseOutput is flagged, create directory for full radar files
 echo_out = fullfile(OUTDIR, 'echo');
 if NameValueArgs.VerboseOutput == true
     % Check for existence of echogram output dir and create as necessary
     if 7~=exist(echo_out, 'dir')
         mkdir(echo_out)
+    end
+end
+
+% If LayerDepths is flagged, create directory for depth files
+depth_out = fullfile(OUTDIR, 'depth');
+if NameValueArgs.LayerDepths == true
+    if 7~=exist(depth_out, 'dir')
+        mkdir(depth_out)
     end
 end
 
@@ -197,19 +210,40 @@ parfor i=1:length(end_idx)
         % Assign what distribution modeling to perform and bin size (in
         % meters) to use
         distribution = 'mixture';
+        distribution = 'raw';
         bin_size = 200;
         
-        switch NameValueArgs.VerboseOutput
-            case true
-                mat_output = fullfile(echo_out, strcat(filename, '.mat'));
-                % Save output structures to disk
-                [success_codes(i)] = parsave(...
-                    radar, csv_output, distribution, bin_size, mat_output);
-            case false
-                % Save output structures to disk
-                [success_codes(i)] = parsave(...
-                    radar, csv_output, distribution, bin_size);
+        % Name echogram file path based on NameValueArgs
+        if (NameValueArgs.VerboseOutput==true)
+            mat_output = fullfile(echo_out, strcat(filename, '.mat'));
+        else
+            mat_output = [];
         end
+          
+        % Name layer-depth path based on NameValue Args
+        if (NameValueArgs.LayerDepths==true)
+            depth_output = fullfile(depth_out, strcat(filename, '.csv'));
+        else
+            depth_output = [];
+        end
+        
+        % Save requested output structures
+        [success_codes(i)] = parsave(...
+            radar, csv_output, distribution, bin_size, ...
+            mat_output, depth_output)
+        
+        
+%         switch NameValueArgs.VerboseOutput
+%             case true
+%                 mat_output = fullfile(echo_out, strcat(filename, '.mat'));
+%                 % Save output structures to disk
+%                 [success_codes(i)] = parsave(...
+%                     radar, csv_output, distribution, bin_size, mat_output);
+%             case false
+%                 % Save output structures to disk
+%                 [success_codes(i)] = parsave(...
+%                     radar, csv_output, distribution, bin_size);
+%         end
         
     catch ME
         fprintf(1, ['An error occurred while processing data in the '...

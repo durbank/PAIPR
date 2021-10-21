@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Development script for testing bash script functionality locally
+
 # Define current working directory
 startDIR=$(pwd)
 

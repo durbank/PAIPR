@@ -2,7 +2,8 @@
 % loop (so as to preserve variable transparency). This saves both the .mat
 % results of PAIPR as well as the .csv results of gamma-fitting
 
-function [success] = parsave(mdata, csv_output, dist, bin_size, varargin)
+function [success] = parsave(...
+    mdata, csv_output, dist, bin_size, mat_path, depth_path)
 
 %% Fit distributions to results and save to disk
 
@@ -38,6 +39,15 @@ switch dist
         
         % Converts data to a long form space-time table
         long_table = vertcat(table_cell{:});
+        
+    case 'raw'
+        % Uses raw MC draws as output and formats results to match others
+        % as best as can be done
+        table_cell = accum_raw(mdata);
+        
+        % Converts data to a long form space-time table
+        long_table = vertcat(table_cell{:});
+        
 end
 
 % Create table for QC values of echogram image
@@ -45,18 +55,44 @@ QC_T = table(mdata.QC_flag, mdata.QC_med, mdata.QC_val, ...
     mdata.QC_yr, 'VariableNames', ...
     {'QC_flag', 'QC_med', 'QC_val', 'QC_yr'});
 
-% Add variables for QC values of echogram image
-full_table = [long_table repmat(QC_T, height(long_table), 1)];
-
-% Save the file
-writetable(full_table, csv_output);
-
+if strcmp(dist,'raw')
+    [fn_dir, fn] = fileparts(csv_output);
+    QC_T.SMB_fn = fn;
+    
+    QC_output = fullfile(fileparts(fn_dir), 'QC_tbl.csv');
+    if isfile(QC_output)
+        writetable(QC_T, QC_output, 'WriteMode', 'Append', ...
+            'WriteVariableNames', false);
+    else
+        writetable(QC_T, QC_output);
+    end
+    
+    writetable(long_table, csv_output);
+else
+    
+    % Add variables for QC values of echogram image
+    full_table = [long_table repmat(QC_T, height(long_table), 1)];
+    
+    % Save the file
+    writetable(full_table, csv_output);
+end
 %%
 
-if length(varargin) == 1
-    mat_output = varargin{1};
-    save(mat_output, '-struct', 'mdata', '-v7.3')
+% If full echogram file path given, save as .mat file
+if ~isempty(mat_path)
+    save(mat_path, '-struct', 'mdata', '-v7.3')
 end
+        
+% If layer_depth file path given, save as .csv
+if ~isempty(depth_path)
+    
+    % Calculate annual layer depths as save as table
+    IRH_depths = get_depths(mdata, bin_size);
+    depths_table = vertcat(IRH_depths{:});
+    writetable(depths_table, depth_path);
+end
+
+
 
 
 success = true;
